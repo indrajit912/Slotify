@@ -20,6 +20,7 @@
 from .user_service import *
 from .booking_service import *
 from .washing_machine_service import *
+from .building_service import *
 
 __all__ = [
     "create_user",
@@ -28,12 +29,15 @@ __all__ = [
     "get_user_by_username",
     "update_user_by_uuid",
     "delete_user_by_uuid",
+    "update_user_last_seen",
     "create_washing_machine",
+    "update_washing_machine",
     "get_all_machines",
     "delete_washing_machine_by_uuid",
     "get_machine_monthly_slots",
     "get_time_slot_by_uuid",
     "book_slot",
     "cancel_booking",
-    "get_user_bookings"
+    "get_user_bookings",
+    "create_building"
 ]

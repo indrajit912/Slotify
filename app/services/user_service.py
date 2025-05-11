@@ -11,13 +11,15 @@ import logging
 from sqlalchemy.exc import IntegrityError
 
 from app.models.user import User
+from app.models.building import Building
 from app.extensions import db
+from scripts.utils import utcnow
 
 logger = logging.getLogger(__name__)
 
-def create_user(username, fullname, email, password, role="user"):
+def create_user(username, fullname, email, password, role="user", building_uuid=None):
     """
-    Creates and stores a new user with hashed password.
+    Creates and stores a new user with hashed password and associated building.
 
     Args:
         username (str): Unique username.
@@ -25,12 +27,13 @@ def create_user(username, fullname, email, password, role="user"):
         email (str): User's email (must be unique).
         password (str): Plaintext password.
         role (str, optional): 'user', 'admin', or 'superadmin'. Defaults to 'user'.
+        building_uuid (str, optional): UUID of the building where the user resides. Defaults to None.
 
     Returns:
         User: The created user object.
 
     Raises:
-        ValueError: If email or username already exists.
+        ValueError: If email or username already exists, or if the building is not found.
     """
     if get_user_by_email(email):
         logger.warning(f"Email already registered: {email}")
@@ -49,6 +52,13 @@ def create_user(username, fullname, email, password, role="user"):
     )
     user.set_hashed_password(password=password)
 
+    if building_uuid:
+        building = Building.query.filter_by(uuid=building_uuid).first()
+        if not building:
+            logger.error(f"Building not found with UUID: {building_uuid}")
+            raise ValueError(f"No building found with UUID: {building_uuid}")
+        user.building = building
+
     db.session.add(user)
     try:
         db.session.commit()
@@ -59,6 +69,7 @@ def create_user(username, fullname, email, password, role="user"):
         raise ValueError("Could not create user due to a database error.")
 
     return user
+
 
 def get_user_by_uuid(uuid_str: str):
     """
@@ -167,6 +178,36 @@ def update_user_by_uuid(user_uuid, **kwargs):
         raise ValueError("Could not update user.")
 
     return user
+
+def update_user_last_seen(user_uuid: str):
+    """
+    Updates the 'last_seen' field of a user with the current timestamp.
+
+    Args:
+        user_uuid (str): UUID of the user whose last_seen field will be updated.
+
+    Returns:
+        bool: True if the update was successful, False otherwise.
+    """
+    try:
+        # Retrieve the user by UUID
+        user = get_user_by_uuid(user_uuid)
+        if not user:
+            logger.warning(f"User not found: {user_uuid}")
+            return False
+        
+        # Update the 'last_seen' field to the current timestamp
+        user.last_seen = utcnow()
+        
+        # Commit the changes to the database
+        db.session.commit()
+        logger.info(f"User's last_seen updated: {user_uuid}")
+        return True
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error updating last_seen for user {user_uuid}: {e}")
+        return False
 
 def delete_user_by_uuid(user_uuid):
     """

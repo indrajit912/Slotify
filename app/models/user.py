@@ -35,6 +35,9 @@ class User(db.Model, UserMixin):
     last_seen = db.Column(db.DateTime(timezone=True), default=utcnow)
     email_verified = db.Column(db.Boolean, default=False)
 
+    building_id = db.Column(db.Integer, db.ForeignKey('building.id'), nullable=False)
+    building = db.relationship("Building", back_populates="users")
+
     bookings = db.relationship("Booking", back_populates="user")
 
     def __repr__(self):
@@ -103,7 +106,8 @@ class User(db.Model, UserMixin):
             'date_joined': User.format_datetime_to_str(self.date_joined),
             'last_updated': User.format_datetime_to_str(self.last_updated),
             'last_seen': User.format_datetime_to_str(self.last_seen),
-            'email_verified': self.email_verified
+            'email_verified': self.email_verified,
+            'campus_address': self.campus_address
         }
         
     

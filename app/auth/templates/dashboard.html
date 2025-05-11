@@ -1,0 +1,11 @@
+<!-- app/auth/templates/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+    {% include 'flash_msgs.html' %}
+    <h1 class="heading">Welcome, {{ user.fullname or user.username }}!</h1>
+
+    <p>This is your dashboard. More features coming soon.</p>
+{% endblock %}

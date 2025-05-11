@@ -12,18 +12,21 @@ from sqlalchemy import extract
 
 from app.models.washingmachine import WashingMachine
 from app.models.booking import TimeSlot, Booking
+from app.models.building import Building
 from app.extensions import db
+from scripts.utils import utcnow
 
 logger = logging.getLogger(__name__)
 
 # TODO: Write a function that can check whether a list of time_range is valid (i.e. not coinciding)
 
-def create_washing_machine(name: str, time_slots: list[dict]):
+def create_washing_machine(name: str, building_uuid: str, time_slots: list[dict]):
     """
-    Creates a new washing machine with given time slots.
+    Creates a new washing machine with given time slots and building UUID.
 
     Args:
         name (str): Name of the washing machine.
+        building_uuid (str): UUID of the building where the machine is located.
         time_slots (list of dict): Each dict should have 'slot_number' and 'time_range'.
             Example: [
                         {"slot_number": 1, "time_range": "07:00-10:30"},
@@ -35,15 +38,20 @@ def create_washing_machine(name: str, time_slots: list[dict]):
         WashingMachine: The created machine object.
 
     Raises:
-        ValueError: If the machine name already exists.
+        ValueError: If the machine name already exists or building is not found.
     """
     if WashingMachine.query.filter_by(name=name).first():
         logger.warning(f"WashingMachine name already exists: {name}")
         raise ValueError("Washing machine name already exists.")
 
-    machine = WashingMachine(name=name)
+    building = Building.query.filter_by(uuid=building_uuid).first()
+    if not building:
+        logger.error(f"Building not found with UUID: {building_uuid}")
+        raise ValueError(f"No building found with UUID: {building_uuid}")
+
+    machine = WashingMachine(name=name, building=building)
     db.session.add(machine)
-    db.session.flush()  # So we get machine.id before committing
+    db.session.flush()  # Ensures machine.id is available before adding related time slots
 
     for slot in time_slots:
         ts = TimeSlot(
@@ -55,14 +63,13 @@ def create_washing_machine(name: str, time_slots: list[dict]):
 
     try:
         db.session.commit()
-        logger.info(f"WashingMachine '{name}' created with {len(time_slots)} slots.")
+        logger.info(f"WashingMachine '{name}' created in building '{building.name}' with {len(time_slots)} slots.")
     except IntegrityError as e:
         db.session.rollback()
-        logger.error(f"Failed to create machine {name}: {e}")
+        logger.error(f"Failed to create machine '{name}' in building '{building.name}': {e}")
         raise ValueError("Could not create machine due to a database error.")
 
     return machine
-
 
 def get_all_machines():
     return WashingMachine.query.all()
@@ -97,6 +104,55 @@ def delete_washing_machine_by_uuid(uuid_str: str):
         logger.error(f"Failed to delete washing machine {uuid_str}: {e}")
         return False
 
+def update_washing_machine(machine_uuid: str, new_name: str):
+    """
+    Update the details of a washing machine by its UUID.
+    
+    Args:
+        machine_uuid (str): UUID of the washing machine to update.
+        new_name (str): The new name for the washing machine.
+        
+    Returns:
+        WashingMachine: The updated washing machine object.
+    
+    Raises:
+        ValueError: If no washing machine is found with the provided UUID.
+    """
+    try:
+        # Find the washing machine by UUID
+        washing_machine = db.session.query(WashingMachine).filter_by(uuid=machine_uuid).first()
+        
+        # Check if the machine exists
+        if not washing_machine:
+            logger.error(f"Washing machine with UUID {machine_uuid} not found.")
+            raise ValueError(f"No washing machine found with UUID: {machine_uuid}")
+        
+        # Update the washing machine's details
+        old_name = washing_machine.name
+        washing_machine.name = new_name
+        washing_machine.last_updated = utcnow()  # Update the last updated timestamp
+        
+        # Commit the changes to the database
+        db.session.commit()
+
+        # Log the update action
+        logger.info(f"Washing machine with UUID {machine_uuid} updated: '{old_name}' -> '{new_name}'")
+
+        return washing_machine
+    
+    except ValueError as ve:
+        # Handle specific ValueError if the machine is not found
+        logger.error(f"Error updating washing machine: {ve}")
+        raise ve
+    except SQLAlchemyError as e:
+        # Handle any SQLAlchemy-related errors
+        db.session.rollback()  # Rollback in case of an error during the database operation
+        logger.error(f"Database error while updating washing machine: {str(e)}")
+        raise Exception("An error occurred while updating the washing machine. Please try again.")
+    except Exception as e:
+        # Handle any other unexpected errors
+        logger.error(f"Unexpected error: {str(e)}")
+        raise Exception("An unexpected error occurred. Please try again.")
 
 def get_machine_monthly_slots(uuid_str: str, year: int, month: int):
     """

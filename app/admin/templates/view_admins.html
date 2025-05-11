@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}All Admins{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">All Admins</h1>
+    {% include 'flash_msgs.html' %}
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Date Joined</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for admin in admins %}
+            <tr>
+                <td>{{ admin.username }}</td>
+                <td>{{ admin.fullname }}</td>
+                <td>{{ admin.email }}</td>
+                <td>{{ admin.role }}</td>
+                <td>{{ admin.date_joined.strftime("%Y-%m-%d") }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

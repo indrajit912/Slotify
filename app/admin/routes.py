@@ -1,0 +1,115 @@
+# app/admin/routes.py
+# Author: Indrajit Ghosh
+# Created On: May 11, 2025
+#
+
+# Standard library imports
+import logging
+
+# Third-party imports
+from flask import flash, redirect, render_template, request, url_for
+from flask_login import current_user
+from sqlalchemy import desc
+
+# Local application imports
+from . import admin_bp
+from app.models.user import User
+from app.models.washingmachine import WashingMachine
+from app.models.building import Building
+from app.utils.decorators import admin_required
+from app.services import create_washing_machine, create_building
+
+logger = logging.getLogger(__name__)
+
+@admin_bp.route('/')
+@admin_required
+def home():
+    # Retrieve all users and buildings from the database
+    users = User.query.order_by(desc(User.date_joined)).all()
+    buildings = Building.query.all()
+
+    logger.info(f"Admin dashboard visited by the admin '{current_user.email}'.")
+
+    return render_template(
+        'admin.html', 
+        users=users,
+        buildings=buildings
+    )
+
+
+@admin_bp.route('/admins')
+@admin_required
+def view_admins():
+    """View all users with role admin or superadmin."""
+    admins = User.query.filter(User.role.in_(['admin', 'superadmin'])).order_by(desc(User.date_joined)).all()
+    logger.info(f"Admin '{current_user.email}' viewed all admins.")
+    return render_template('view_admins.html', admins=admins)
+
+
+@admin_bp.route('/users')
+@admin_required
+def view_users():
+    """View all non-admin users."""
+    users = User.query.filter(User.role == 'user').order_by(desc(User.date_joined)).all()
+    logger.info(f"Admin '{current_user.email}' viewed all users.")
+    return render_template('view_users.html', users=users)
+
+
+@admin_bp.route('/machines')
+@admin_required
+def view_machines():
+    """View all washing machines."""
+    machines = WashingMachine.query.order_by(desc(WashingMachine.created_at)).all()
+    logger.info(f"Admin '{current_user.email}' viewed all washing machines.")
+    return render_template('view_machines.html', machines=machines)
+
+@admin_bp.route('/create_building_route', methods=['POST'])
+@admin_required
+def create_building_route():
+    building_name = request.form.get('building_name')
+    try:
+        new_building = create_building(building_name)
+        flash(f"Building '{new_building.name}' created successfully!", "success")
+        return redirect(url_for('admin.home'))  # Redirect back to the admin dashboard
+    except ValueError as e:
+        flash(str(e), "error")
+        return redirect(url_for('admin.home'))
+    
+@admin_bp.route('/create_machine', methods=['POST'])
+@admin_required
+def create_machine():
+    """
+    Handle the form submission for creating a new washing machine with time slots.
+    """
+    try:
+        # Get washing machine name from form
+        machine_name = request.form.get('machine_name')
+        machine_building_uuid = request.form.get('machine_building_uuid')
+        
+        # Get time slots from the form
+        time_slots = []
+        slot_numbers = request.form.getlist('slot_number')
+        time_ranges = request.form.getlist('time_range')
+        
+        # Build the time slot list
+        for slot_number, time_range in zip(slot_numbers, time_ranges):
+            time_slots.append({
+                'slot_number': int(slot_number),
+                'time_range': time_range
+            })
+
+        # Call the function to create washing machine with time slots
+        new_machine = create_washing_machine(
+            name=machine_name,
+            building_uuid=machine_building_uuid,
+            time_slots=time_slots
+        )
+
+        # Flash success message and redirect
+        flash(f"Washing machine '{new_machine.name}' created successfully!", "success")
+        return redirect(url_for('admin.view_machines'))
+
+    except Exception as e:
+        logger.error(f"Error creating washing machine: {str(e)}")
+        flash("An error occurred while creating the washing machine. Please try again.", "danger")
+        return redirect(url_for('admin.home'))

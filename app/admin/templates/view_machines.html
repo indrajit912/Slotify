@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}All Washing Machines{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">All Washing Machines</h1>
+    {% include 'flash_msgs.html' %}
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Building</th>
+                <th>UUID</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for machine in machines %}
+            <tr>
+                <td>{{ machine.name }}</td>
+                <td>{{ machine.building.name }}</td>
+                <td>{{ machine.uuid }}</td>
+                <td>{{ machine.created_at.strftime("%Y-%m-%d") }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
