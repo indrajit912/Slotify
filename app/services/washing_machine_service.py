@@ -13,6 +13,7 @@ from sqlalchemy import extract
 from app.models.washingmachine import WashingMachine
 from app.models.booking import TimeSlot, Booking
 from app.models.building import Building
+from app.services.building_service import get_building_by_uuid
 from app.extensions import db
 from scripts.utils import utcnow
 
@@ -104,16 +105,16 @@ def delete_washing_machine_by_uuid(uuid_str: str):
         logger.error(f"Failed to delete washing machine {uuid_str}: {e}")
         return False
 
-def update_washing_machine(machine_uuid: str, new_name: str):
+def update_washing_machine(machine_uuid: str, **kwargs):
     """
     Update the details of a washing machine by its UUID.
     
     Args:
         machine_uuid (str): UUID of the washing machine to update.
-        new_name (str): The new name for the washing machine.
         
     Returns:
         WashingMachine: The updated washing machine object.
+        kwargs: {'name': "New Name", 'building_uuid': "New-building-uuid"}
     
     Raises:
         ValueError: If no washing machine is found with the provided UUID.
@@ -127,32 +128,46 @@ def update_washing_machine(machine_uuid: str, new_name: str):
             logger.error(f"Washing machine with UUID {machine_uuid} not found.")
             raise ValueError(f"No washing machine found with UUID: {machine_uuid}")
         
-        # Update the washing machine's details
-        old_name = washing_machine.name
-        washing_machine.name = new_name
-        washing_machine.last_updated = utcnow()  # Update the last updated timestamp
-        
-        # Commit the changes to the database
-        db.session.commit()
+        logger.info(f"Updating user {washing_machine.username} (UUID: {machine_uuid})")
 
-        # Log the update action
-        logger.info(f"Washing machine with UUID {machine_uuid} updated: '{old_name}' -> '{new_name}'")
+        # Update name and building association
+        if 'name' in kwargs:
+            new_name = kwargs['name']
+            washing_machine.name = new_name
+
+        if 'building_uuid' in kwargs:
+            new_building_uuid = kwargs['building_uuid']
+            new_building = get_building_by_uuid(new_building_uuid)
+            washing_machine.building = new_building
+        
+        if kwargs:
+            washing_machine.last_updated = utcnow()
+
+        try:
+            # Commit the changes to the database
+            db.session.commit()
+    
+            # Log the update action
+            logger.info(f"Washing machine with UUID {machine_uuid} updated.")
+
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error updating washing machine (UUID: {machine_uuid}): {e}")
+            raise ValueError("Could not update washing machine.")
 
         return washing_machine
-    
+
     except ValueError as ve:
-        # Handle specific ValueError if the machine is not found
         logger.error(f"Error updating washing machine: {ve}")
         raise ve
     except SQLAlchemyError as e:
-        # Handle any SQLAlchemy-related errors
-        db.session.rollback()  # Rollback in case of an error during the database operation
+        db.session.rollback()
         logger.error(f"Database error while updating washing machine: {str(e)}")
         raise Exception("An error occurred while updating the washing machine. Please try again.")
     except Exception as e:
-        # Handle any other unexpected errors
         logger.error(f"Unexpected error: {str(e)}")
         raise Exception("An unexpected error occurred. Please try again.")
+
 
 def get_machine_monthly_slots(uuid_str: str, year: int, month: int):
     """

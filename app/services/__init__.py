@@ -39,5 +39,6 @@ __all__ = [
     "book_slot",
     "cancel_booking",
     "get_user_bookings",
-    "create_building"
+    "create_building",
+    "get_building_by_uuid"
 ]

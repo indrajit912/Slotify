@@ -45,3 +45,12 @@ def create_building(name: str):
         raise ValueError("Could not create building due to a database error.")
 
     return building
+
+def get_building_by_uuid(uuid_str: str):
+    building = Building.query.filter_by(uuid=uuid_str).first()
+    if building:
+        logger.debug(f"Building found with UUID {uuid_str}: {building.name}")
+    else:
+        logger.warning(f"No building found with UUID {uuid_str}")
+    
+    return building

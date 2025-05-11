@@ -168,7 +168,10 @@ def update_user_by_uuid(user_uuid, **kwargs):
     if 'password' in kwargs:
         user.set_hashed_password(kwargs['password'])
         logger.debug(f"Password updated for user UUID {user_uuid}")
-
+    
+    if kwargs:
+        user.last_updated = utcnow()
+        
     try:
         db.session.commit()
         logger.info(f"User {user.username} (UUID: {user_uuid}) updated successfully.")
