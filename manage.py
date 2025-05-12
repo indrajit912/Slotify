@@ -11,22 +11,32 @@ import logging
 
 # Third-party imports
 import click
-from flask import current_app
+from sqlalchemy import inspect
 from flask.cli import FlaskGroup
+from flask.cli import with_appcontext
 
 # Local application imports
 from app import create_app
-from config import Config
 from scripts.utils import sha256_hash
 from app.extensions import db
 from app.models.building import Building
 from app.services import create_user, create_building
+from config import get_config
 
 cli = FlaskGroup(create_app=create_app)
 logger = logging.getLogger(__name__)
 bullet_unicode = '\u2022'
+app_config = get_config()
+
+def is_db_initialized():
+    """
+    Check if the database is initialized by checking for existing tables.
+    """
+    inspector = inspect(db.engine)
+    return bool(inspector.get_table_names())
 
 @cli.command("create-superadmin")
+@with_appcontext
 def create_superadmin():
     """
     Command-line command to create a superadmin user.
@@ -34,86 +44,87 @@ def create_superadmin():
     Prompts the user for all necessary details: username, fullname, email, and password.
     First, checks for a secret password to authorize the superadmin creation.
     """
-    # Ask for the secret password to proceed with superadmin creation
-    secret_password = getpass.getpass(prompt="Enter the secret password (Indrajit's password): ")
-
-    # Retrieve the stored secret password hash from .env
-    stored_hash = os.getenv("SUPERADMIN_PASSWORD_HASH")
-
-    # Hash the entered password and compare it to the stored hash
-    if sha256_hash(secret_password) != stored_hash:
-        click.echo("Error: Incorrect password. You are not authorized to create a superadmin.")
+    if not is_db_initialized():
+        click.echo("❌ Database is not initialized.")
+        click.echo("➡️  Please run 'python manage.py create-db' first to initialize the database.")
         return
 
-    click.echo("You are about to create a superadmin. This operation requires authorization.")
+    secret_password = getpass.getpass(prompt="Enter the secret password (Indrajit's password): ")
+    stored_hash = os.getenv("SUPERADMIN_PASSWORD_HASH")
 
-    # Prompt for the user's information
+    if sha256_hash(secret_password) != stored_hash:
+        click.echo("❌ Incorrect password. You are not authorized to create a superadmin.")
+        return
+
+    click.echo("🔐 Authorization successful. Proceeding to create superadmin.")
+
     username = click.prompt("Enter username")
     fullname = click.prompt("Enter full name")
     email = click.prompt("Enter email address")
-    
-    # Ask for the password securely using getpass
     password = getpass.getpass(prompt="Enter password: ")
 
-    # Get all buildings from the database
     buildings = Building.query.all()
 
     if not buildings:
-        click.echo("No buildings found in the system. You need to create a new building for the superadmin.")
-        building_name = click.prompt("Enter the name of the building where the superadmin resides (e.g. Hostel 1, RS Hostel)")
-
-        # Create the building and associate it with the superadmin
+        click.echo("🏢 No buildings found in the system.")
+        building_name = click.prompt("Enter the name of the building for the superadmin")
         building = create_building(name=building_name)
-
-        click.echo(f"New building '{building_name}' created and assigned to the superadmin.")
+        click.echo(f"✅ Building '{building_name}' created.")
         building_uuid = building.uuid
     else:
-        # If buildings exist, allow the superadmin to choose one
-        click.echo("Please select a building from the list of available buildings:")
-
+        click.echo("🏢 Available buildings:")
         for idx, b in enumerate(buildings, 1):
             click.echo(f"{idx}. {b.name} (UUID: {b.uuid})")
+        building_choice = click.prompt("Enter the number of the building", type=int)
 
-        building_choice = click.prompt("Enter the number of the building you want to assign to the superadmin", type=int)
-        
         if building_choice < 1 or building_choice > len(buildings):
-            click.echo("Invalid choice. Exiting.")
+            click.echo("❌ Invalid choice. Exiting.")
             return
-        
+
         building_uuid = buildings[building_choice - 1].uuid
-        click.echo(f"Building {buildings[building_choice - 1].name} (UUID: {building_uuid}) selected for the superadmin.")
+        click.echo(f"✅ Selected building: {buildings[building_choice - 1].name}")
 
     try:
-        # Create the superadmin using the service function
         superadmin = create_user(username, fullname, email, password, role="superadmin", building_uuid=building_uuid)
         superadmin.email_verified = True
-        click.echo(f"Superadmin created: {superadmin.username} ({superadmin.email})")
+        click.echo(f"🎉 Superadmin created: {superadmin.username} ({superadmin.email})")
     except ValueError as e:
-        click.echo(f"Error: {e}")
-
+        click.echo(f"❌ Error: {e}")
 
 
 @cli.command("setup-db")
+@with_appcontext
 def setup_database():
     """
     Command-line utility to set up the database.
 
-    This command creates all necessary tables in the database based on defined models.
+    This command checks whether the database has already been initialized
+    using is_db_initialized(). If it has, the user is prompted whether to
+    delete and recreate it from scratch.
 
     Usage:
-        flask setup_database
+        flask setup-db
 
     Returns:
         None
     """
-    with current_app.app_context():
-        db.create_all()
-        print("[-] Database tables created successfully!")
+    db_path = app_config.SQLALCHEMY_DATABASE_URI.replace("sqlite:///", "")
 
-        # Create APP_DATA dir
-        if not Config.APP_DATA_DIR.exists():
-            Config.APP_DATA_DIR.mkdir()
-            print("[-] '/app_data' directory created successfully!")
+    if is_db_initialized():
+        click.echo("[!] Database appears to already be initialized.")
+        if not click.confirm("Do you want to delete the existing database and start fresh?"):
+            click.echo("Aborted. Database remains unchanged.")
+            return
+        os.remove(db_path)
+        click.echo("[-] Existing database deleted.")
+
+    db.create_all()
+    click.echo("[-] Database tables created successfully.")
+
+    if not app_config.APP_DATA_DIR.exists():
+        app_config.APP_DATA_DIR.mkdir(parents=True, exist_ok=True)
+        click.echo("[-] '/app_data' directory created successfully.")
+
 
 def help_command():
     """

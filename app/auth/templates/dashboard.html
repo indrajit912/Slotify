@@ -5,7 +5,43 @@
 
 {% block content %}
     {% include 'flash_msgs.html' %}
+
     <h1 class="heading">Welcome, {{ user.fullname or user.username }}!</h1>
 
-    <p>This is your dashboard. More features coming soon.</p>
+    <div>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Role:</strong> {{ user.role }}</p>
+        <p><strong>Building:</strong> {{ building.name if building else "N/A" }}</p>
+    </div>
+
+    <hr>
+
+    <h2>Washing Machines in Your Building</h2>
+    {% if machines %}
+        <ul>
+            {% for machine in machines %}
+                <li>{{ machine.name }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No machines available in your building.</p>
+    {% endif %}
+
+    <hr>
+
+    <h2>Recent Bookings</h2>
+    {% if bookings %}
+    <ul>
+        {% for booking in bookings %}
+        <li>
+            {{ booking.date.strftime('%d %b %Y') }} –
+            Slot {{ booking.time_slot.slot_number }} ({{ booking.time_slot.time_range }})
+            – {{ booking.time_slot.machine.name }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>You have no recent bookings.</p>
+    {% endif %}
 {% endblock %}
+

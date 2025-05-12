@@ -13,6 +13,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 from . import auth_bp
 from app.forms.auth_forms import UserLoginForm
 from app.models.user import User
+from app.models.booking import Booking, TimeSlot
 from app.services import update_user_last_seen
 from app.utils.decorators import logout_required
 
@@ -61,11 +62,25 @@ def login():
 def dashboard():
     """
     Dashboard view for logged-in users.
-
-    Returns:
-        Rendered HTML template for the dashboard.
+    Shows user info, building, washing machines, and recent bookings.
     """
-    return render_template('dashboard.html', user=current_user)
+    building = current_user.building
+    machines = building.machines if building else []
+    bookings = (
+        Booking.query
+        .filter_by(user_id=current_user.id)
+        .join(Booking.time_slot)
+        .order_by(Booking.date.desc(), TimeSlot.slot_number.desc())
+        .limit(5)
+        .all()
+    )
+    return render_template(
+        'dashboard.html',
+        user=current_user,
+        building=building,
+        machines=machines,
+        bookings=bookings
+    )
 
 
 @auth_bp.route('/logout', methods=['GET', 'POST'])

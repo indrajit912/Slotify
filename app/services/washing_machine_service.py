@@ -210,7 +210,11 @@ def get_machine_monthly_slots(uuid_str: str, year: int, month: int):
                 "slot_number": slot.slot_number,
                 "time_range": slot.time_range,
                 "is_booked": booking is not None,
-                "booked_by": booking.user.fullname if booking else None
+                "booked_by": {
+                    "user": booking.user.fullname,
+                    "email": booking.user.email,
+                    "building": booking.user.building.name if booking.user.building else "N/A"
+                } if booking else None
             })
 
         result[str(current_date)] = daily_slots

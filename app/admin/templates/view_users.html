@@ -22,7 +22,7 @@
                 <td>{{ user.fullname }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ moment(user.date_joined).format('LLL') }}</td>
-                <td>{{ moment(admin.last_seen).fromNow() }}</td>
+                <td>{{ moment(user.last_seen).fromNow() }}</td>
             </tr>
             {% endfor %}
         </tbody>

@@ -35,5 +35,84 @@ svg.bi {
     background-position: center 3px;
 }
 
+/* Calendar View Styling */
+.calendar-container {
+    padding: 1.5rem;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.calendar-heading {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: #2c3e50;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.calendar-table th,
+.calendar-table td {
+    border: 1px solid #ccc;
+    padding: 0.6rem;
+    min-width: 100px;
+    vertical-align: middle;
+}
+
+.slot-cell.booked {
+    background-color: #f28b82; /* red-ish */
+    color: #fff;
+    font-weight: 500;
+}
+
+.slot-cell.available {
+    background-color: #a5d6a7; /* green-ish */
+    color: #000;
+    font-weight: 400;
+}
+
+.date-cell {
+    font-weight: 600;
+    background-color: #f3f3f3;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .calendar-heading {
+        font-size: 1.2rem;
+    }
+
+    .calendar-table th,
+    .calendar-table td {
+        font-size: 0.75rem;
+        min-width: 80px;
+        padding: 0.4rem;
+    }
+}
 
 
+.popover-trigger {
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: 2px solid white;
+    border-radius: 50%;
+    padding: 0.2rem 0.4rem;
+    background-color: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    display: inline-block;
+    transition: transform 0.1s ease-in-out;
+}
+
+.popover-trigger:hover,
+.popover-trigger:focus {
+    transform: scale(1.1);
+}

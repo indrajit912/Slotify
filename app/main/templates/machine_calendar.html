@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ machine.name }} - Monthly Slot Calendar{% endblock %}
+
+{% block content %}
+<div class="calendar-container my-4">
+    <h2 class="calendar-heading text-center mb-4">{{ machine.name }} - Slot Booking for {{ month }}/{{ year }}</h2>
+
+    <div class="table-responsive">
+        <table class="table table-bordered text-center align-middle calendar-table">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Date</th>
+                    {% for slot in calendar_data.values()|list|first %}
+                        <th scope="col">
+                            Slot {{ slot.slot_number }}<br>
+                            <small>{{ slot.time_range }}</small>
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for date, slots in calendar_data.items() %}
+                    <tr>
+                        <td class="date-cell fw-bold">{{ moment(date).format('LL') }}</td>
+                        {% for slot in slots %}
+                            {% if slot.is_booked %}
+                                <td class="bg-danger text-white position-relative">
+                                    <span 
+                                        tabindex="0"
+                                        role="button"
+                                        class="popover-trigger text-white"
+                                        data-bs-toggle="popover"
+                                        data-bs-trigger="focus"
+                                        title="Booking Info"
+                                        data-bs-html="true"
+                                        data-bs-content="
+                                            <strong>Name:</strong> {{ slot.booked_by['user'] }}<br>
+                                            <strong>Email:</strong> {{ slot.booked_by['email'] }}<br>
+                                            <strong>Building:</strong> {{ slot.booked_by['building'] }}
+                                        "
+                                    >
+                                        ❓
+                                    </span>
+                                </td>
+                            {% else %}
+                                <td class="bg-success bg-opacity-75"></td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            const popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl);
+            });
+        });
+    </script>
+{% endblock %}

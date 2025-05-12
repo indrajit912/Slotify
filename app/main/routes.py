@@ -7,10 +7,13 @@ Author: Indrajit Ghosh
 Created on: May 10, 2025
 """
 import logging
+from datetime import datetime
 
-from flask import render_template
+from flask import render_template, request, redirect, url_for, flash
 
 from . import main_bp
+from app.models.washingmachine import WashingMachine
+from app.services import get_machine_monthly_slots
 
 logger = logging.getLogger(__name__)
 
@@ -22,3 +25,21 @@ logger = logging.getLogger(__name__)
 def index():
     logger.info("Visited homepage.")
     return render_template("index.html")
+
+
+@main_bp.route('/machine/<uuid_str>/calendar/<int:year>/<int:month>')
+def view_machine_calendar(uuid_str, year, month):
+    """
+    View the monthly booking chart for a specific washing machine.
+    """
+    try:
+        machine = WashingMachine.query.filter_by(uuid=uuid_str).first_or_404()
+        calendar_data = get_machine_monthly_slots(uuid_str, year, month)
+        return render_template('machine_calendar.html',
+                               machine=machine,
+                               calendar_data=calendar_data,
+                               year=year,
+                               month=month)
+    except ValueError:
+        flash("Washing machine not found.", "danger")
+        return redirect(url_for("main.index"))
