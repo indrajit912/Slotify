@@ -13,6 +13,7 @@
                 <th>Email</th>
                 <th>Role</th>
                 <th>Date Joined</th>
+                <th>Last seen</th>
             </tr>
         </thead>
         <tbody>
@@ -22,7 +23,8 @@
                 <td>{{ admin.fullname }}</td>
                 <td>{{ admin.email }}</td>
                 <td>{{ admin.role }}</td>
-                <td>{{ admin.date_joined.strftime("%Y-%m-%d") }}</td>
+                <td>{{ moment(admin.date_joined).format('LLL') }}</td>
+                <td>{{ moment(admin.last_seen).fromNow() }}</td>
             </tr>
             {% endfor %}
         </tbody>

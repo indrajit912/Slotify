@@ -20,7 +20,7 @@
                 <td>{{ machine.name }}</td>
                 <td>{{ machine.building.name }}</td>
                 <td>{{ machine.uuid }}</td>
-                <td>{{ machine.created_at.strftime("%Y-%m-%d") }}</td>
+                <td>{{ moment(machine.created_at).format('LLL') }}</td>
             </tr>
             {% endfor %}
         </tbody>

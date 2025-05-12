@@ -3,6 +3,7 @@ gunicorn
 python-dotenv
 Flask-SQLAlchemy
 Flask-Migrate
+Flask-Moment
 Flask-Login
 Flask-WTF
 email-validator

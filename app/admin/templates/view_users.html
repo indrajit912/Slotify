@@ -12,6 +12,7 @@
                 <th>Full Name</th>
                 <th>Email</th>
                 <th>Date Joined</th>
+                <th>Last seen</th>
             </tr>
         </thead>
         <tbody>
@@ -20,7 +21,8 @@
                 <td>{{ user.username }}</td>
                 <td>{{ user.fullname }}</td>
                 <td>{{ user.email }}</td>
-                <td>{{ user.date_joined.strftime("%Y-%m-%d") }}</td>
+                <td>{{ moment(user.date_joined).format('LLL') }}</td>
+                <td>{{ moment(admin.last_seen).fromNow() }}</td>
             </tr>
             {% endfor %}
         </tbody>
