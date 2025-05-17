@@ -30,11 +30,12 @@ def get_time_slot_by_uuid(uuid_str: str):
     return time_slot
 
 
-
 def book_slot(user_uuid: str, slot_uuid: str, day: date):
     """
-    Books a time slot for a given user (by UUID) on a specific date, enforcing max 3 bookings per machine per week,
-    and only one booking per user per day.
+    Books a time slot for a given user (by UUID) on a specific date, enforcing:
+    - max 3 bookings per machine per week
+    - only one booking per user per day
+    - no bookings on past dates
 
     Args:
         user_uuid (str): UUID of the user making the booking.
@@ -45,8 +46,11 @@ def book_slot(user_uuid: str, slot_uuid: str, day: date):
         Booking: The newly created booking object.
 
     Raises:
-        Exception: If the time slot is already booked on the given date or user exceeded limit.
+        Exception: If the time slot is already booked, user exceeded limit, or date is invalid.
     """
+    if day < date.today():
+        raise Exception("You cannot book a slot on a past date.")
+
     user = get_user_by_uuid(user_uuid)
     slot = get_time_slot_by_uuid(slot_uuid)
 
@@ -81,7 +85,7 @@ def book_slot(user_uuid: str, slot_uuid: str, day: date):
     if existing_user_booking:
         raise Exception("You already have a booking on this date. Only one booking per day allowed.")
 
-    # Check if this specific slot is already booked (by anyone)
+    # Check if this specific slot is already booked
     existing = Booking.query.filter_by(time_slot_id=slot.id, date=day).first()
     if existing:
         raise Exception("Slot already booked")
@@ -91,7 +95,6 @@ def book_slot(user_uuid: str, slot_uuid: str, day: date):
     db.session.add(booking)
     db.session.commit()
     return booking
-
 
 def cancel_booking(user_uuid: str, slot_uuid: str, day: date):
     """

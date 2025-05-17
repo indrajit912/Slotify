@@ -169,7 +169,8 @@ def update_washing_machine(machine_uuid: str, **kwargs):
         raise Exception("An unexpected error occurred. Please try again.")
 
 
-def get_machine_monthly_slots(uuid_str: str, year: int, month: int):
+
+def get_machine_monthly_slots(uuid_str: str, year: int, month: int, exclude_past: bool = False):
     """
     Returns a structured dictionary of all slots for the given washing machine,
     grouped by date for a specific month and year.
@@ -178,6 +179,7 @@ def get_machine_monthly_slots(uuid_str: str, year: int, month: int):
         uuid_str (str): UUID of the WashingMachine.
         year (int): Year.
         month (int): Month.
+        exclude_past (bool): If True, exclude slots for past dates.
 
     Returns:
         dict: {date_str: [ {slot_number, time_range, is_booked, booked_by}, ... ]}
@@ -194,10 +196,15 @@ def get_machine_monthly_slots(uuid_str: str, year: int, month: int):
 
     num_days = calendar.monthrange(year, month)[1]
     result = {}
+    today = date.today()
 
     # For each day of the month
     for day in range(1, num_days + 1):
         current_date = date(year, month, day)
+
+        if exclude_past and current_date < today:
+            continue  # skip past dates
+
         daily_slots = []
 
         for slot in machine.time_slots:

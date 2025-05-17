@@ -1,47 +1,173 @@
-<!-- app/auth/templates/dashboard.html -->
 {% extends 'base.html' %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-    {% include 'flash_msgs.html' %}
+{% include 'flash_msgs.html' %}
 
-    <h1 class="heading">Welcome, {{ user.fullname or user.username }}!</h1>
+<div class="card mb-4 shadow-sm p-4">
+    <div class="d-flex align-items-center">
+        <img src="{{ user.avatar(size=128) }}" alt="Avatar" class="rounded-circle me-3" width="128" height="128">
+        <div>
+            <h2 class="mb-1">Welcome, {{ user.fullname or user.username }}!</h2>
+            <p class="mb-0"><strong>Email:</strong> {{ user.email }}</p>
+            <p class="mb-0"><strong>Role:</strong> {{ user.role }}</p>
+            <p class="mb-0"><strong>Building:</strong> {{ building.name if building else "N/A" }}</p>
+        </div>
+    </div>
+</div>
 
-    <div>
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>Role:</strong> {{ user.role }}</p>
-        <p><strong>Building:</strong> {{ building.name if building else "N/A" }}</p>
+<div class="mb-4">
+    <h3>Washing Machines in Your Building</h3>
+
+    <div class="alert alert-info d-flex align-items-center" role="alert">
+        <i class="bi bi-info-circle me-2"></i>
+            Use the "<strong>View Calendar</strong>" button to see available slots for a particular month and make a booking.
+        
     </div>
 
-    <hr>
-
-    <h2>Washing Machines in Your Building</h2>
     {% if machines %}
-        <ul>
+        <div class="row">
             {% for machine in machines %}
-                <li>{{ machine.name }}</li>
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ machine.name }}</h5>
+                        <button class="btn btn-outline-primary btn-sm open-calendar-modal"
+                                data-machine-uuid="{{ machine.uuid }}">
+                            <i class="bi bi-calendar3"></i> View Calendar
+                        </button>
+                    </div>
+                </div>
+            </div>
             {% endfor %}
-        </ul>
+        </div>
     {% else %}
         <p>No machines available in your building.</p>
     {% endif %}
+</div>
 
-    <hr>
 
-    <h2>Recent Bookings</h2>
+<hr>
+
+<div>
+    <h3>Recent Bookings</h3>
     {% if bookings %}
-    <ul>
+    <ul class="list-group" id="bookings-list">
         {% for booking in bookings %}
-        <li>
-            {{ booking.date.strftime('%d %b %Y') }} –
-            Slot {{ booking.time_slot.slot_number }} ({{ booking.time_slot.time_range }})
-            – {{ booking.time_slot.machine.name }}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ moment(booking.date).format('LL') }}</strong><br>
+                Slot {{ booking.time_slot.slot_number }} – {{ booking.time_slot.time_range }}<br>
+                <small class="text-muted">{{ booking.time_slot.machine.name }}</small>
+            </div>
+            <button class="btn btn-outline-danger btn-sm cancel-booking-btn" data-slot-uuid="{{ booking.time_slot.uuid }}"
+                data-date="{{ booking.date.isoformat() }}">
+                <i class="bi bi-x-circle"></i> Cancel
+            </button>
         </li>
         {% endfor %}
     </ul>
     {% else %}
     <p>You have no recent bookings.</p>
     {% endif %}
+
+</div>
+
+<!-- Calendar Modal -->
+<div class="modal fade" id="calendarModal" tabindex="-1" aria-labelledby="calendarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="calendarForm" method="get">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">View Machine Calendar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="modal-machine-uuid">
+                    <div class="mb-3">
+                        <label for="calendar-year" class="form-label">Year</label>
+                        <input type="number" id="calendar-year" name="year" class="form-control" min="2020" max="2100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="calendar-month" class="form-label">Month</label>
+                        <select id="calendar-month" name="month" class="form-select" required>
+                            {% for m in range(1, 13) %}
+                            <option value="{{ m }}">{{ m }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Go</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% endblock %}
 
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const calendarModal = new bootstrap.Modal(document.getElementById('calendarModal'));
+        const modalMachineUUID = document.getElementById('modal-machine-uuid');
+        const calendarForm = document.getElementById('calendarForm');
+        const yearInput = document.getElementById('calendar-year');
+        const monthSelect = document.getElementById('calendar-month');
+
+        // Set current year/month by default
+        const now = new Date();
+        yearInput.value = now.getFullYear();
+        monthSelect.value = now.getMonth() + 1;
+
+        document.querySelectorAll('.open-calendar-modal').forEach(button => {
+            button.addEventListener('click', () => {
+                modalMachineUUID.value = button.dataset.machineUuid;
+                calendarModal.show();
+            });
+        });
+
+        calendarForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const uuid = modalMachineUUID.value;
+            const year = yearInput.value;
+            const month = monthSelect.value;
+            window.location.href = `/machine/${uuid}/calendar/${year}/${month}`;
+        });
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('.cancel-booking-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                if (!confirm("Are you sure you want to cancel this booking?")) return;
+    
+                const slotUUID = button.dataset.slotUuid;
+                const date = button.dataset.date;
+    
+                fetch("/cancel-slot", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({ slot_uuid: slotUUID, date: date })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        button.closest('li').remove();
+                        alert("Booking cancelled successfully.");
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                })
+                .catch(() => alert("Something went wrong while cancelling the booking."));
+            });
+        });
+    });
+    </script>
+{% endblock %}
