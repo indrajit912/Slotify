@@ -212,7 +212,9 @@ def get_machine_monthly_slots(uuid_str: str, year: int, month: int):
                 "is_booked": booking is not None,
                 "booked_by": {
                     "user": booking.user.fullname,
+                    "username": booking.user.username,
                     "email": booking.user.email,
+                    "avatar": booking.user.avatar(size=28),
                     "building": booking.user.building.name if booking.user.building else "N/A"
                 } if booking else None
             })

@@ -7,7 +7,7 @@ Author: Indrajit Ghosh
 Created on: May 10, 2025
 """
 import logging
-from datetime import datetime
+import calendar
 
 from flask import render_template, request, redirect, url_for, flash
 
@@ -35,11 +35,12 @@ def view_machine_calendar(uuid_str, year, month):
     try:
         machine = WashingMachine.query.filter_by(uuid=uuid_str).first_or_404()
         calendar_data = get_machine_monthly_slots(uuid_str, year, month)
+        month_name = calendar.month_name[month]  # Convert 5 to 'May'
         return render_template('machine_calendar.html',
                                machine=machine,
                                calendar_data=calendar_data,
                                year=year,
-                               month=month)
+                               month=month_name)  # Pass name instead of number
     except ValueError:
         flash("Washing machine not found.", "danger")
         return redirect(url_for("main.index"))
