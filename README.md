@@ -19,7 +19,7 @@ PhD Scholar, Indian Statistical Institute Bangalore <br>
 - ✅ Only registered users can book or cancel slots
 - 👥 Role-based access: user, admin, superadmin
 - 🧼 Configurable daily time slots (e.g., 07:00–10:30)
-- 🛠️ Admin dashboard (planned)
+- 🛠️ Admin dashboard
 - 🔒 Session-based authentication with Flask-Login
 
 ---
@@ -36,7 +36,7 @@ PhD Scholar, Indian Statistical Institute Bangalore <br>
 
 ---
 
-## ⚙️ Local Setup Instructions
+## 🛠️ Local Development Setup
 
 ### 🔧 1. Clone the Repository
 
@@ -63,29 +63,74 @@ FLASK_RUN_PORT=8080
 FLASK_DEBUG = 1
 ```
 
-### 🗃️ 5. Initialize the Database
+### 🗃️ 5a. Initialize the Database
 ```bash
-flask shell
->>> from app import db
->>> db.create_all()
->>> exit()
+python manage.py setup-db --isi # This will setup the db for ISI
 ```
 
-### ▶️ 6. Run the Developement Server
+### 🗃️ 5b. Create Some Fake Users for Development Purposoe
 ```bash
-flask run
+pip install Faker # This package is needed to generate fake users
+python -m scripts.seed_data # Creates face users
 ```
----
+
+### ▶️ 6. Run the Development Server
+
+```bash
+flask run # By default the server will be live at 'localhost:8080/'
+```
+
+After running the above command, **leave the terminal window open**. You should ideally see output like:
+
+```
+ * Serving Flask app 'slotify.py'
+ * Debug mode: on
+```
+
+with a **blinking cursor**.
+
+✅ This means the web application is now running locally at the port specified in your `.flaskenv` file — by default, it's **8080**.
+
+🌐 Now, open any web browser and go to:
+
+```
+http://localhost:8080/
+```
+
+to access the **Slotify** web app.
+
+> ⚠️ **Important**: Don’t close the terminal window while you're using the app. Closing it will shut down the development server and make the app inaccessible.
+
+🔐 **Logging In**
+
+By default, some **demo users** (including a few admins) have already been created for you.
+
+* You can log in using the following default credentials:
+
+  ```
+  Username: user1
+  Password: test@123
+  ```
+
+* All users (including admins) have the **default password**:
+
+  ```
+  test@123
+  ```
+
+* If you'd like to try logging in as an **admin**, simply do a bit of **trial and error** with the other usernames — a few of them have admin roles.
+
+> 💡 Once logged in, you can explore features like booking slots, viewing calendars, and managing access (if you’re an admin).
+
+
 
 ## 📌 Todo
 
-- Admin panel to view all bookings
+- Registration. Email verification and password reset
 
-- Email verification and password reset
+- Exportable QR for Calendar url: `/machine/uuid_str/calendar/year/month`
 
-- Exportable PDF booking calendar
-
-- Notifications/reminders
+- Notifications/reminders to the Users
 
 ---
 
