@@ -29,7 +29,9 @@ def index():
     logger.info("Visited homepage.")
     return render_template("index.html")
 
-
+# TODO: There is a bug in this route. 
+# When the user visits this route without authentication the 
+# calendar layout gets break for two consecutive bookings!
 @main_bp.route('/machine/<uuid_str>/calendar/<int:year>/<int:month>')
 def view_machine_calendar(uuid_str, year, month):
     """

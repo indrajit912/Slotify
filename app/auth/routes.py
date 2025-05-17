@@ -77,7 +77,7 @@ def dashboard():
         )
         .join(Booking.time_slot)
         .order_by(Booking.date.asc(), TimeSlot.slot_number.asc())
-        .limit(5)
+        # .limit(5)
         .all()
     )
     return render_template(

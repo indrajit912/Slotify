@@ -50,22 +50,27 @@ def book_slot(user_uuid: str, slot_uuid: str, day: date):
         Exception: If the time slot is already booked, user exceeded limit, or date is invalid.
     """
     today = date.today()
+    logger.info(f"Booking attempt: user_uuid={user_uuid}, slot_uuid={slot_uuid}, date={day}")
 
     if day < today:
+        logger.warning(f"Rejected booking: date {day} is in the past.")
         raise Exception("You cannot book a slot on a past date.")
 
     if day > today + timedelta(days=90):
+        logger.warning(f"Rejected booking: date {day} is more than 3 months ahead.")
         raise Exception("You cannot book more than 3 months in advance.")
 
     user = get_user_by_uuid(user_uuid)
     slot = get_time_slot_by_uuid(slot_uuid)
 
     if not user or not slot:
+        logger.error(f"User or TimeSlot not found: user_uuid={user_uuid}, slot_uuid={slot_uuid}")
         raise ValueError("User or TimeSlot not found.")
 
-    # Restrict: No more than 3 bookings for the same machine in the week
-    monday = day - timedelta(days=day.weekday())  # start of week
-    sunday = monday + timedelta(days=6)           # end of week
+    logger.info(f"User {user.id} and slot {slot.id} retrieved successfully.")
+
+    monday = day - timedelta(days=day.weekday())  # start of the week
+    sunday = monday + timedelta(days=6)           # end of the week
 
     weekly_count = (
         Booking.query
@@ -79,27 +84,30 @@ def book_slot(user_uuid: str, slot_uuid: str, day: date):
         .count()
     )
 
+    logger.debug(f"Weekly booking count for user {user.id} on machine {slot.machine_id}: {weekly_count}")
     if weekly_count >= 3:
+        logger.warning(f"Booking limit exceeded: user {user.id} has {weekly_count} bookings this week.")
         raise Exception("Booking limit reached: You can book a maximum of 3 slots per machine per week.")
 
-    # Prevent multiple bookings on the same date by the same user
     existing_user_booking = (
         Booking.query
         .filter_by(user_id=user.id, date=day)
         .first()
     )
     if existing_user_booking:
+        logger.warning(f"User {user.id} already has a booking on {day}.")
         raise Exception("You already have a booking on this date. Only one booking per day allowed.")
 
-    # Check if this specific slot is already booked
     existing = Booking.query.filter_by(time_slot_id=slot.id, date=day).first()
     if existing:
+        logger.warning(f"Slot {slot.id} already booked on {day}.")
         raise Exception("Slot already booked")
 
-    # Proceed with booking
     booking = Booking(user_id=user.id, time_slot_id=slot.id, date=day)
     db.session.add(booking)
     db.session.commit()
+
+    logger.info(f"Booking successful: booking_id={booking.id}, user_id={user.id}, slot_id={slot.id}, date={day}")
     return booking
 
 
@@ -115,18 +123,29 @@ def cancel_booking(user_uuid: str, slot_uuid: str, day: date):
     Returns:
         bool: True if a booking was cancelled, False otherwise.
     """
+    logger.info(f"Attempting to cancel booking: user_uuid={user_uuid}, slot_uuid={slot_uuid}, date={day}")
+
     user = get_user_by_uuid(user_uuid)
     slot = get_time_slot_by_uuid(slot_uuid)
 
-    if not user or not slot:
+    if not user:
+        logger.error(f"User not found for UUID: {user_uuid}")
+        return False
+    if not slot:
+        logger.error(f"TimeSlot not found for UUID: {slot_uuid}")
         return False
 
     booking = Booking.query.filter_by(user_id=user.id, time_slot_id=slot.id, date=day).first()
+
     if booking:
+        logger.info(f"Booking found (id={booking.id}), proceeding with cancellation.")
         db.session.delete(booking)
         db.session.commit()
+        logger.info(f"Booking (id={booking.id}) successfully cancelled.")
         return True
-    return False
+    else:
+        logger.warning(f"No booking found for user_id={user.id}, slot_id={slot.id}, date={day}. Nothing to cancel.")
+        return False
 
 
 def get_user_bookings(user_uuid: str):

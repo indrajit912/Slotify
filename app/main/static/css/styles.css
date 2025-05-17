@@ -60,13 +60,24 @@ svg.bi {
     font-size: 0.95rem;
 }
 
-.calendar-table th,
-.calendar-table td {
+.calendar-table th {
     border: 1px solid #ccc;
     padding: 0.6rem;
     min-width: 100px;
     vertical-align: middle;
 }
+
+.calendar-table td {
+    height: 60px; /* or adjust to your design */
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.calendar-table img {
+    max-width: 40px;
+    height: auto;
+}
+
 
 .slot-cell.booked {
     background-color: #f28b82; /* red-ish */
@@ -85,6 +96,7 @@ svg.bi {
     min-width: 90px;
     max-width: 180px;
 }
+
 
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
