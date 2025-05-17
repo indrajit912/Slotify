@@ -19,16 +19,20 @@ Requirements:
 Note:
     All test users are assigned the password: 'test@123'
 """
+
 import random
 from datetime import date, timedelta
 from faker import Faker
 from app import create_app
 from app.extensions import db
-from app.models.building import Building
-from app.models.booking import Booking, TimeSlot
-from app.models.washingmachine import WashingMachine
-from app.models.user import User
-from app.models.course import Course
+from app.models.booking import TimeSlot
+from app.services import (
+    create_building,
+    create_new_course,
+    create_user,
+    create_washing_machine,
+    book_slot
+)
 
 app = create_app()
 faker = Faker("en_IN")  # Use Indian locale
@@ -51,10 +55,11 @@ def seed_data():
         buildings = []
         for name in building_names:
             code = name.lower().replace(" ", "_")  # e.g., "vikram_sarabhai"
-            b = Building(name=name, code=code)
-            db.session.add(b)
-            buildings.append(b)
-        db.session.commit()
+            try:
+                b = create_building(name=name, code=code)
+                buildings.append(b)
+            except ValueError as e:
+                print(f"⚠️ Skipping building {name}: {e}")
         print("✅ Added buildings.")
 
         # Create sample courses
@@ -67,53 +72,42 @@ def seed_data():
         ]
         courses = []
         for cd in courses_data:
-            course = Course(**cd)  # Assuming Course model assigns uuid internally
-            db.session.add(course)
-            courses.append(course)
-        db.session.commit()
+            try:
+                course = create_new_course(**cd)
+                courses.append(course)
+            except ValueError as e:
+                print(f"⚠️ Skipping course {cd['code']}: {e}")
         print("✅ Added courses.")
 
-        # Add washing machines to buildings with unique 'code'
+        # Add washing machines with default time slots
         machine_labels = ["A", "B", "C", "D"]
         machines = []
-        for b_idx, building in enumerate(buildings):
+        for b in buildings:
             num_machines = faker.random_int(min=2, max=4)
             for i in range(num_machines):
                 label = machine_labels[i % len(machine_labels)]
-                machine_name = f"{building.name} - Machine {label}"
-                machine_code = f"{building.name[:3].upper()}{label}{i+1}"  # e.g., 'ARYA1'
+                machine_name = f"{b.name} - Machine {label}"
+                machine_code = f"{b.name[:3].upper()}{label}{i+1}"  # e.g., 'ARYA1'
 
-                machine = WashingMachine(
-                    name=machine_name,
-                    code=machine_code,
-                    building=building
-                )
-                db.session.add(machine)
-                machines.append(machine)
+                default_slots = [
+                    {"slot_number": 1, "time_range": "06:00–08:00"},
+                    {"slot_number": 2, "time_range": "08:00–10:00"},
+                    {"slot_number": 3, "time_range": "10:00–12:00"},
+                    {"slot_number": 4, "time_range": "12:00–14:00"},
+                ]
+                try:
+                    machine = create_washing_machine(
+                        name=machine_name,
+                        code=machine_code,
+                        building_uuid=str(b.uuid),
+                        time_slots=default_slots
+                    )
+                    machines.append(machine)
+                except ValueError as e:
+                    print(f"⚠️ Skipping machine {machine_code}: {e}")
+        print("✅ Added washing machines with time slots.")
 
-        db.session.commit()
-        print("✅ Added washing machines.")
-
-        # Create 4 default time slots per machine
-        default_slots = [
-            (1, "06:00–08:00"),
-            (2, "08:00–10:00"),
-            (3, "10:00–12:00"),
-            (4, "12:00–14:00")
-        ]
-
-        for machine in machines:
-            for slot_num, time_range in default_slots:
-                slot = TimeSlot(
-                    machine=machine,  # Assuming relationship setter
-                    slot_number=slot_num,
-                    time_range=time_range
-                )
-                db.session.add(slot)
-        db.session.commit()
-        print("✅ Created time slots for each machine.")
-
-        # Generate users
+        # Create users
         roles = ["user", "admin"]
         users = []
         for i in range(20):
@@ -125,44 +119,35 @@ def seed_data():
             building = buildings[i % len(buildings)]
             course = courses[i % len(courses)]
 
-            user = User(
-                username=username,
-                first_name=first_name,
-                middle_name=middle_name or None,
-                last_name=last_name or "Singh",
-                email=email,
-                role=role,
-                building=building,
-                course=course,
-                contact_no=faker.phone_number(),
-                room_no=f"A-{random.randint(101, 599)}"
-            )
-            user.set_hashed_password("test@123")
-            db.session.add(user)
-            users.append(user)
-
-        db.session.commit()
+            try:
+                user = create_user(
+                    username=username,
+                    first_name=first_name,
+                    middle_name=middle_name or None,
+                    last_name=last_name or "Singh",
+                    email=email,
+                    password="test@123",
+                    role=role,
+                    building_uuid=str(building.uuid),
+                    course_uuid=str(course.uuid)
+                )
+                users.append(user)
+            except ValueError as e:
+                print(f"⚠️ Skipping user {username}: {e}")
         print("✅ Added 20 Indian users.")
 
-        # Make bookings for some users
+        # Make sample bookings
         all_slots = TimeSlot.query.all()
-        booking_days = [date.today() + timedelta(days=i) for i in range(3)]  # today + next 2 days
+        booking_days = [date.today() + timedelta(days=i) for i in range(3)]
 
         for user in users[:10]:  # First 10 users get bookings
-            for _ in range(random.randint(1, 3)):  # 1 to 3 bookings per user
+            for _ in range(random.randint(1, 3)):
                 chosen_slot = random.choice(all_slots)
                 chosen_date = random.choice(booking_days)
-
-                # Avoid duplicate bookings on same slot & day
-                if not Booking.query.filter_by(time_slot_id=chosen_slot.id, date=chosen_date).first():
-                    booking = Booking(
-                        user=user,
-                        time_slot=chosen_slot,
-                        date=chosen_date
-                    )
-                    db.session.add(booking)
-
-        db.session.commit()
+                try:
+                    book_slot(str(user.uuid), str(chosen_slot.uuid), chosen_date)
+                except Exception as e:
+                    print(f"⚠️ Could not book slot for {user.username} on {chosen_date}: {e}")
         print("✅ Created sample bookings for first 10 users.")
 
 

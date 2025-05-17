@@ -30,14 +30,16 @@
                     {% for slot in slots %}
                     {% if slot.is_booked %}
                     {% if slot.booked_by['user_uuid'] == current_user.uuid %}
-                    <td class="bg-danger text-white d-flex justify-content-center align-items-center gap-1 cancelable-slot"
-                        data-slot-uuid="{{ slot.slot_uuid }}" data-date="{{ date }}"
-                        title="Click to cancel your booking"
-                        style="min-width: 140px; cursor: pointer; border: 1px solid #ccc; padding: 4px 6px;">
-                        <img src="{{ slot.booked_by['avatar'] }}" alt="User Avatar" width="36" height="36"
-                            class="rounded-circle" style="border:none; flex-shrink: 0;">
-                        <span class="fw-semibold small ms-1">{{ slot.booked_by['username'] }}</span>
-                    </td>
+                    <td class="bg-danger text-white text-center align-middle p-1 cancelable-slot" 
+                    data-slot-uuid="{{ slot.slot_uuid }}" data-date="{{ date }}"
+                    title="Click to cancel your booking"
+                    style="min-width: 140px; border: 1px solid #ccc;">
+                        <div class="d-inline-flex align-items-center gap-1">
+                            <img src="{{ slot.booked_by['avatar'] }}" alt="User Avatar" width="36" height="36"
+                                 class="rounded-circle" style="flex-shrink: 0;">
+                            <span class="fw-semibold small">{{ slot.booked_by['username'] }}</span>
+                        </div>
+                    </td>                    
                     {% else %}
                     <td class="bg-danger text-white d-flex justify-content-center align-items-center gap-1"
                         style="min-width: 140px; border: 1px solid #ccc; padding: 4px 6px;">
@@ -65,17 +67,10 @@
                         style="min-width: 140px; border: 1px solid #ccc; padding: 4px 6px;">
 
                         <!-- Invisible placeholder to keep size consistent -->
-                        <span
-                            style="visibility:hidden; display:flex; align-items:center; gap:4px; justify-content:center; min-width: 100px;">
-                            <img src="https://via.placeholder.com/36" alt="placeholder" width="36" height="36"
-                                class="rounded-circle" style="border:none;">
-                            <span class="fw-semibold small">Username</span>
-                        </span>
+                        &nbsp;
                     </td>
                     {% endif %}
                     {% endfor %}
-
-
                 </tr>
                 {% endfor %}
             </tbody>
