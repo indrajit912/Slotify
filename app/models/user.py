@@ -23,11 +23,17 @@ class User(db.Model, UserMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(36), unique=True, nullable=False, default=lambda: uuid.uuid4().hex)
+    
     username = db.Column(db.String(100), unique=True, nullable=False)
-    fullname = db.Column(db.String(100), nullable=False)
+    
+    first_name = db.Column(db.String(50), nullable=False)
+    middle_name = db.Column(db.String(50), nullable=True)
+    last_name = db.Column(db.String(50), nullable=False)
+
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     password_salt = db.Column(db.String(32), nullable=False)
+    
     role = db.Column(db.String(20), default='user')  # user, admin, superadmin
 
     date_joined = db.Column(db.DateTime(timezone=True), default=utcnow)
@@ -35,14 +41,29 @@ class User(db.Model, UserMixin):
     last_seen = db.Column(db.DateTime(timezone=True), default=utcnow)
     email_verified = db.Column(db.Boolean, default=False)
 
+    # Optional fields
+    contact_no = db.Column(db.String(20), nullable=True)
+    room_no = db.Column(db.String(20), nullable=True)
+
     building_id = db.Column(db.Integer, db.ForeignKey('building.id'), nullable=False)
     building = db.relationship("Building", back_populates="users")
 
     bookings = db.relationship("Booking", back_populates="user")
 
+    course_id = db.Column(db.Integer, db.ForeignKey("course.id"))
+    course = db.relationship('Course', back_populates='users', lazy=True)
+
     def __repr__(self):
         """Representation of the User object."""
         return f"User(username={self.username}, email={self.email}, date_joined={self.date_joined})"
+    
+    @property
+    def fullname(self):
+        parts = [self.first_name]
+        if self.middle_name:
+            parts.append(self.middle_name)
+        parts.append(self.last_name)
+        return ' '.join(parts)
     
     def is_admin(self):
         return self.role in ("admin", "superadmin")

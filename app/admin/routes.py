@@ -67,9 +67,10 @@ def view_machines():
 @admin_required
 def create_building_route():
     building_name = request.form.get('building_name')
+    building_code = request.form.get('building_code')
     try:
-        new_building = create_building(building_name)
-        flash(f"Building '{new_building.name}' created successfully!", "success")
+        new_building = create_building(name=building_name, code=building_code)
+        flash(f"Building '{new_building.name}({building_code})' created successfully!", "success")
         return redirect(url_for('admin.home'))  # Redirect back to the admin dashboard
     except ValueError as e:
         flash(str(e), "error")
@@ -84,6 +85,7 @@ def create_machine():
     try:
         # Get washing machine name from form
         machine_name = request.form.get('machine_name')
+        machine_code = request.form.get('machine_code')
         machine_building_uuid = request.form.get('machine_building_uuid')
         
         # Get time slots from the form
@@ -101,6 +103,7 @@ def create_machine():
         # Call the function to create washing machine with time slots
         new_machine = create_washing_machine(
             name=machine_name,
+            code=machine_code,
             building_uuid=machine_building_uuid,
             time_slots=time_slots
         )

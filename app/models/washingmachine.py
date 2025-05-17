@@ -13,6 +13,8 @@ class WashingMachine(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(36), unique=True, nullable=False, default=lambda: uuid.uuid4().hex)
     name = db.Column(db.String(100), unique=True, nullable=False)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="available") # e.g., "available", "maintenance", "offline"
 
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow)
     last_updated = db.Column(db.DateTime(timezone=True), default=utcnow)
@@ -23,4 +25,4 @@ class WashingMachine(db.Model):
     time_slots = db.relationship("TimeSlot", back_populates="machine", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<WashingMachine(name={self.name})>"
+        return f"<WashingMachine(name={self.name}, code={self.code})>"

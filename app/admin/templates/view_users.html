@@ -5,14 +5,16 @@
     <h1 class="mb-4">All Regular Users</h1>
     {% include 'flash_msgs.html' %}
 
-    <table class="table table-striped">
+    <table class="table table-striped" aria-describedby="usersTableCaption">
+        <caption id="usersTableCaption" class="visually-hidden">List of all regular users with details</caption>
         <thead>
             <tr>
-                <th>Username</th>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Date Joined</th>
-                <th>Last seen</th>
+                <th scope="col">Username</th>
+                <th scope="col">Full Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Course</th>  <!-- New column for course -->
+                <th scope="col">Date Joined</th>
+                <th scope="col">Last Seen</th>
             </tr>
         </thead>
         <tbody>
@@ -21,8 +23,27 @@
                 <td>{{ user.username }}</td>
                 <td>{{ user.fullname }}</td>
                 <td>{{ user.email }}</td>
-                <td>{{ moment(user.date_joined).format('LLL') }}</td>
-                <td>{{ moment(user.last_seen).fromNow() }}</td>
+                <td>
+                    {% if user.course %}
+                        {{ user.course.short_name or user.course.name }}
+                    {% else %}
+                        -  <!-- TODO: Add a link to add a course to the user -->
+                    {% endif %}
+                </td>
+                <td>
+                    {% if user.date_joined %}
+                        {{ moment(user.date_joined).format('LLL') }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if user.last_seen %}
+                        {{ moment(user.last_seen).fromNow() }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>

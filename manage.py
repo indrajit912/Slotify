@@ -20,7 +20,8 @@ from app import create_app
 from scripts.utils import sha256_hash
 from app.extensions import db
 from app.models.building import Building
-from app.services import create_user, create_building
+from app.models.washingmachine import WashingMachine
+from app.services import create_user, create_building, create_washing_machine
 from config import get_config
 
 cli = FlaskGroup(create_app=create_app)
@@ -40,13 +41,14 @@ def is_db_initialized():
 def create_superadmin():
     """
     Command-line command to create a superadmin user.
-    
-    Prompts the user for all necessary details: username, fullname, email, and password.
+
+    Prompts the user for all necessary details: username, first name, middle name (optional), last name, email, and password.
     First, checks for a secret password to authorize the superadmin creation.
+    Also prompts to select an existing Building or create a new one.
     """
     if not is_db_initialized():
         click.echo("❌ Database is not initialized.")
-        click.echo("➡️  Please run 'python manage.py create-db' first to initialize the database.")
+        click.echo("➡️  Please run 'python manage.py setup-db' first to initialize the database.")
         return
 
     secret_password = getpass.getpass(prompt="Enter the secret password (Indrajit's password): ")
@@ -59,42 +61,118 @@ def create_superadmin():
     click.echo("🔐 Authorization successful. Proceeding to create superadmin.")
 
     username = click.prompt("Enter username")
-    fullname = click.prompt("Enter full name")
+    first_name = click.prompt("Enter first name")
+    middle_name = click.prompt("Enter middle name", default="", show_default=False)
+    last_name = click.prompt("Enter last name")
     email = click.prompt("Enter email address")
+    
     password = getpass.getpass(prompt="Enter password: ")
+    confirm_password = getpass.getpass(prompt="Confirm password: ")
+    
+    if password != confirm_password:
+        raise ValueError("Passwords do not match.")
 
-    buildings = Building.query.all()
+    buildings = Building.query.order_by(Building.name).all()
 
     if not buildings:
         click.echo("🏢 No buildings found in the system.")
         building_name = click.prompt("Enter the name of the building for the superadmin")
-        building = create_building(name=building_name)
+        building_code = click.prompt("Enter the building code (unique short code)")
+        building = Building(name=building_name, code=building_code)
+        db.session.add(building)
+        db.session.commit()
         click.echo(f"✅ Building '{building_name}' created.")
-        building_uuid = building.uuid
     else:
         click.echo("🏢 Available buildings:")
-        for idx, b in enumerate(buildings, 1):
-            click.echo(f"{idx}. {b.name} (UUID: {b.uuid})")
+        for idx, b in enumerate(buildings, start=1):
+            click.echo(f"{idx}. {b.name} (Code: {b.code})")
         building_choice = click.prompt("Enter the number of the building", type=int)
 
         if building_choice < 1 or building_choice > len(buildings):
             click.echo("❌ Invalid choice. Exiting.")
             return
 
-        building_uuid = buildings[building_choice - 1].uuid
-        click.echo(f"✅ Selected building: {buildings[building_choice - 1].name}")
+        building = buildings[building_choice - 1]
+        click.echo(f"✅ Selected building: {building.name}")
 
     try:
-        superadmin = create_user(username, fullname, email, password, role="superadmin", building_uuid=building_uuid)
+        superadmin = create_user(
+            username=username,
+            first_name=first_name,
+            middle_name=middle_name or None,
+            last_name=last_name,
+            email=email,
+            password=password,
+            role="superadmin",
+            building_uuid=building.uuid
+        )
         superadmin.email_verified = True
+        db.session.commit()
         click.echo(f"🎉 Superadmin created: {superadmin.username} ({superadmin.email})")
     except ValueError as e:
         click.echo(f"❌ Error: {e}")
 
 
+def create_isi_specific_data():
+    """
+    Creates ISI-specific initial data:
+    - Building: Research Scholars' Hostel, ISIBc
+    - WashingMachine: BOSCH Front Loaded Washing Machine at the above building
+    """
+    # Create or get building
+    try:
+        building = create_building(name="Research Scholars' Hostel, ISIBc", code="RSH")
+    except ValueError:
+        building = Building.query.filter_by(code="RSH").first()
+
+    # Check and create washing machine if it doesn't exist
+    machine = WashingMachine.query.filter_by(code="RSH-BOSCH").first()
+    if not machine:
+        print("\nNo washing machine with code 'RSH-BOSCH' found.")
+        print("Preparing to create one with the following default time slots:")
+        _rsh_default_time_slots = [
+            {"slot_number": 1, "time_range": "07:00-10:30"},
+            {"slot_number": 2, "time_range": "11:30-15:00"},
+            {"slot_number": 3, "time_range": "16:00-19:30"},
+            {"slot_number": 4, "time_range": "20:30-00:00"}
+        ]
+        for slot in _rsh_default_time_slots:
+            print(f"  Slot {slot['slot_number']}: {slot['time_range']}")
+
+        choice = input("\nDo you want to use the default time slots? (y/n): ").strip().lower()
+        if choice == 'n':
+            custom_slots = []
+            print("Enter custom time slots in the format HH:MM-HH:MM.")
+            print("Type 'done' when finished.\n")
+            slot_number = 1
+            while True:
+                user_input = input(f"  Time range for slot {slot_number}: ").strip()
+                if user_input.lower() == "done":
+                    break
+                # Optional: Validate input format here
+                custom_slots.append({
+                    "slot_number": slot_number,
+                    "time_range": user_input
+                })
+                slot_number += 1
+
+            time_slots = custom_slots
+        else:
+            time_slots = _rsh_default_time_slots
+
+        new_machine = create_washing_machine(
+            name="BOSCH Front Loaded Washing Machine",
+            code="RSH-BOSCH",
+            building_uuid=building.uuid,
+            time_slots=time_slots
+        )
+        print(f"\n✅ Washing machine '{new_machine.name}' created successfully.")
+
+
 @cli.command("setup-db")
+@click.option('--isi', is_flag=True, default=False, help="Create ISI specific data after setup")
 @with_appcontext
-def setup_database():
+def setup_database(isi):
     """
     Command-line utility to set up the database.
 
@@ -103,7 +181,10 @@ def setup_database():
     delete and recreate it from scratch.
 
     Usage:
-        flask setup-db
+        python manage.py setup-db [--isi]
+
+    Args:
+        isi (bool): If True, create ISI specific data after database setup.
 
     Returns:
         None
@@ -125,6 +206,11 @@ def setup_database():
         app_config.APP_DATA_DIR.mkdir(parents=True, exist_ok=True)
         click.echo("[-] '/app_data' directory created successfully.")
 
+    if isi:
+        click.echo("[*] Creating ISI specific data...")
+        create_isi_specific_data()
+        click.echo("[+] ISI specific data created successfully.")
+
 
 def help_command():
     """
@@ -141,14 +227,4 @@ def help_command():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Command-line utility for managing Slotify.')
-    parser.add_argument('command', type=str, nargs='?', help='Command to execute (e.g., setup-db, help)')
-    args = parser.parse_args()
-
-    if args.command == 'help':
-        help_command()
-    elif args.command:
-        sys.argv = ['manage.py', args.command]  # Modify sys.argv to include the command
-        cli.main()  # Use cli.main() to execute the command
-    else:
-        print("Please provide a valid command. Use 'python manage.py help' to see available commands.")
+    cli()

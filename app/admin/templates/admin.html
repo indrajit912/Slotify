@@ -45,51 +45,65 @@
     <div class="card-body">
       <h5 class="card-title">Create New Building</h5>
       <form method="POST" action="{{ url_for('admin.create_building_route') }}">
+        
         <div class="mb-3">
           <label for="building_name" class="form-label">Building Name</label>
           <input type="text" class="form-control" id="building_name" name="building_name" placeholder="E.g. RS Hostel, Hostel 1, D Qtr" required>
         </div>
-
+  
+        <div class="mb-3">
+          <label for="building_code" class="form-label">Building Code</label>
+          <input type="text" class="form-control" id="building_code" name="building_code" placeholder="E.g. RSH, H1, DQ, CQ" required>
+        </div>
+  
         <button type="submit" class="btn btn-success">Create Building</button>
       </form>
     </div>
   </div>
+  
 
   <!-- Add Washing Machine Card -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <h5 class="card-title">Create New Washing Machine</h5>
-      <form method="POST" action="{{ url_for('admin.create_machine') }}">
-        <div class="mb-3">
-          <label for="machine_name" class="form-label">Washing Machine Name</label>
-          <input type="text" class="form-control" id="machine_name" name="machine_name" required>
-        </div>
+<div class="card mb-4">
+  <div class="card-body">
+    <h5 class="card-title">Create New Washing Machine</h5>
+    <form method="POST" action="{{ url_for('admin.create_machine') }}">
+      
+      <div class="mb-3">
+        <label for="machine_name" class="form-label">Washing Machine Name</label>
+        <input type="text" class="form-control" id="machine_name" name="machine_name" placeholder="E.g. BOSCH Front Loaded Machine" required>
+      </div>
 
-        <div class="mb-3">
-          <label for="machine_building_uuid" class="form-label">Where is this washing machine located in the campus? Choose from below</label>
-          <select class="form-select" id="machine_building_uuid" name="machine_building_uuid" required>
-            <option value="" disabled selected>Select a building</option>
-            {% for building in buildings %}
-              <option value="{{ building.uuid }}">{{ building.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
+      <div class="mb-3">
+        <label for="machine_code" class="form-label">Machine Code</label>
+        <input type="text" class="form-control" id="machine_code" name="machine_code" placeholder="E.g. RSH-BOSCH, DQ-2" required>
+      </div>
 
-        <div class="mb-3">
-          <label for="time_slots" class="form-label">Time Slots</label>
-          <div id="time_slots">
-            <div class="d-flex mb-2">
-              <input type="text" class="form-control me-2" name="slot_number" placeholder="Slot Number" required>
-              <input type="text" class="form-control" name="time_range" placeholder="Time Range (e.g., 07:00-10:30)" required>
-            </div>
+      <div class="mb-3">
+        <label for="machine_building_uuid" class="form-label">Where is this washing machine located in the campus? Choose from below</label>
+        <select class="form-select" id="machine_building_uuid" name="machine_building_uuid" required>
+          <option value="" disabled selected>Select a building</option>
+          {% for building in buildings %}
+            <option value="{{ building.uuid }}">{{ building.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="time_slots" class="form-label">Time Slots</label>
+        <div id="time_slots">
+          <div class="d-flex mb-2">
+            <input type="text" class="form-control me-2" name="slot_number" placeholder="Slot Number" required>
+            <input type="text" class="form-control" name="time_range" placeholder="Time Range (e.g., 07:00-10:30)" required>
           </div>
-          <button type="button" id="add_slot" class="btn btn-secondary mt-2">Add Another Slot</button>
         </div>
+        <button type="button" id="add_slot" class="btn btn-secondary mt-2">Add Another Slot</button>
+      </div>
 
-        <button type="submit" class="btn btn-success">Create Washing Machine</button>
-      </form>
-    </div>
+      <button type="submit" class="btn btn-success">Create Washing Machine</button>
+    </form>
   </div>
+</div>
+
 
   <script>
     document.getElementById('add_slot').addEventListener('click', function() {

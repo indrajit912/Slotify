@@ -11,30 +11,35 @@ import logging
 from sqlalchemy.exc import IntegrityError
 
 from app.models.user import User
+from app.models.course import Course
 from app.models.building import Building
 from app.extensions import db
 from scripts.utils import utcnow
 
 logger = logging.getLogger(__name__)
 
-def create_user(username, fullname, email, password, role="user", building_uuid=None):
+def create_user(username, first_name, email, password, role="user", building_uuid=None, course_uuid=None, middle_name=None, last_name=None):
     """
-    Creates and stores a new user with hashed password and associated building.
+    Creates and stores a new user with hashed password, building, and course association.
 
     Args:
         username (str): Unique username.
-        fullname (str): Full name of the user.
+        first_name (str): User's first name.
         email (str): User's email (must be unique).
         password (str): Plaintext password.
         role (str, optional): 'user', 'admin', or 'superadmin'. Defaults to 'user'.
-        building_uuid (str, optional): UUID of the building where the user resides. Defaults to None.
+        building_uuid (str, optional): UUID of the building where the user resides.
+        course_uuid (str, optional): UUID of the course the user is enrolled in.
+        middle_name (str, optional): Middle name of the user.
+        last_name (str, optional): Last name of the user.
 
     Returns:
         User: The created user object.
 
     Raises:
-        ValueError: If email or username already exists, or if the building is not found.
+        ValueError: If email or username already exists, or if the building/course is not found.
     """
+
     if get_user_by_email(email):
         logger.warning(f"Email already registered: {email}")
         raise ValueError("Email already registered.")
@@ -42,11 +47,16 @@ def create_user(username, fullname, email, password, role="user", building_uuid=
         logger.warning(f"Username already taken: {username}")
         raise ValueError("Username already taken.")
 
+    if not first_name:
+        raise ValueError("First name is required.")
+
     logger.info(f"Creating new user: {username} ({email})")
 
     user = User(
         username=username,
-        fullname=fullname,
+        first_name=first_name,
+        middle_name=middle_name,
+        last_name=last_name,
         email=email,
         role=role
     )
@@ -59,6 +69,13 @@ def create_user(username, fullname, email, password, role="user", building_uuid=
             raise ValueError(f"No building found with UUID: {building_uuid}")
         user.building = building
 
+    if course_uuid:
+        course = Course.query.filter_by(uuid=course_uuid).first()
+        if not course:
+            logger.error(f"Course not found with UUID: {course_uuid}")
+            raise ValueError(f"No course found with UUID: {course_uuid}")
+        user.course = course
+
     db.session.add(user)
     try:
         db.session.commit()
@@ -69,6 +86,7 @@ def create_user(username, fullname, email, password, role="user", building_uuid=
         raise ValueError("Could not create user due to a database error.")
 
     return user
+
 
 
 def get_user_by_uuid(uuid_str: str):
@@ -130,7 +148,8 @@ def update_user_by_uuid(user_uuid, **kwargs):
 
     Args:
         user_uuid (str): The UUID of the user to update.
-        **kwargs: Fields to update (e.g., fullname, email, password, role, username).
+        **kwargs: Fields to update (e.g., first_name, middle_name, last_name, email, password, role,
+                  username, course_uuid, building_uuid, contact_no, room_no).
 
     Returns:
         User: The updated user object.
@@ -159,8 +178,22 @@ def update_user_by_uuid(user_uuid, **kwargs):
             raise ValueError("Email already registered.")
         user.email = new_email
 
+    # Update name parts individually or via fullname if provided
     if 'fullname' in kwargs:
-        user.fullname = kwargs['fullname']
+        name_parts = kwargs['fullname'].strip().split()
+        if len(name_parts) == 0:
+            raise ValueError("Full name must contain at least one word.")
+        user.first_name = name_parts[0]
+        user.middle_name = " ".join(name_parts[1:-1]) if len(name_parts) > 2 else None
+        user.last_name = name_parts[-1] if len(name_parts) > 1 else ""
+    else:
+        # If individual name parts are given
+        if 'first_name' in kwargs:
+            user.first_name = kwargs['first_name']
+        if 'middle_name' in kwargs:
+            user.middle_name = kwargs['middle_name']
+        if 'last_name' in kwargs:
+            user.last_name = kwargs['last_name']
 
     if 'role' in kwargs:
         user.role = kwargs['role']
@@ -168,10 +201,38 @@ def update_user_by_uuid(user_uuid, **kwargs):
     if 'password' in kwargs:
         user.set_hashed_password(kwargs['password'])
         logger.debug(f"Password updated for user UUID {user_uuid}")
-    
+
+    if 'contact_no' in kwargs:
+        user.contact_no = kwargs['contact_no']
+
+    if 'room_no' in kwargs:
+        user.room_no = kwargs['room_no']
+
+    if 'building_uuid' in kwargs:
+        building_uuid = kwargs['building_uuid']
+        if building_uuid:
+            building = Building.query.filter_by(uuid=building_uuid).first()
+            if not building:
+                logger.error(f"Building not found with UUID: {building_uuid}")
+                raise ValueError(f"No building found with UUID: {building_uuid}")
+            user.building = building
+        else:
+            user.building = None  # Allow clearing building
+
+    if 'course_uuid' in kwargs:
+        course_uuid = kwargs['course_uuid']
+        if course_uuid:
+            course = Course.query.filter_by(uuid=course_uuid).first()
+            if not course:
+                logger.error(f"Course not found with UUID: {course_uuid}")
+                raise ValueError(f"No course found with UUID: {course_uuid}")
+            user.course = course
+        else:
+            user.course = None  # Allow clearing course
+
     if kwargs:
         user.last_updated = utcnow()
-        
+
     try:
         db.session.commit()
         logger.info(f"User {user.username} (UUID: {user_uuid}) updated successfully.")
@@ -181,6 +242,7 @@ def update_user_by_uuid(user_uuid, **kwargs):
         raise ValueError("Could not update user.")
 
     return user
+
 
 def update_user_last_seen(user_uuid: str):
     """

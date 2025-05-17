@@ -9,8 +9,11 @@
     <thead>
         <tr>
             <th>Name</th>
+            <th>Code</th>
             <th>Building</th>
+            <th>Status</th>
             <th>Created At</th>
+            <th>Last Updated</th>
             <th>Calendar</th>
         </tr>
     </thead>
@@ -18,8 +21,17 @@
         {% for machine in machines %}
         <tr>
             <td>{{ machine.name }}</td>
+            <td>{{ machine.code or "N/A" }}</td>
             <td>{{ machine.building.name }}</td>
+            <td>{{ machine.status|capitalize }}</td>
             <td>{{ moment(machine.created_at).format('LLL') }}</td>
+            <td>
+                {% if machine.last_updated %}
+                    {{ moment(machine.last_updated).format('LLL') }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
             <td>
                 <button class="btn btn-outline-primary btn-sm open-calendar-modal" data-machine-id="{{ machine.id }}" data-machine-uuid="{{ machine.uuid }}">
                     <i class="bi bi-calendar3"></i>

@@ -19,9 +19,10 @@ class Building(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(36), unique=True, nullable=False, default=lambda: uuid.uuid4().hex)
     name = db.Column(db.String(100), unique=True, nullable=False)
+    code = db.Column(db.String(50), unique=True, nullable=False)
 
     users = db.relationship("User", back_populates="building")
     machines = db.relationship("WashingMachine", back_populates="building")
 
     def __repr__(self):
-        return f"<Building(name={self.name})>"
+        return f"<Building(name={self.name}, code={self.code})>"

@@ -19,14 +19,14 @@ from scripts.utils import utcnow
 
 logger = logging.getLogger(__name__)
 
-# TODO: Write a function that can check whether a list of time_range is valid (i.e. not coinciding)
 
-def create_washing_machine(name: str, building_uuid: str, time_slots: list[dict]):
+def create_washing_machine(name: str, code: str, building_uuid: str, time_slots: list[dict]):
     """
     Creates a new washing machine with given time slots and building UUID.
 
     Args:
         name (str): Name of the washing machine.
+        code (str): Unique code for the washing machine.
         building_uuid (str): UUID of the building where the machine is located.
         time_slots (list of dict): Each dict should have 'slot_number' and 'time_range'.
             Example: [
@@ -39,18 +39,18 @@ def create_washing_machine(name: str, building_uuid: str, time_slots: list[dict]
         WashingMachine: The created machine object.
 
     Raises:
-        ValueError: If the machine name already exists or building is not found.
+        ValueError: If the machine name or code already exists or building is not found.
     """
-    if WashingMachine.query.filter_by(name=name).first():
-        logger.warning(f"WashingMachine name already exists: {name}")
-        raise ValueError("Washing machine name already exists.")
+    if WashingMachine.query.filter((WashingMachine.name == name) | (WashingMachine.code == code)).first():
+        logger.warning(f"WashingMachine name or code already exists: name='{name}', code='{code}'")
+        raise ValueError("Washing machine name or code already exists.")
 
     building = Building.query.filter_by(uuid=building_uuid).first()
     if not building:
         logger.error(f"Building not found with UUID: {building_uuid}")
         raise ValueError(f"No building found with UUID: {building_uuid}")
 
-    machine = WashingMachine(name=name, building=building)
+    machine = WashingMachine(name=name, code=code, building=building)
     db.session.add(machine)
     db.session.flush()  # Ensures machine.id is available before adding related time slots
 
@@ -71,6 +71,7 @@ def create_washing_machine(name: str, building_uuid: str, time_slots: list[dict]
         raise ValueError("Could not create machine due to a database error.")
 
     return machine
+
 
 def get_all_machines():
     return WashingMachine.query.all()
@@ -111,13 +112,14 @@ def update_washing_machine(machine_uuid: str, **kwargs):
     
     Args:
         machine_uuid (str): UUID of the washing machine to update.
+        kwargs: Fields to update. Supported keys: 'name', 'code', 'building_uuid'.
         
     Returns:
         WashingMachine: The updated washing machine object.
-        kwargs: {'name': "New Name", 'building_uuid': "New-building-uuid"}
     
     Raises:
-        ValueError: If no washing machine is found with the provided UUID.
+        ValueError: If no washing machine is found with the provided UUID or if
+                    new name/code conflicts with existing machines.
     """
     try:
         # Find the washing machine by UUID
@@ -128,28 +130,38 @@ def update_washing_machine(machine_uuid: str, **kwargs):
             logger.error(f"Washing machine with UUID {machine_uuid} not found.")
             raise ValueError(f"No washing machine found with UUID: {machine_uuid}")
         
-        logger.info(f"Updating user {washing_machine.username} (UUID: {machine_uuid})")
+        logger.info(f"Updating washing machine {washing_machine.name} (UUID: {machine_uuid})")
 
-        # Update name and building association
+        # Update 'name' with uniqueness check
         if 'name' in kwargs:
             new_name = kwargs['name']
+            existing_name = WashingMachine.query.filter(WashingMachine.name == new_name, WashingMachine.uuid != machine_uuid).first()
+            if existing_name:
+                raise ValueError(f"Washing machine name '{new_name}' already exists.")
             washing_machine.name = new_name
 
+        # Update 'code' with uniqueness check
+        if 'code' in kwargs:
+            new_code = kwargs['code']
+            existing_code = WashingMachine.query.filter(WashingMachine.code == new_code, WashingMachine.uuid != machine_uuid).first()
+            if existing_code:
+                raise ValueError(f"Washing machine code '{new_code}' already exists.")
+            washing_machine.code = new_code
+
+        # Update building if 'building_uuid' given
         if 'building_uuid' in kwargs:
             new_building_uuid = kwargs['building_uuid']
             new_building = get_building_by_uuid(new_building_uuid)
+            if not new_building:
+                raise ValueError(f"No building found with UUID: {new_building_uuid}")
             washing_machine.building = new_building
         
         if kwargs:
             washing_machine.last_updated = utcnow()
 
         try:
-            # Commit the changes to the database
             db.session.commit()
-    
-            # Log the update action
-            logger.info(f"Washing machine with UUID {machine_uuid} updated.")
-
+            logger.info(f"Washing machine with UUID {machine_uuid} updated successfully.")
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error updating washing machine (UUID: {machine_uuid}): {e}")
@@ -167,7 +179,6 @@ def update_washing_machine(machine_uuid: str, **kwargs):
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         raise Exception("An unexpected error occurred. Please try again.")
-
 
 
 def get_machine_monthly_slots(uuid_str: str, year: int, month: int, exclude_past: bool = False):

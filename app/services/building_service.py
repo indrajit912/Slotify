@@ -12,27 +12,34 @@ from app.extensions import db
 
 logger = logging.getLogger(__name__)
 
-def create_building(name: str):
+def create_building(name: str, code: str):
     """
     Creates and stores a new building in the database.
 
     Args:
         name (str): The name of the building (e.g., "Hostel 1", "D Quarter").
+        code (str): A unique short code for the building (e.g., "HQ1", "DQ").
 
     Returns:
         Building: The created building object.
 
     Raises:
-        ValueError: If a building with the same name already exists.
+        ValueError: If a building with the same name or code already exists.
     """
-    # Check if a building with the same name already exists
-    existing_building = Building.query.filter_by(name=name).first()
+    # Check if a building with the same name or code already exists
+    existing_building = Building.query.filter(
+        (Building.name == name) | (Building.code == code)
+    ).first()
     if existing_building:
-        logger.warning(f"Building with name '{name}' already exists.")
-        raise ValueError(f"A building with the name '{name}' already exists.")
+        logger.warning(
+            f"Building with name '{name}' or code '{code}' already exists."
+        )
+        raise ValueError(
+            f"A building with the name '{name}' or code '{code}' already exists."
+        )
 
-    # Create a new building and generate a uuid
-    building = Building(name=name)
+    # Create a new building with uuid generated automatically
+    building = Building(name=name, code=code)
 
     # Add the building to the session and commit
     db.session.add(building)
@@ -45,6 +52,7 @@ def create_building(name: str):
         raise ValueError("Could not create building due to a database error.")
 
     return building
+
 
 def get_building_by_uuid(uuid_str: str):
     building = Building.query.filter_by(uuid=uuid_str).first()
