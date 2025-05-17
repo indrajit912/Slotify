@@ -10,14 +10,9 @@
         <img src="{{ user.avatar(size=150) }}" alt="Avatar of {{ user.fullname or user.username }}" class="rounded-circle me-3" width="128" height="128">
         <div>
             <h2 class="mb-1">
-                Welcome, 
-                {% if user.first_name %}
-                    {{ user.first_name }}{% if user.middle_name %} {{ user.middle_name }}{% endif %} {{ user.last_name or '' }}
-                {% else %}
-                    {{ user.username }}
-                {% endif %}
-                !
+                Welcome, {{ user.first_name }}!
             </h2>
+            <p class="mb-0"><strong>Fullname:</strong> {{ user.fullname }}</p>
             <p class="mb-0"><strong>Email:</strong> {{ user.email }}</p>
             <p class="mb-0"><strong>Contact No:</strong> {{ user.contact_no or 'N/A' }}</p>
             <p class="mb-0"><strong>Room No:</strong> {{ user.room_no or 'N/A' }}</p>
@@ -61,7 +56,7 @@
 <hr>
 
 <div>
-    <h3>Recent Bookings</h3>
+    <h3>Upcoming Bookings</h3>
     {% if bookings %}
     <ul class="list-group" id="bookings-list">
         {% for booking in bookings %}
@@ -81,7 +76,7 @@
         {% endfor %}
     </ul>
     {% else %}
-    <p>You have no recent bookings.</p>
+    <p>You have no upcoming bookings.</p>
     {% endif %}
 </div>
 

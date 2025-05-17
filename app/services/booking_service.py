@@ -36,6 +36,7 @@ def book_slot(user_uuid: str, slot_uuid: str, day: date):
     - max 3 bookings per machine per week
     - only one booking per user per day
     - no bookings on past dates
+    - no bookings more than 3 months into the future
 
     Args:
         user_uuid (str): UUID of the user making the booking.
@@ -48,8 +49,13 @@ def book_slot(user_uuid: str, slot_uuid: str, day: date):
     Raises:
         Exception: If the time slot is already booked, user exceeded limit, or date is invalid.
     """
-    if day < date.today():
+    today = date.today()
+
+    if day < today:
         raise Exception("You cannot book a slot on a past date.")
+
+    if day > today + timedelta(days=90):
+        raise Exception("You cannot book more than 3 months in advance.")
 
     user = get_user_by_uuid(user_uuid)
     slot = get_time_slot_by_uuid(slot_uuid)
@@ -95,6 +101,7 @@ def book_slot(user_uuid: str, slot_uuid: str, day: date):
     db.session.add(booking)
     db.session.commit()
     return booking
+
 
 def cancel_booking(user_uuid: str, slot_uuid: str, day: date):
     """

@@ -114,22 +114,32 @@
         // -------------------------------
         document.querySelectorAll('.available-slot').forEach(td => {
             td.style.cursor = 'pointer';
-
+                
             td.addEventListener('click', async () => {
                 const machineId = td.dataset.machineId;
                 const slotNumber = parseInt(td.dataset.slotNumber);
-                const date = td.dataset.date;
-
+                const dateStr = td.dataset.date;
+            
                 if (!userLoggedIn) {
-                    showAlert(`Please log in to book Slot ${slotNumber} on ${date}.`, 'warning');
+                    showAlert(`Please log in to book Slot ${slotNumber} on ${dateStr}.`, 'warning');
                     return;
                 }
-
-                const confirmBooking = confirm(`Do you want to book Slot ${slotNumber} on ${date}?`);
+            
+                const bookingDate = new Date(dateStr);
+                const today = new Date();
+                const futureLimit = new Date();
+                futureLimit.setDate(today.getDate() + 90); // 3 months ahead
+            
+                if (bookingDate > futureLimit) {
+                    showAlert(`You cannot book a slot more than 3 months in advance.`, 'warning');
+                    return;
+                }
+            
+                const confirmBooking = confirm(`Do you want to book Slot ${slotNumber} on ${dateStr}?`);
                 if (!confirmBooking) return;
-
+            
                 td.style.pointerEvents = 'none';  // disable during request
-
+            
                 try {
                     const response = await fetch("{{ url_for('main.book_slot_route') }}", {
                         method: "POST",
@@ -137,11 +147,11 @@
                             "Content-Type": "application/json",
                             "X-CSRFToken": "{{ csrf_token() }}"
                         },
-                        body: JSON.stringify({ machine_id: machineId, slot_number: slotNumber, date: date })
+                        body: JSON.stringify({ machine_id: machineId, slot_number: slotNumber, date: dateStr })
                     });
-
+                
                     const data = await response.json();
-
+                
                     if (data.success) {
                         showAlert(data.message, 'success');
                         setTimeout(() => location.reload(), 1000);
@@ -155,6 +165,7 @@
                 }
             });
         });
+        
 
         // -------------------------------
         // Cancelling a booked slot

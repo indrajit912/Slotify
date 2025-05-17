@@ -4,9 +4,10 @@
 #
 # Standard library imports
 import logging
+from datetime import date
 
 # Third-party imports
-from flask import abort, current_app, flash, redirect, render_template, request, session, url_for
+from flask import flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 # Relative imports
@@ -66,11 +67,16 @@ def dashboard():
     """
     building = current_user.building
     machines = building.machines if building else []
+    today = date.today()
+
     bookings = (
         Booking.query
-        .filter_by(user_id=current_user.id)
+        .filter(
+            Booking.user_id == current_user.id,
+            Booking.date >= today  # only today and future dates
+        )
         .join(Booking.time_slot)
-        .order_by(Booking.date.desc(), TimeSlot.slot_number.desc())
+        .order_by(Booking.date.asc(), TimeSlot.slot_number.asc())
         .limit(5)
         .all()
     )
