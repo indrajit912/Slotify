@@ -208,9 +208,11 @@ def get_machine_monthly_slots(uuid_str: str, year: int, month: int):
 
             daily_slots.append({
                 "slot_number": slot.slot_number,
+                "slot_uuid": slot.uuid,
                 "time_range": slot.time_range,
                 "is_booked": booking is not None,
                 "booked_by": {
+                    "user_uuid": booking.user.uuid,
                     "user": booking.user.fullname,
                     "username": booking.user.username,
                     "email": booking.user.email,

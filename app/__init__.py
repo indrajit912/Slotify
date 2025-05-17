@@ -8,6 +8,7 @@ import logging
 
 # Third-party imports
 from flask import Flask
+from flask_wtf.csrf import generate_csrf
 
 # Local application imports
 from config import get_config, LOG_FILE
@@ -59,6 +60,11 @@ def create_app(config_class=get_config()):
     def load_user(user_id):
         from app.models.user import User  # Import your User model
         return User.query.get(int(user_id))
+
+    # Inject csrf_token globally for templates
+    @app.context_processor
+    def inject_csrf_token():
+        return dict(csrf_token=generate_csrf)
 
     @app.route('/test/')
     def test():

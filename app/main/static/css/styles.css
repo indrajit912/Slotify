@@ -80,9 +80,10 @@ svg.bi {
     font-weight: 400;
 }
 
-.date-cell {
-    font-weight: 600;
-    background-color: #f3f3f3;
+/* Wider Date Column */
+.calendar-table .date-cell {
+    min-width: 90px;
+    max-width: 180px;
 }
 
 /* Mobile Responsive Styles */
