@@ -68,6 +68,9 @@ class User(db.Model, UserMixin):
     def is_admin(self):
         return self.role in ("admin", "superadmin")
     
+    def is_superadmin(self):
+        return self.role == "superadmin"
+    
     def set_hashed_password(self, password):
         """
         Set hashed password for the user.

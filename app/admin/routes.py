@@ -17,7 +17,7 @@ from app.models.user import User
 from app.models.washingmachine import WashingMachine
 from app.models.building import Building
 from app.utils.decorators import admin_required
-from app.services import create_washing_machine, create_building
+from app.services import create_washing_machine, create_building, update_user_by_uuid, get_user_by_uuid
 
 logger = logging.getLogger(__name__)
 
@@ -116,3 +116,46 @@ def create_machine():
         logger.error(f"Error creating washing machine: {str(e)}")
         flash("An error occurred while creating the washing machine. Please try again.", "danger")
         return redirect(url_for('admin.home'))
+    
+
+@admin_bp.route('/make_admin/<user_uuid>', methods=['POST'])
+@admin_required
+def make_admin(user_uuid):
+    user = get_user_by_uuid(user_uuid)
+    current_admin = current_user
+
+    if not user:
+        flash('User not found.', 'danger')
+        logger.warning(f"[{current_admin.username}] tried to make a non-existent user ({user_uuid}) an admin.")
+    elif user.is_admin():
+        flash(f'{user.username} is already an admin.', 'info')
+        logger.info(f"[{current_admin.username}] attempted to make {user.username} an admin, but they already are.")
+    else:
+        update_user_by_uuid(user_uuid, role='admin')
+        flash(f'Admin privileges granted to {user.username}.', 'success')
+        logger.info(f"[{current_admin.username}] granted admin privileges to {user.username}.")
+
+    return redirect(url_for('admin.view_users'))
+
+
+@admin_bp.route('/revoke_admin/<user_uuid>', methods=['POST'])
+@admin_required
+def revoke_admin(user_uuid):
+    user = get_user_by_uuid(user_uuid)
+    current_admin = current_user
+
+    if not user:
+        flash('User not found.', 'danger')
+        logger.warning(f"[{current_admin.username}] tried to revoke admin of non-existent user ({user_uuid}).")
+    elif user.is_superadmin():
+        flash('You cannot revoke admin privileges from a superadmin.', 'warning')
+        logger.warning(f"[{current_admin.username}] attempted to revoke admin from superadmin {user.username}.")
+    elif not user.is_admin():
+        flash(f'{user.username} is not an admin.', 'info')
+        logger.info(f"[{current_admin.username}] attempted to revoke admin from {user.username}, who is not an admin.")
+    else:
+        update_user_by_uuid(user_uuid, role='user')
+        flash(f'Admin privileges revoked from {user.username}.', 'success')
+        logger.info(f"[{current_admin.username}] revoked admin privileges from {user.username}.")
+
+    return redirect(url_for('admin.view_admins'))

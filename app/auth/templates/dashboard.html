@@ -7,79 +7,83 @@
 
 <div class="card mb-4 shadow-sm p-4">
     <div class="d-flex align-items-center">
-        <img src="{{ user.avatar(size=150) }}" alt="Avatar of {{ user.fullname or user.username }}" class="rounded-circle me-3" width="128" height="128">
+        <img src="{{ user.avatar(size=150) }}" alt="Avatar of {{ user.fullname or user.username }}" class="rounded-circle me-4" width="128" height="128">
         <div>
-            <h2 class="mb-1">
-                Welcome, {{ user.first_name }}!
-            </h2>
-            <p class="mb-0"><strong>Fullname:</strong> {{ user.fullname }}</p>
-            <p class="mb-0"><strong>Email:</strong> {{ user.email }}</p>
-            <p class="mb-0"><strong>Contact No:</strong> {{ user.contact_no or 'N/A' }}</p>
-            <p class="mb-0"><strong>Room No:</strong> {{ user.room_no or 'N/A' }}</p>
-            <p class="mb-0"><strong>Course:</strong> {{ user.course or 'N/A' }}</p>
-            <p class="mb-0"><strong>Role:</strong> {{ user.role|capitalize }}</p>
-            <p class="mb-0"><strong>Building:</strong> {{ building.name if building else "N/A" }}</p>
+            <h2 class="mb-3"><i class="bi bi-person-circle me-2"></i>Welcome, {{ user.first_name }}!</h2>
+            <p class="mb-1"><i class="bi bi-person-lines-fill me-1"></i><strong>Fullname:</strong> {{ user.fullname }}</p>
+            <p class="mb-1"><i class="bi bi-envelope me-1"></i><strong>Email:</strong> {{ user.email }}</p>
+            <p class="mb-1"><i class="bi bi-telephone me-1"></i><strong>Contact No:</strong> {{ user.contact_no or 'N/A' }}</p>
+            <p class="mb-1"><i class="bi bi-door-open me-1"></i><strong>Room No:</strong> {{ user.room_no or 'N/A' }}</p>
+            <p class="mb-1"><i class="bi bi-mortarboard me-1"></i><strong>Course:</strong> {{ user.course.name or 'N/A' }}</p>
+            <p class="mb-1"><i class="bi bi-person-badge me-1"></i><strong>Role:</strong> {{ user.role|capitalize }}</p>
+            <p class="mb-0"><i class="bi bi-building me-1"></i><strong>Building:</strong> {{ building.name if building else "N/A" }}</p>
         </div>
     </div>
 </div>
 
-<div class="mb-4">
-    <h3>Washing Machines in Your Building</h3>
+<div class="mb-5">
+    <h3 class="mb-3"><i class="bi bi-boxes me-2"></i>Washing Machines in Your Building</h3>
 
     <div class="alert alert-info d-flex align-items-center" role="alert">
-        <i class="bi bi-info-circle me-2"></i>
+        <i class="bi bi-info-circle-fill me-2"></i>
         Use the "<strong>View Calendar</strong>" button to see available slots for a particular month and make a booking.
     </div>
 
     {% if machines %}
-        <div class="row">
-            {% for machine in machines %}
-            <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ machine.name }}</h5>
-                        <button class="btn btn-outline-primary btn-sm open-calendar-modal"
-                                data-machine-uuid="{{ machine.uuid }}"
-                                aria-label="View calendar for {{ machine.name }}">
-                            <i class="bi bi-calendar3"></i> View Calendar
-                        </button>
+    <div class="row">
+        {% for machine in machines %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title"><i class="bi bi-gear-wide-connected me-1"></i>{{ machine.name }}</h5>
+                    <div class="d-flex justify-content-between text-muted small mb-2">
+                        <span><i class="bi bi-upc-scan me-1"></i><code>{{ machine.code }}</code></span>
+                        <span><i class="bi bi-building me-1"></i>{{ machine.building.name }}</span>
                     </div>
+                    <button class="btn btn-outline-primary mt-auto open-calendar-modal"
+                            data-machine-uuid="{{ machine.uuid }}"
+                            aria-label="View calendar for {{ machine.name }}">
+                        <i class="bi bi-calendar3 me-1"></i> View Calendar
+                    </button>
                 </div>
             </div>
-            {% endfor %}
-        </div>
+        </div>        
+        {% endfor %}
+    </div>
     {% else %}
-        <p>No machines available in your building.</p>
+    <p class="text-muted">No machines available in your building.</p>
     {% endif %}
 </div>
 
-<hr>
+<hr class="my-5">
 
 <div>
-    <h3>Upcoming Bookings</h3>
+    <h3 class="mb-3"><i class="bi bi-clock-history me-2"></i>Upcoming Bookings</h3>
     {% if bookings %}
     <ul class="list-group" id="bookings-list">
         {% for booking in bookings %}
         <li class="list-group-item d-flex justify-content-between align-items-center" data-booking-uuid="{{ booking.uuid }}">
             <div>
-                <strong>{{ moment(booking.date).format('LL') }}</strong><br>
-                Slot {{ booking.time_slot.slot_number }} – {{ booking.time_slot.time_range }}<br>
-                <small class="text-muted">{{ booking.time_slot.machine.name }}</small>
+                <strong><i class="bi bi-calendar-event me-1"></i>{{ moment(booking.date).format('LL') }}</strong><br>
+                <i class="bi bi-clock me-1"></i>Slot {{ booking.time_slot.slot_number }} – {{ booking.time_slot.time_range }}<br>
+                <small class="text-muted">
+                    <i class="bi bi-gear-wide-connected me-1"></i>{{ booking.time_slot.machine.name }}
+                    [<code>{{ booking.time_slot.machine.code }}</code>]
+                </small>
             </div>
             <button class="btn btn-outline-danger btn-sm cancel-booking-btn"
                     data-slot-uuid="{{ booking.time_slot.uuid }}"
                     data-date="{{ booking.date }}"
                     aria-label="Cancel this booking">
-                <i class="bi bi-x-circle"></i> Cancel
+                <i class="bi bi-x-circle me-1"></i> Cancel
             </button>
         </li>
         {% endfor %}
     </ul>
     {% else %}
-    <p>You have no upcoming bookings.</p>
+    <p class="text-muted">You have no upcoming bookings.</p>
     {% endif %}
 </div>
-
 
 <!-- Calendar Modal -->
 <div class="modal fade" id="calendarModal" tabindex="-1" aria-labelledby="calendarModalLabel" aria-hidden="true">
@@ -87,7 +91,9 @@
         <form id="calendarForm" method="get">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="calendarModalLabel">View Machine Calendar</h5>
+                    <h5 class="modal-title" id="calendarModalLabel">
+                        <i class="bi bi-calendar-week me-1"></i>View Machine Calendar
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -106,7 +112,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Go</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Go
+                    </button>
                 </div>
             </div>
         </form>
@@ -125,7 +133,6 @@
         const yearInput = document.getElementById('calendar-year');
         const monthSelect = document.getElementById('calendar-month');
 
-        // Set current year/month by default
         const now = new Date();
         yearInput.value = now.getFullYear();
         monthSelect.value = now.getMonth() + 1;
@@ -145,9 +152,7 @@
             window.location.href = `/machine/${uuid}/calendar/${year}/${month}`;
         });
     });
-</script>
 
-<script>
     document.querySelectorAll('.cancel-booking-btn').forEach(button => {
         button.addEventListener('click', async function () {
             const slotUuid = this.dataset.slotUuid;
@@ -179,6 +184,4 @@
         });
     });
 </script>
-
-
 {% endblock %}
