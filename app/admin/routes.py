@@ -17,7 +17,7 @@ from app.models.user import User
 from app.models.washingmachine import WashingMachine
 from app.models.building import Building
 from app.utils.decorators import admin_required
-from app.services import create_washing_machine, create_building, update_user_by_uuid, get_user_by_uuid
+from app.services import create_washing_machine, create_building, update_user_by_uuid, delete_user_by_uuid, get_user_by_uuid
 
 logger = logging.getLogger(__name__)
 
@@ -160,4 +160,31 @@ def revoke_admin(user_uuid):
 
     return redirect(url_for('admin.view_admins'))
 
-# TODO: Delete User Route
+@admin_bp.route('/delete_user/<user_uuid>', methods=['POST'])
+@admin_required
+def delete_user(user_uuid):
+    """
+    Delete a user by UUID.
+    Only superadmins can delete other superadmins.
+    Admins can delete regular users.
+    """
+    logger.info(f"Admin '{current_user.username}' requested deletion of user {user_uuid}")
+
+    user_to_delete = get_user_by_uuid(user_uuid)
+    if not user_to_delete:
+        logger.warning(f"Attempted to delete non-existent user: {user_uuid}")
+        flash("User not found.", "danger")
+        return redirect(url_for('admin.view_users'))
+
+    # Prevent unauthorized deletion of superadmins
+    if user_to_delete.is_superadmin() and not current_user.is_superadmin():
+        logger.warning(f"Unauthorized deletion attempt: Admin '{current_user.username}' tried to delete superadmin '{user_to_delete.username}'")
+        flash("You are not authorized to delete a superadmin.", "danger")
+        return redirect(url_for('admin.view_users'))
+
+    # Perform deletion
+    delete_user_by_uuid(user_uuid)
+    logger.info(f"User '{user_to_delete.username}' (UUID: {user_uuid}) deleted by '{current_user.username}'")
+    flash(f"User '{user_to_delete.username}' has been deleted.", "success")
+
+    return redirect(url_for('admin.view_users'))

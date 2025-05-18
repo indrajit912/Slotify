@@ -14,12 +14,6 @@ class UserLoginForm(FlaskForm):
     submit = SubmitField("Log in")
 
 
-class EmailRegistrationForm(FlaskForm):
-    fullname = StringField("Fullname", validators=[DataRequired()])
-    email = EmailField("Email", validators=[DataRequired(), Email()])
-
-    submit = SubmitField("Next")
-
 class RegisterForm(FlaskForm):
     username = StringField("Username", validators=[DataRequired(), Length(max=100)])
     first_name = StringField("First Name", validators=[DataRequired(), Length(max=50)])
@@ -27,6 +21,7 @@ class RegisterForm(FlaskForm):
     last_name = StringField("Last Name", validators=[DataRequired(), Length(max=50)])
     email = StringField("Email", validators=[DataRequired(), Email(), Length(max=120)])
     password = PasswordField("Password", validators=[DataRequired(), Length(min=8)])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match.')])
     contact_no = StringField("Contact No", validators=[Length(max=20)])
     room_no = StringField("Room No", validators=[Length(max=20)])
     building_uuid = SelectField("Building", choices=[], validators=[DataRequired()])

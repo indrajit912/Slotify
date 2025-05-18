@@ -1,5 +1,4 @@
 <!-- app/auth/templates/register.html -->
-
 {% extends "base.html" %}
 {% block title %}Register{% endblock %}
 
@@ -62,6 +61,15 @@
                                 <div class="text-danger small">{{ form.password.errors[0] }}</div>
                             {% endif %}
                         </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label"><i class="bi bi-shield-lock me-1"></i> Confirm Password</label>
+                            {{ form.confirm_password(class="form-control", placeholder="Re-enter your password") }}
+                            {% if form.confirm_password.errors %}
+                                <div class="text-danger small">{{ form.confirm_password.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
 
                         <div class="form-group mb-3">
                             <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ form.contact_no.label.text }}</label>
@@ -90,14 +98,33 @@
                         </div>
 
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-check-circle me-1"></i> {{ form.submit.label.text }}
+                            <button id="submit-btn" type="submit" class="btn btn-primary btn-lg">
+                                <span id="spinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                                <span id="btn-text"><i class="bi bi-check-circle me-1"></i> {{ form.submit.label.text }}</span>
                             </button>
-                        </div>
+                        </div>                        
+                        
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+<script>
+    document.querySelector('form').addEventListener('submit', function () {
+        const btn = document.getElementById('submit-btn');
+        const spinner = document.getElementById('spinner');
+        const btnText = document.getElementById('btn-text');
+
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+        btnText.textContent = 'Registering...';
+    });
+</script>
+
 {% endblock %}

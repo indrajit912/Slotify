@@ -22,13 +22,26 @@
         {% for admin in admins %}
         <tr>
             <td>
-                <span class="fw-semibold me-2">{{ admin.username }}</span>
-                <form method="POST" action="{{ url_for('admin.revoke_admin', user_uuid=admin.uuid) }}" class="d-inline" onsubmit="return confirm('Revoke admin rights for {{ admin.username }}?');">
+                <div class="d-flex align-items-center">
+                    <span class="fw-semibold me-2">{{ admin.username }}</span>
+            
+                    {% if admin.is_superadmin() %}
+                    <span class="badge bg-danger text-white align-middle" title="Superadmin">
+                        <i class="bi bi-shield-lock-fill"></i> S
+                    </span>
+                    {% endif %}
+                </div>
+            
+                {% if not admin.is_superadmin() %}
+                <form method="POST" action="{{ url_for('admin.revoke_admin', user_uuid=admin.uuid) }}"
+                      onsubmit="return confirm('Revoke admin rights for {{ admin.username }}?');" class="mt-1">
                     <button type="submit" class="btn btn-sm btn-outline-danger p-1" title="Revoke Admin">
                         <i class="bi bi-person-dash-fill"></i>
                     </button>
                 </form>
+                {% endif %}
             </td>
+            
             <td>{{ admin.fullname }}</td>
             <td>
                 <a href="mailto:{{ admin.email }}" class="text-decoration-none">
