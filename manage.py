@@ -121,7 +121,7 @@ def create_isi_specific_data():
     """
     # Create or get building
     try:
-        building = create_building(name="Research Scholars' Hostel, ISIBc", code="RSH")
+        building = create_building(name="Research Scholars' Hostel", code="RSH")
     except ValueError:
         building = Building.query.filter_by(code="RSH").first()
 

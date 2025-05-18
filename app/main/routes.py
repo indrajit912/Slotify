@@ -7,9 +7,12 @@ Author: Indrajit Ghosh
 Created on: May 10, 2025
 """
 import logging
+import base64
+import io
 import calendar
 from datetime import datetime, date
 
+import qrcode
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 
@@ -17,6 +20,8 @@ from . import main_bp
 from app.models.washingmachine import WashingMachine
 from app.models.booking import TimeSlot
 from app.services import get_machine_monthly_slots, book_slot, cancel_booking
+from app.utils.decorators import admin_required
+from config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +34,7 @@ def index():
     logger.info("Visited homepage.")
     return render_template("index.html")
 
-# TODO: There is a bug in this route. 
-# When the user visits this route without authentication the 
-# calendar layout gets break for two consecutive bookings!
+
 @main_bp.route('/machine/<uuid_str>/calendar/<int:year>/<int:month>')
 def view_machine_calendar(uuid_str, year, month):
     """
@@ -67,7 +70,8 @@ def view_machine_calendar(uuid_str, year, month):
                                machine=machine,
                                calendar_data=calendar_data,
                                year=year,
-                               month=month_name)
+                               month=month_name,
+                               month_num=month)
 
     except ValueError:
         flash("Washing machine not found.", "danger")
@@ -126,3 +130,39 @@ def cancel_slot_route():
     else:
         return jsonify({'success': False, 'message': 'You cannot cancel this slot.'})
 
+
+@main_bp.route('/machine/calendar/qrcode', methods=['POST'])
+@admin_required
+def generate_machine_calendar_qr():
+    app_dir = Config.APP_DATA_DIR
+    uuid_str = request.form.get('uuid_str')
+    year = int(request.form.get('year'))
+    month = int(request.form.get('month'))
+
+    machine = WashingMachine.query.filter_by(uuid=uuid_str).first_or_404()
+    building = machine.building
+
+    calendar_url = url_for(
+        'main.view_machine_calendar',
+        uuid_str=uuid_str,
+        year=year,
+        month=month,
+        _external=True
+    )
+
+    qr_img = qrcode.make(calendar_url)
+    buf = io.BytesIO()
+    qr_img.save(buf, format='PNG')
+    qr_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+
+    return render_template(
+        'machine_qr.html',
+        machine=machine,
+        building=building,
+        year=year,
+        month=month,
+        month_name=calendar.month_name[month],
+        calendar_url=calendar_url,
+        qr_b64=qr_b64,
+        current_year=datetime.now().year
+    )
