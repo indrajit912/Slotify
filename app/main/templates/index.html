@@ -3,18 +3,29 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-    <div class="text-center">
+{% include 'flash_msgs.html' %}
 
-        <!-- ISI Logo -->
-        <img src="{{ url_for('main.static', filename='img/isi_logo.png') }}" alt="ISI Bangalore Logo" class="mb-4" style="max-width: 200px; height: auto;">
-
-        <h1 class="mb-4">Welcome to Slotify 👕</h1>
-        <p class="lead">Easily book your hostel washing machine slots online.</p>
+<div class="d-flex justify-content-center align-items-center min-vh-75">
+  <div class="card shadow-lg p-5 text-center" style="max-width: 480px; width: 100%; border-radius: 1rem;">
     
-        {% if not current_user.is_authenticated %}
-            <a href="{{ url_for('auth.register') }}" class="btn btn-primary mt-4">Get Started</a> 
-        {% else %}
-            <a href="#" class="btn btn-success mt-4">Go to Booking Calendar</a>
-        {% endif %}
-    </div>
+    <!-- ISI Logo -->
+    <img src="{{ url_for('main.static', filename='img/isi_logo.png') }}" alt="ISI Bangalore Logo" 
+         class="mb-4 mx-auto d-block" style="max-width: 180px; height: auto;">
+    
+    <h1 class="mb-3 fw-bold">Welcome to Slotify <span class="fs-2">👕</span></h1>
+    
+    <p class="lead text-muted mb-4">Easily book your hostel washing machine slots online.</p>
+
+    {% if not current_user.is_authenticated %}
+      <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-5 shadow-sm">
+        Get Started
+      </a>
+    {% else %}
+      <a href="{{ url_for('auth.dashboard') }}" class="btn btn-success btn-lg px-5 shadow-sm">
+        Dashboard
+      </a>
+    {% endif %}
+
+  </div>
+</div>
 {% endblock %}

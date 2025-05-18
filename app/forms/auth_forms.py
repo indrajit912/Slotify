@@ -9,7 +9,7 @@ from wtforms.validators import DataRequired, EqualTo, Optional, Length, Email
 
 
 class UserLoginForm(FlaskForm):
-    username_or_email = StringField("Username or Email address", validators=[DataRequired()])
+    username_or_email = StringField("Username or Email", validators=[DataRequired()])
     passwd = PasswordField("Password", validators=[DataRequired()])
     submit = SubmitField("Log in")
 

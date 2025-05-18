@@ -2,111 +2,129 @@
 {% extends "base.html" %}
 {% block title %}Register{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('auth.static', filename='css/register.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow-lg border-0">
-                <div class="card-body">
-                    <h2 class="card-title mb-4 text-center">
-                        <i class="bi bi-person-plus-fill me-2 text-primary"></i> Create a New Account
-                    </h2>
+{% include "flash_msgs.html" %}
 
-                    {% include "flash_msgs.html" %}
+<div class="register-container">
+    <div class="card shadow-lg">
+        <div class="card-body">
 
-                    <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
-                        {{ form.hidden_tag() }}
+            <!-- Back Button -->
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-back">
+                <i class="bi bi-arrow-left me-1"></i> Back to Home
+            </a>
 
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="username"><i class="bi bi-person-circle me-1"></i> {{ form.username.label.text }}</label>
-                            {{ form.username(class="form-control", placeholder="Choose a username") }}
-                            {% if form.username.errors %}
-                                <div class="text-danger small">{{ form.username.errors[0] }}</div>
-                            {% endif %}
-                        </div>
+            <h2 class="card-title">
+                <i class="bi bi-person-plus-fill me-2 text-primary"></i> Create a New Account
+            </h2>
 
-                        <div class="form-group mb-3">
-                            <label class="form-label"><i class="bi bi-person me-1"></i> {{ form.first_name.label.text }}</label>
-                            {{ form.first_name(class="form-control", placeholder="First name") }}
-                            {% if form.first_name.errors %}
-                                <div class="text-danger small">{{ form.first_name.errors[0] }}</div>
-                            {% endif %}
-                        </div>
+            <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
 
-                        <div class="form-group mb-3">
-                            <label class="form-label"><i class="bi bi-person me-1"></i> {{ form.middle_name.label.text }}</label>
-                            {{ form.middle_name(class="form-control", placeholder="Middle name (optional)") }}
-                        </div>
+                {{ form.hidden_tag() }}
 
-                        <div class="form-group mb-3">
-                            <label class="form-label"><i class="bi bi-person me-1"></i> {{ form.last_name.label.text }}</label>
-                            {{ form.last_name(class="form-control", placeholder="Last name") }}
-                            {% if form.last_name.errors %}
-                                <div class="text-danger small">{{ form.last_name.errors[0] }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label"><i class="bi bi-envelope me-1"></i> {{ form.email.label.text }}</label>
-                            {{ form.email(class="form-control", placeholder="Email address") }}
-                            {% if form.email.errors %}
-                                <div class="text-danger small">{{ form.email.errors[0] }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label"><i class="bi bi-shield-lock me-1"></i> {{ form.password.label.text }}</label>
-                            {{ form.password(class="form-control", placeholder="Create a strong password") }}
-                            {% if form.password.errors %}
-                                <div class="text-danger small">{{ form.password.errors[0] }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="form-group mb-3">
-                            <label class="form-label"><i class="bi bi-shield-lock me-1"></i> Confirm Password</label>
-                            {{ form.confirm_password(class="form-control", placeholder="Re-enter your password") }}
-                            {% if form.confirm_password.errors %}
-                                <div class="text-danger small">{{ form.confirm_password.errors[0] }}</div>
-                            {% endif %}
-                        </div>
-                        
-
-                        <div class="form-group mb-3">
-                            <label class="form-label"><i class="bi bi-telephone me-1"></i> {{ form.contact_no.label.text }}</label>
-                            {{ form.contact_no(class="form-control", placeholder="Contact number (optional)") }}
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label"><i class="bi bi-door-open me-1"></i> {{ form.room_no.label.text }}</label>
-                            {{ form.room_no(class="form-control", placeholder="Room number (optional)") }}
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label"><i class="bi bi-building me-1"></i> {{ form.building_uuid.label.text }}</label>
-                            {{ form.building_uuid(class="form-select") }}
-                            {% if form.building_uuid.errors %}
-                                <div class="text-danger small">{{ form.building_uuid.errors[0] }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="form-group mb-4">
-                            <label class="form-label"><i class="bi bi-journal-bookmark me-1"></i> {{ form.course_uuid.label.text }}</label>
-                            {{ form.course_uuid(class="form-select") }}
-                            {% if form.course_uuid.errors %}
-                                <div class="text-danger small">{{ form.course_uuid.errors[0] }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="d-grid">
-                            <button id="submit-btn" type="submit" class="btn btn-primary btn-lg">
-                                <span id="spinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-                                <span id="btn-text"><i class="bi bi-check-circle me-1"></i> {{ form.submit.label.text }}</span>
-                            </button>
-                        </div>                        
-                        
-                    </form>
+                <!-- Username -->
+                <div class="form-floating mb-3">
+                    {{ form.username(class="form-control", placeholder="Choose a username", id="username") }}
+                    <label for="username"><i class="bi bi-person-circle"></i> {{ form.username.label.text }}</label>
+                    {% if form.username.errors %}
+                        <div class="text-danger small">{{ form.username.errors[0] }}</div>
+                    {% endif %}
                 </div>
-            </div>
+
+                <!-- First Name -->
+                <div class="form-floating mb-3">
+                    {{ form.first_name(class="form-control", placeholder="First name", id="first_name") }}
+                    <label for="first_name"><i class="bi bi-person"></i> {{ form.first_name.label.text }}</label>
+                    {% if form.first_name.errors %}
+                        <div class="text-danger small">{{ form.first_name.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Middle Name (optional) -->
+                <div class="form-floating mb-3">
+                    {{ form.middle_name(class="form-control", placeholder="Middle name (optional)", id="middle_name") }}
+                    <label for="middle_name"><i class="bi bi-person"></i> {{ form.middle_name.label.text }}</label>
+                </div>
+
+                <!-- Last Name -->
+                <div class="form-floating mb-3">
+                    {{ form.last_name(class="form-control", placeholder="Last name", id="last_name") }}
+                    <label for="last_name"><i class="bi bi-person"></i> {{ form.last_name.label.text }}</label>
+                    {% if form.last_name.errors %}
+                        <div class="text-danger small">{{ form.last_name.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Email -->
+                <div class="form-floating mb-3">
+                    {{ form.email(class="form-control", placeholder="Email address", id="email") }}
+                    <label for="email"><i class="bi bi-envelope"></i> {{ form.email.label.text }}</label>
+                    {% if form.email.errors %}
+                        <div class="text-danger small">{{ form.email.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Password -->
+                <div class="form-floating mb-3">
+                    {{ form.password(class="form-control", placeholder="Create a strong password", id="password") }}
+                    <label for="password"><i class="bi bi-shield-lock"></i> {{ form.password.label.text }}</label>
+                    {% if form.password.errors %}
+                        <div class="text-danger small">{{ form.password.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-floating mb-3">
+                    {{ form.confirm_password(class="form-control", placeholder="Re-enter your password", id="confirm_password") }}
+                    <label for="confirm_password"><i class="bi bi-shield-lock"></i> Confirm Password</label>
+                    {% if form.confirm_password.errors %}
+                        <div class="text-danger small">{{ form.confirm_password.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Contact Number (optional) -->
+                <div class="form-floating mb-3">
+                    {{ form.contact_no(class="form-control", placeholder="Contact number (optional)", id="contact_no") }}
+                    <label for="contact_no"><i class="bi bi-telephone"></i> {{ form.contact_no.label.text }}</label>
+                </div>
+
+                <!-- Room Number (optional) -->
+                <div class="form-floating mb-3">
+                    {{ form.room_no(class="form-control", placeholder="Room number (optional)", id="room_no") }}
+                    <label for="room_no"><i class="bi bi-door-open"></i> {{ form.room_no.label.text }}</label>
+                </div>
+
+                <!-- Building UUID (select) -->
+                <div class="form-floating mb-3">
+                    {{ form.building_uuid(class="form-select", id="building_uuid") }}
+                    <label for="building_uuid"><i class="bi bi-building"></i> {{ form.building_uuid.label.text }}</label>
+                    {% if form.building_uuid.errors %}
+                        <div class="text-danger small">{{ form.building_uuid.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Course UUID (select) -->
+                <div class="form-floating mb-4">
+                    {{ form.course_uuid(class="form-select", id="course_uuid") }}
+                    <label for="course_uuid"><i class="bi bi-journal-bookmark"></i> {{ form.course_uuid.label.text }}</label>
+                    {% if form.course_uuid.errors %}
+                        <div class="text-danger small">{{ form.course_uuid.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid">
+                    <button id="submit-btn" type="submit" class="btn btn-primary btn-lg">
+                        <span id="spinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                        <span id="btn-text"><i class="bi bi-check-circle me-1"></i> {{ form.submit.label.text }}</span>
+                    </button>
+                </div>
+
+            </form>
+
         </div>
     </div>
 </div>
@@ -114,7 +132,6 @@
 
 {% block scripts %}
 {{ super() }}
-
 <script>
     document.querySelector('form').addEventListener('submit', function () {
         const btn = document.getElementById('submit-btn');
@@ -126,5 +143,4 @@
         btnText.textContent = 'Registering...';
     });
 </script>
-
 {% endblock %}

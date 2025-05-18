@@ -1,3 +1,4 @@
+<!-- app/auth/templates/dashboard.html -->
 {% extends 'base.html' %}
 
 {% block title %}Dashboard{% endblock %}
@@ -6,10 +7,14 @@
 {% include 'flash_msgs.html' %}
 
 <div class="card mb-4 shadow-sm p-4">
-    <div class="d-flex align-items-center">
-        <img src="{{ user.avatar(size=150) }}" alt="Avatar of {{ user.fullname or user.username }}" class="rounded-circle me-4" width="128" height="128">
+    <div class="d-flex flex-column flex-sm-row align-items-center">
+        <!-- Avatar on top for xs, side by side from sm up -->
+        <img src="{{ user.avatar(size=150) }}" alt="Avatar of {{ user.fullname or user.username }}" 
+             class="rounded-circle mb-3 mb-sm-0 me-sm-4" width="128" height="128">
         <div>
-            <h2 class="mb-3"><i class="bi bi-person-circle me-2"></i>Welcome, {{ user.first_name }}!</h2>
+            <h2 class="mb-3 text-center text-sm-start">
+                <i class="bi bi-person-circle me-2"></i>Welcome, {{ user.first_name }}!
+            </h2>
             <p class="mb-1"><i class="bi bi-person-lines-fill me-1"></i><strong>Fullname:</strong> {{ user.fullname }}</p>
             <p class="mb-1"><i class="bi bi-envelope me-1"></i><strong>Email:</strong> {{ user.email }}</p>
             <p class="mb-1"><i class="bi bi-telephone me-1"></i><strong>Contact No:</strong> {{ user.contact_no or 'N/A' }}</p>
@@ -24,20 +29,23 @@
 <div class="mb-5">
     <h3 class="mb-3"><i class="bi bi-boxes me-2"></i>Washing Machines in Your Building</h3>
 
-    <div class="alert alert-info d-flex align-items-center" role="alert">
-        <i class="bi bi-info-circle-fill me-2"></i>
-        Use the "<strong>View Calendar</strong>" button to see available slots for a particular month and make a booking.
+    <div class="alert alert-info d-flex flex-column flex-md-row align-items-start align-items-md-center" role="alert">
+        <i class="bi bi-info-circle-fill mb-2 mb-md-0 me-md-2 fs-4"></i>
+        <div>
+            Use the "<strong>View Calendar</strong>" button to see available slots for a particular month and make a booking.
+        </div>
     </div>
+    
 
     {% if machines %}
-    <div class="row">
+    <div class="row g-3">  <!-- Added gutter for spacing -->
         {% for machine in machines %}
-        <div class="col-md-6 col-lg-4 mb-4">
+        <div class="col-12 col-sm-6 col-lg-4"> <!-- full width on xs, 2 per row on sm, 3 per row on lg -->
             <div class="card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title"><i class="bi bi-gear-wide-connected me-1"></i>{{ machine.name }}</h5>
-                    <div class="d-flex justify-content-between text-muted small mb-2">
-                        <span><i class="bi bi-upc-scan me-1"></i><code>{{ machine.code }}</code></span>
+                    <div class="d-flex justify-content-between text-muted small mb-2 flex-wrap">
+                        <span class="me-2"><i class="bi bi-upc-scan me-1"></i><code>{{ machine.code }}</code></span>
                         <span><i class="bi bi-building me-1"></i>{{ machine.building.name }}</span>
                     </div>
                     <button class="btn btn-outline-primary mt-auto open-calendar-modal"
@@ -62,8 +70,8 @@
     {% if bookings %}
     <ul class="list-group" id="bookings-list">
         {% for booking in bookings %}
-        <li class="list-group-item d-flex justify-content-between align-items-center" data-booking-uuid="{{ booking.uuid }}">
-            <div>
+        <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center" data-booking-uuid="{{ booking.uuid }}">
+            <div class="mb-2 mb-md-0">
                 <strong><i class="bi bi-calendar-event me-1"></i>{{ moment(booking.date).format('LL') }}</strong><br>
                 <i class="bi bi-clock me-1"></i>Slot {{ booking.time_slot.slot_number }} – {{ booking.time_slot.time_range }}<br>
                 <small class="text-muted">
@@ -87,7 +95,8 @@
 
 <!-- Calendar Modal -->
 <div class="modal fade" id="calendarModal" tabindex="-1" aria-labelledby="calendarModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <!-- modal-sm to keep it narrow on small screens -->
         <form id="calendarForm" method="get">
             <div class="modal-content">
                 <div class="modal-header">
@@ -112,7 +121,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary w-100">
                         <i class="bi bi-arrow-right-circle me-1"></i>Go
                     </button>
                 </div>
@@ -122,6 +131,7 @@
 </div>
 
 {% endblock %}
+
 
 {% block scripts %}
 {{ super() }}

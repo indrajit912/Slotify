@@ -20,6 +20,8 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('main.static', filename='css/styles.css') }}">
 
+    {% block styles %}{% endblock %}
+    
     {% block head %}{% endblock %}
 </head>
 <body class="d-flex flex-column h-100">
