@@ -7,23 +7,25 @@ import logging
 from datetime import date
 
 # Third-party imports
-from flask import flash, redirect, render_template, request, session, url_for, current_app
+from flask import flash, redirect, render_template, url_for, current_app
 from flask_login import current_user, login_required, login_user, logout_user
 
 # Relative imports
 from . import auth_bp
-from app.forms.auth_forms import UserLoginForm, RegisterForm
+from app.forms.auth_forms import UserLoginForm, RegisterForm, ForgotPasswordForm, ResetPasswordForm
 from app.models.user import User
 from app.models.booking import Booking, TimeSlot
 from app.models.building import Building
 from app.models.course import Course
-from app.services import update_user_last_seen, create_user
+from app.services import update_user_last_seen, create_user, get_user_by_email, update_user_by_uuid
 from app.utils.decorators import logout_required
 from scripts.email_message import EmailMessage
 from app.utils.token import generate_registration_token, confirm_registration_token
 from config import EmailConfig
 
 logger = logging.getLogger(__name__)
+
+# TODO: Create a settings page for authenticated user to update their profile!
 
 @auth_bp.before_request
 def update_last_seen():
@@ -220,7 +222,64 @@ def complete_registration(token):
         flash("An error occurred while creating the account. Please try again.", "danger")
         return redirect(url_for('auth.register'))
 
+
 @auth_bp.route('/forgot_password', methods=['GET', 'POST'])
 @logout_required
 def forgot_password():
-    return "This is forgot_password."
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        email = form.email.data.lower()
+        user = get_user_by_email(email=email)
+        if user:
+            reset_passwd_token = user.get_reset_password_token()
+            reset_url = url_for('auth.reset_password', token=reset_passwd_token, _external=True)
+            html_body = render_template('email/email_reset_password.html', user=user.first_name, reset_url=reset_url)
+
+            current_app.logger.info(f"Password reset requested for user {user.uuid} ({email}). Reset URL: {reset_url}")
+            
+            # Email
+            msg = EmailMessage(
+                sender_email_id=EmailConfig.MAIL_USERNAME,
+                to=email,
+                subject=f"Reset Your {current_app.config['FLASK_APP_NAME']} Password",
+                email_html_text=html_body
+            )
+
+            try:
+                msg.send(
+                    sender_email_password=EmailConfig.MAIL_PASSWORD,
+                    server_info=EmailConfig.GMAIL_SERVER,
+                    print_success_status=False
+                )
+                logger.info(f"Password Reset email successfully sent to {email}")
+            except Exception as e:
+                logger.exception(f"Failed to send password reset link email to {email}: {e}")
+                flash("Failed to send password reset link email. Please try again later.", "danger")
+                return redirect(url_for('auth.login'))
+
+            
+            flash('Check your email for instructions to reset your password.', 'info')
+        else:
+            current_app.logger.warning(f"Password reset requested for non-existent email: {email}")
+            flash('If that email is registered, you will receive a reset link shortly.', 'info')
+        return redirect(url_for('auth.login'))
+    return render_template('forgot_password.html', form=form)
+
+
+@auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
+@logout_required
+def reset_password(token):
+    user = User.verify_reset_password_token(token)
+    if not user:
+        current_app.logger.warning(f"Invalid or expired password reset token used: {token}")
+        flash('The password reset link is invalid or has expired.', 'warning')
+        return redirect(url_for('auth.forgot_password'))
+    
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        update_user_by_uuid(user_uuid=user.uuid, password=form.password.data)
+        current_app.logger.info(f"Password successfully reset for user {user.uuid}")
+        flash('Your password has been reset successfully. You can now log in.', 'success')
+        return redirect(url_for('auth.login'))
+
+    return render_template('reset_password.html', form=form)

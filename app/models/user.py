@@ -127,11 +127,14 @@ class User(db.Model, UserMixin):
             'fullname': self.fullname,
             'email': self.email,
             'role': self.role,
+            'contact_no': self.contact_no,
+            'room_no': self.room_no,
             'date_joined': User.format_datetime_to_str(self.date_joined),
             'last_updated': User.format_datetime_to_str(self.last_updated),
             'last_seen': User.format_datetime_to_str(self.last_seen),
             'email_verified': self.email_verified,
-            'campus_address': self.campus_address
+            'building': self.building.name,
+            'course': self.course.name
         }
         
     
@@ -149,38 +152,16 @@ class User(db.Model, UserMixin):
         return dt.strftime('%a, %d %b %Y %H:%M:%S UTC')
 
     
-    def generate_email_verification_token(self):
-        """
-        Generate email verification token.
+    def get_reset_password_token(self, expires_sec=3600):
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return serializer.dumps({'user_id': self.id}, salt='password-reset-salt')
 
-        Returns:
-            str: Email verification token.
-        """
-        serializer = URLSafeTimedSerializer(
-            secret_key=current_app.config['SECRET_KEY'], salt=b"email_verification"
-        )
-        return serializer.dumps({'user_id': self.id, 'email_verified': self.email_verified})
-    
     @staticmethod
-    def verify_email_verification_token(token):
-        """
-        Verify email verification token.
-
-        Args:
-            token (str): Email verification token.
-
-        Returns:
-            User or None: User object if token is valid, None otherwise.
-        """
-        serializer = URLSafeTimedSerializer(
-            secret_key=current_app.config['SECRET_KEY'], salt=b"email_verification"
-        )
+    def verify_reset_password_token(token, expires_sec=3600):
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
         try:
-            data = serializer.loads(token, max_age=3600 * 24)  # Token expires after 1 day
+            data = serializer.loads(token, salt='password-reset-salt', max_age=expires_sec)
             user_id = data.get('user_id')
-            email_verified = data.get('email_verified')
-            if user_id is not None and email_verified is False:
-                return User.query.get(user_id)
-        except:
-            pass
-        return None
+        except Exception:
+            return None
+        return User.query.get(user_id)
