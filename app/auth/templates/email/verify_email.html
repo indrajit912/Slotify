@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Verification – Slotify</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --brand-color: #2b6cb0;
+      --accent-color: #edf2f7;
+      --text-color: #2d3748;
+      --muted-color: #718096;
+      --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      --radius: 10px;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--accent-color);
+      font-family: var(--font);
+      color: var(--text-color);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 2rem auto;
+      background-color: white;
+      padding: 2rem 2.5rem;
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .logo h1 {
+      font-size: 1.8rem;
+      color: var(--brand-color);
+      margin: 0;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      margin-top: 1rem;
+      color: var(--text-color);
+    }
+
+    p {
+      line-height: 1.6;
+      font-size: 1rem;
+    }
+
+    .button {
+      display: inline-block;
+      background-color: var(--brand-color);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      margin: 1.5rem 0;
+      transition: background-color 0.2s ease;
+    }
+
+    .link-box {
+      background-color: #f1f5f9;
+      padding: 1rem;
+      word-wrap: break-word;
+      border-left: 4px solid var(--brand-color);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: var(--muted-color);
+      text-align: center;
+    }
+
+    .signature {
+      margin-top: 1.5rem;
+    }
+
+    a {
+      color: var(--brand-color);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        margin: 1rem;
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>Slotify</h1>
+    </div>
+
+    <h2>Confirm Your Email Address</h2>
+
+    <p>Hi {{ user }},</p>
+
+    <p>Thanks for registering with <strong>Slotify</strong> – your smart platform to reserve washing machine time slots with ease.</p>
+
+    <p>To activate your account, please verify your email address by clicking the button below:</p>
+
+    <div style="text-align: center;">
+      <a href="{{ verification_link }}" class="button">Verify My Email</a>
+    </div>
+
+    <p>If the button doesn't work, you can also use the following link:</p>
+
+    <div class="link-box">
+      <a href="{{ verification_link }}">{{ verification_link }}</a>
+    </div>
+
+    <div class="signature">
+      Warm regards,<br>
+      <strong>The Slotify Team</strong><br>
+      Created by <a href="https://indrajitghosh.onrender.com/" target="_blank">Indrajit Ghosh</a>
+    </div>
+
+    <div class="footer">
+      Didn't request this email? Please ignore it.
+    </div>
+  </div>
+</body>
+</html>

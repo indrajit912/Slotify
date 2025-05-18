@@ -159,3 +159,5 @@ def revoke_admin(user_uuid):
         logger.info(f"[{current_admin.username}] revoked admin privileges from {user.username}.")
 
     return redirect(url_for('admin.view_admins'))
+
+# TODO: Delete User Route

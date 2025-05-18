@@ -12,7 +12,7 @@
         <p class="lead">Easily book your hostel washing machine slots online.</p>
     
         {% if not current_user.is_authenticated %}
-            <a href="{{ url_for('auth.register_email') }}" class="btn btn-primary mt-4">Get Started</a> 
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary mt-4">Get Started</a> 
         {% else %}
             <a href="#" class="btn btn-success mt-4">Go to Booking Calendar</a>
         {% endif %}

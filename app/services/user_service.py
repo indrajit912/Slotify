@@ -18,7 +18,17 @@ from scripts.utils import utcnow
 
 logger = logging.getLogger(__name__)
 
-def create_user(username, first_name, email, password, role="user", building_uuid=None, course_uuid=None, middle_name=None, last_name=None):
+def create_user(
+        username, first_name, email, password, 
+        role="user", 
+        contact_no=None,
+        room_no=None,
+        building_uuid=None, 
+        course_uuid=None, 
+        middle_name=None, 
+        last_name=None,
+        email_verified=False
+):
     """
     Creates and stores a new user with hashed password, building, and course association.
 
@@ -27,6 +37,8 @@ def create_user(username, first_name, email, password, role="user", building_uui
         first_name (str): User's first name.
         email (str): User's email (must be unique).
         password (str): Plaintext password.
+        contact_no (str): Contact number.
+        room_no (str): Room number.
         role (str, optional): 'user', 'admin', or 'superadmin'. Defaults to 'user'.
         building_uuid (str, optional): UUID of the building where the user resides.
         course_uuid (str, optional): UUID of the course the user is enrolled in.
@@ -47,8 +59,19 @@ def create_user(username, first_name, email, password, role="user", building_uui
         logger.warning(f"Username already taken: {username}")
         raise ValueError("Username already taken.")
 
+    # Validate required fields
+    if not username:
+        raise ValueError("Username is required.")
     if not first_name:
         raise ValueError("First name is required.")
+    if not last_name:
+        raise ValueError("Last name is required.")
+    if not email:
+        raise ValueError("Email is required.")
+    if not password:
+        raise ValueError("Password is required.")
+    if not building_uuid:
+        raise ValueError("Building UUID is required.")
 
     logger.info(f"Creating new user: {username} ({email})")
 
@@ -58,7 +81,10 @@ def create_user(username, first_name, email, password, role="user", building_uui
         middle_name=middle_name,
         last_name=last_name,
         email=email,
-        role=role
+        contact_no=contact_no,
+        room_no=room_no,
+        role=role,
+        email_verified=email_verified
     )
     user.set_hashed_password(password=password)
 

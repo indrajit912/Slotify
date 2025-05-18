@@ -7,16 +7,21 @@ import logging
 from datetime import date
 
 # Third-party imports
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import flash, redirect, render_template, request, session, url_for, current_app
 from flask_login import current_user, login_required, login_user, logout_user
 
 # Relative imports
 from . import auth_bp
-from app.forms.auth_forms import UserLoginForm
+from app.forms.auth_forms import UserLoginForm, RegisterForm
 from app.models.user import User
 from app.models.booking import Booking, TimeSlot
-from app.services import update_user_last_seen
+from app.models.building import Building
+from app.models.course import Course
+from app.services import update_user_last_seen, create_user
 from app.utils.decorators import logout_required
+from scripts.email_message import EmailMessage
+from app.utils.token import generate_registration_token, confirm_registration_token
+from config import EmailConfig
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +52,7 @@ def login():
                 flash("Login successful!", 'success')
                 return redirect(url_for('auth.dashboard'))
             else:
-                flash("Wrong password. Try again!", 'error')
+                flash("Invalid username or password. Please try again.", "error")
                 logger.warning(f"Failed login attempt: incorrect password for '{user_input}'")
         else:
             flash("That user doesn't exist! Try again...", 'error')
@@ -98,12 +103,124 @@ def logout():
 
     return redirect(url_for('auth.login'))
 
-
-@auth_bp.route('/register_email', methods=['GET', 'POST'])
+@auth_bp.route('/register', methods=['GET', 'POST'])
 @logout_required
-def register_email():
-    return "This is register_email"
+def register():
+    """
+    Handle user registration by displaying the form, validating it,
+    generating a token, and sending a verification email.
+    """
+    logger.info("Accessed /register route")
+    form = RegisterForm()
+
+    # Populate choices with (uuid, name)
+    form.building_uuid.choices = [(b.uuid, b.name) for b in Building.query.all()]
+    form.course_uuid.choices = [(c.uuid, c.name) for c in Course.query.all()]
+
+    if form.validate_on_submit():
+        logger.debug("Register form submitted and validated.")
+
+        existing = User.query.filter_by(email=form.email.data).first()
+        if existing:
+            logger.warning(f"Attempt to register with already registered email: {form.email.data}")
+            flash("Email is already registered and verified.", "danger")
+            return redirect(url_for('auth.login'))
+
+        form_data = {
+            "username": form.username.data,
+            "first_name": form.first_name.data,
+            "middle_name": form.middle_name.data,
+            "last_name": form.last_name.data,
+            "email": form.email.data,
+            "password": form.password.data,
+            "contact_no": form.contact_no.data,
+            "room_no": form.room_no.data,
+            "building_uuid": form.building_uuid.data,
+            "course_uuid": form.course_uuid.data
+        }
+
+        token = generate_registration_token(form_data)
+        verification_link = url_for('auth.complete_registration', token=token, _external=True)
+        html = render_template(
+            'email/verify_email.html',
+            verification_link=verification_link,
+            user=form_data['first_name']
+        )
+
+        logger.info(f"Registration token generated and email prepared for {form_data['email']}")
+
+        msg = EmailMessage(
+            sender_email_id=EmailConfig.MAIL_USERNAME,
+            to=form_data['email'],
+            subject=f"Action Required: Confirm your email for {current_app.config['FLASK_APP_NAME']}",
+            email_html_text=html
+        )
+        
+        try:
+            msg.send(
+                sender_email_password=EmailConfig.MAIL_PASSWORD,
+                server_info=EmailConfig.GMAIL_SERVER,
+                print_success_status=False
+            )
+            logger.info(f"Verification email successfully sent to {form_data['email']}")
+        except Exception as e:
+            logger.exception(f"Failed to send verification email to {form_data['email']}: {e}")
+            flash("Failed to send verification email. Please try again later.", "danger")
+            return redirect(url_for('auth.register'))
+
+        flash("A confirmation email has been sent. Please verify to complete registration. If you don't see it, please check your spam folder.", "info")
+        return redirect(url_for('auth.login'))
+
+    if form.errors:
+        logger.debug(f"Form validation errors: {form.errors}")
+
+    return render_template("register.html", form=form)
+
+
+@auth_bp.route('/complete-registration/<token>')
+@logout_required
+def complete_registration(token):
+    """
+    Finalize registration after verifying the token.
+    """
+    logger.info("Accessed /complete-registration route")
+    data = confirm_registration_token(token)
+    if not data:
+        logger.warning("Invalid or expired registration token encountered.")
+        flash("Invalid or expired registration link.", "danger")
+        return redirect(url_for('auth.register'))
+
+    if User.query.filter_by(email=data['email']).first():
+        logger.info(f"Email already registered: {data['email']}")
+        flash("This email is already registered.", "danger")
+        return redirect(url_for('auth.login'))
+
+    building = Building.query.filter_by(uuid=data['building_uuid']).first_or_404()
+    course = Course.query.filter_by(uuid=data['course_uuid']).first_or_404()
+
+    try:
+        new_user = create_user(
+            username=data['username'],
+            password=data['password'],
+            first_name=data['first_name'],
+            middle_name=data.get('middle_name'),
+            last_name=data['last_name'],
+            email=data['email'],
+            contact_no=data.get('contact_no'),
+            room_no=data.get('room_no'),
+            building_uuid=building.uuid,
+            course_uuid=course.uuid,
+            email_verified=True
+        )
+        logger.info(f"User created successfully: {new_user.username}")
+        flash("Registration complete! You can now log in.", "success")
+        return redirect(url_for('auth.login'))
+    except Exception as e:
+        logger.exception(f"Error during user creation: {e}")
+        flash("An error occurred while creating the account. Please try again.", "danger")
+        return redirect(url_for('auth.register'))
 
 @auth_bp.route('/forgot_password', methods=['GET', 'POST'])
+@logout_required
 def forgot_password():
     return "This is forgot_password."
