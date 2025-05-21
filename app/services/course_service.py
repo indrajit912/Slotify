@@ -12,12 +12,21 @@ from app.extensions import db
 
 logger = logging.getLogger(__name__)
 
-def create_new_course(code, name, level, department, short_name=None,
-                      duration_years=None, description=None, is_active=True):
+def create_new_course(
+    *, 
+    code, 
+    name, 
+    level, 
+    department, 
+    short_name=None, 
+    duration_years=None, 
+    description=None, 
+    is_active=True
+):
     """
     Creates and stores a new course.
 
-    Args:
+    Keyword-only arguments:
         code (str): Unique course code.
         name (str): Full course name.
         level (str): Course level, e.g., "UG", "PG", "PhD".
@@ -25,7 +34,7 @@ def create_new_course(code, name, level, department, short_name=None,
         short_name (str, optional): Optional short name.
         duration_years (int, optional): Duration in years.
         description (str, optional): Description.
-        is_active (bool, optional): Active status.
+        is_active (bool, optional): Active status (defaults to True).
 
     Returns:
         Course: The created course object.
@@ -41,9 +50,9 @@ def create_new_course(code, name, level, department, short_name=None,
     course = Course(
         code=code,
         name=name,
-        short_name=short_name,
         level=level,
         department=department,
+        short_name=short_name,
         duration_years=duration_years,
         description=description,
         is_active=is_active,

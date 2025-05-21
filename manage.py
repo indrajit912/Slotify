@@ -165,7 +165,9 @@ def create_isi_specific_data():
     # Create washing machine for RSH
     machine = WashingMachine.query.filter_by(code="RSH-BOSCH").first()
     if not machine:
+        print("No washing machine with code 'RSH-BOSCH' found.")
         logger.info("No washing machine with code 'RSH-BOSCH' found.")
+        print("Preparing to create one with default or custom time slots.")
         logger.info("Preparing to create one with default or custom time slots.")
 
         _rsh_default_time_slots = [
@@ -176,7 +178,7 @@ def create_isi_specific_data():
         ]
 
         for slot in _rsh_default_time_slots:
-            logger.info(f"  Default Slot {slot['slot_number']}: {slot['time_range']}")
+            print(f"  Default Slot {slot['slot_number']}: {slot['time_range']}")
 
         choice = input("Use default time slots? (y/n): ").strip().lower()
         if choice == 'n':
@@ -205,8 +207,10 @@ def create_isi_specific_data():
             time_slots=time_slots
         )
         logger.info(f"Washing machine '{new_machine.name}' created at RSH.")
+        print(f"Washing machine '{new_machine.name}' created at RSH.")
     else:
         logger.warning("Washing machine 'RSH-BOSCH' already exists.")
+        print("Washing machine 'RSH-BOSCH' already exists.")
 
     # Create courses
     course_data = [
@@ -227,11 +231,13 @@ def create_isi_specific_data():
             create_new_course(code=code, name=name, level=level, department=dept,
                               short_name=short_name, duration_years=duration, description=desc)
             logger.info(f"Course created: {code} - {name}")
+            print(f"Course created: {code} - {name}")
         except ValueError:
             logger.warning(f"Course with code {code} already exists.")
+            print(f"Course with code {code} already exists.")
 
-    logger.info("ISI-specific data initialization complete.")
-
+    logger.info("ISI-specific data initialization complete.") 
+    print("ISI-specific data initialization complete.")
 
 @cli.command("setup-db")
 @click.option('--isi', is_flag=True, default=False, help="Create ISI specific data after setup")

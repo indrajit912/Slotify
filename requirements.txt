@@ -12,3 +12,5 @@ cryptography
 tabulate
 qrcode
 Pillow
+pytest
+pytest-flask

@@ -19,39 +19,20 @@ from scripts.utils import utcnow
 logger = logging.getLogger(__name__)
 
 def create_user(
-        username, first_name, email, password, 
-        role="user", 
-        contact_no=None,
-        room_no=None,
-        building_uuid=None, 
-        course_uuid=None, 
-        middle_name=None, 
-        last_name=None,
-        email_verified=False
+    *,
+    username: str,
+    first_name: str,
+    email: str,
+    password: str,
+    building_uuid: str,
+    role: str | None = None,
+    contact_no: str | None = None,
+    room_no: str | None = None,
+    course_uuid: str | None = None,
+    middle_name: str | None = None,
+    last_name: str | None = None,
+    email_verified: bool = False,
 ):
-    """
-    Creates and stores a new user with hashed password, building, and course association.
-
-    Args:
-        username (str): Unique username.
-        first_name (str): User's first name.
-        email (str): User's email (must be unique).
-        password (str): Plaintext password.
-        contact_no (str): Contact number.
-        room_no (str): Room number.
-        role (str, optional): 'user', 'admin', or 'superadmin'. Defaults to 'user'.
-        building_uuid (str, optional): UUID of the building where the user resides.
-        course_uuid (str, optional): UUID of the course the user is enrolled in.
-        middle_name (str, optional): Middle name of the user.
-        last_name (str, optional): Last name of the user.
-
-    Returns:
-        User: The created user object.
-
-    Raises:
-        ValueError: If email or username already exists, or if the building/course is not found.
-    """
-
     if get_user_by_email(email):
         logger.warning(f"Email already registered: {email}")
         raise ValueError("Email already registered.")
@@ -59,7 +40,6 @@ def create_user(
         logger.warning(f"Username already taken: {username}")
         raise ValueError("Username already taken.")
 
-    # Validate required fields
     if not username:
         raise ValueError("Username is required.")
     if not first_name:
@@ -88,12 +68,13 @@ def create_user(
     )
     user.set_hashed_password(password=password)
 
-    if building_uuid:
-        building = Building.query.filter_by(uuid=building_uuid).first()
-        if not building:
-            logger.error(f"Building not found with UUID: {building_uuid}")
-            raise ValueError(f"No building found with UUID: {building_uuid}")
-        user.building = building
+    db.session.add(user)  # ✅ Add to session before setting relationships
+
+    building = Building.query.filter_by(uuid=building_uuid).first()
+    if not building:
+        logger.error(f"Building not found with UUID: {building_uuid}")
+        raise ValueError(f"No building found with UUID: {building_uuid}")
+    user.building = building
 
     if course_uuid:
         course = Course.query.filter_by(uuid=course_uuid).first()
@@ -102,7 +83,6 @@ def create_user(
             raise ValueError(f"No course found with UUID: {course_uuid}")
         user.course = course
 
-    db.session.add(user)
     try:
         db.session.commit()
         logger.info(f"User created successfully: {username} ({email})")
@@ -112,7 +92,6 @@ def create_user(
         raise ValueError("Could not create user due to a database error.")
 
     return user
-
 
 
 def get_user_by_uuid(uuid_str: str):
@@ -175,7 +154,7 @@ def update_user_by_uuid(user_uuid, **kwargs):
     Args:
         user_uuid (str): The UUID of the user to update.
         **kwargs: Fields to update (e.g., first_name, middle_name, last_name, email, password, role,
-                  username, course_uuid, building_uuid, contact_no, room_no).
+                  username, course_uuid, building_uuid, contact_no, room_no, email_verified).
 
     Returns:
         User: The updated user object.
@@ -203,6 +182,11 @@ def update_user_by_uuid(user_uuid, **kwargs):
             logger.warning(f"Email already registered: {new_email}")
             raise ValueError("Email already registered.")
         user.email = new_email
+    
+    if 'email_verified' in kwargs:
+        new_val = kwargs['email_verified']
+        user.email_verified = new_val
+        logger.info(f"{user.username}'s email_verified updated to '{new_val}'.")
 
     # Update name parts individually or via fullname if provided
     if 'fullname' in kwargs:
