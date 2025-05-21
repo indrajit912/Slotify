@@ -5,6 +5,7 @@
 
 # Standard library imports
 import logging
+from datetime import datetime
 
 # Third-party imports
 from flask import flash, redirect, render_template, request, url_for
@@ -59,9 +60,16 @@ def view_users():
 @admin_required
 def view_machines():
     """View all washing machines."""
+    current_year = datetime.now().year
+    current_month_num = datetime.now().month
     machines = WashingMachine.query.order_by(desc(WashingMachine.created_at)).all()
     logger.info(f"Admin '{current_user.email}' viewed all washing machines.")
-    return render_template('view_machines.html', machines=machines)
+    return render_template(
+        'view_machines.html', 
+        machines=machines, 
+        current_year=current_year, 
+        current_month_num=current_month_num
+    )
 
 @admin_bp.route('/create_building_route', methods=['POST'])
 @admin_required

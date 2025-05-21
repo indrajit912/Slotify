@@ -12,7 +12,7 @@ from flask_wtf.csrf import generate_csrf
 
 # Local application imports
 from config import get_config, LOG_FILE
-from .extensions import db, migrate, moment, login_manager
+from .extensions import db, migrate, moment, login_manager, csrf
 
 def configure_logging(app:Flask):
     logging.basicConfig(
@@ -40,6 +40,7 @@ def create_app(config_class=get_config()):
 
      # Initialize extensions
     db.init_app(app)
+    csrf.init_app(app)
     migrate.init_app(app, db)
     moment.init_app(app)
     login_manager.init_app(app)

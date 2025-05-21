@@ -7,7 +7,7 @@ import logging
 from datetime import date
 
 # Third-party imports
-from flask import flash, redirect, render_template, url_for, current_app
+from flask import flash, redirect, render_template, url_for, current_app, request, jsonify
 from flask_login import current_user, login_required, login_user, logout_user
 
 # Relative imports
@@ -24,8 +24,6 @@ from app.utils.token import generate_registration_token, confirm_registration_to
 from config import EmailConfig
 
 logger = logging.getLogger(__name__)
-
-# TODO: Create a settings page for authenticated user to update their profile!
 
 @auth_bp.before_request
 def update_last_seen():
@@ -76,6 +74,10 @@ def dashboard():
     machines = building.machines if building else []
     today = date.today()
 
+    # Get all buildings and courses for dropdowns
+    all_buildings = Building.query.order_by(Building.name).all()
+    all_courses = Course.query.order_by(Course.name).all()
+
     bookings = (
         Booking.query
         .filter(
@@ -92,7 +94,9 @@ def dashboard():
         user=current_user,
         building=building,
         machines=machines,
-        bookings=bookings
+        bookings=bookings,
+        all_buildings=all_buildings,
+        all_courses=all_courses
     )
 
 
@@ -283,3 +287,45 @@ def reset_password(token):
         return redirect(url_for('auth.login'))
 
     return render_template('reset_password.html', form=form)
+
+
+@auth_bp.route('/update-profile', methods=['POST'])
+@login_required
+def update_profile():
+    """
+    Allows the currently authenticated user to update their own profile.
+    Role updates are explicitly disallowed.
+    """
+    data = request.form.to_dict()
+
+    # Remove disallowed fields
+    data.pop('role', None)
+
+    allowed_fields = {
+        'username',
+        'email',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'password',
+        'contact_no',
+        'room_no',
+        'building_uuid',
+        'course_uuid'
+    }
+
+    # Filter only allowed fields
+    update_data = {k: v for k, v in data.items() if k in allowed_fields}
+
+    try:
+        updated_user = update_user_by_uuid(current_user.uuid, **update_data)
+        logger.info(f"User '{updated_user.username}' updated their profile successfully.")
+        flash("Profile updated successfully!", 'success')
+    except ValueError as ve:
+        logger.warning(f"Profile update failed for user '{current_user.username}': {ve}")
+        flash(str(ve), 'warning')
+    except Exception as e:
+        logger.error(f"Unexpected error during profile update for user '{current_user.username}': {e}")
+        flash("An unexpected error occurred. Please try again later.", 'danger')
+
+    return redirect(url_for("auth.dashboard"))

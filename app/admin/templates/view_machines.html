@@ -20,7 +20,21 @@
     <tbody>
         {% for machine in machines %}
         <tr>
-            <td>{{ machine.name }}</td>
+            <td>{{ machine.name }}
+                {% if current_user.is_authenticated and current_user.is_admin() %}
+                <form method="POST"
+                      action="{{ url_for('main.generate_machine_calendar_qr') }}"
+                      target="_blank"
+                      class="ms-2 d-inline">
+                    <input type="hidden" name="uuid_str" value="{{ machine.uuid }}">
+                    <input type="hidden" name="year" value="{{ current_year }}">
+                    <input type="hidden" name="month" value="{{ current_month_num }}">
+                    <button type="submit" class="btn btn-sm btn-outline-dark" title="Generate Printable QR Code">
+                        <i class="bi bi-qr-code-scan"></i>
+                    </button>
+                </form>
+                {% endif %}
+            </td>
             <td>{{ machine.code or "N/A" }}</td>
             <td>{{ machine.building.name }}</td>
             <td>

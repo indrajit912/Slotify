@@ -59,7 +59,7 @@
           <label for="building_code" class="form-label"><i class="bi bi-code me-1"></i>Building Code</label>
           <input type="text" class="form-control" id="building_code" name="building_code" placeholder="E.g. RSH, H1, DQ, CQ" required>
         </div>
-        <button type="submit" class="btn btn-success">
+        <button id="create-building-btn" type="submit" class="btn btn-success">
           <i class="bi bi-plus-circle me-1"></i>Create Building
         </button>
       </form>
@@ -76,7 +76,7 @@
           <input type="text" class="form-control" id="machine_name" name="machine_name" placeholder="E.g. BOSCH Front Loaded Machine" required>
         </div>
         <div class="mb-3">
-          <label for="machine_code" class="form-label"><i class="bi bi-hash me-1"></i>Machine Code</label>
+          <label for="machine_code" class="form-label"><i class="bi bi-code me-1"></i>Machine Code</label>
           <input type="text" class="form-control" id="machine_code" name="machine_code" placeholder="E.g. RSH-BOSCH, DQ-2" required>
         </div>
         <div class="mb-3">
@@ -100,8 +100,8 @@
             <i class="bi bi-plus-square me-1"></i>Add Another Slot
           </button>
         </div>
-        <button type="submit" class="btn btn-success">
-          <i class="bi bi-plus-circle-fill me-1"></i>Create Washing Machine
+        <button id="create-machine-btn" type="submit" class="btn btn-success">
+          <i class="bi bi-plus-circle-fill me-1"></i>Create Machine
         </button>
       </form>
     </div>
@@ -118,4 +118,21 @@
       document.getElementById('time_slots').appendChild(slotDiv);
     });
   </script>
+
+<script>
+  // For Create Building button
+  document.querySelector('form[action="{{ url_for("admin.create_building_route") }}"]').addEventListener('submit', function (e) {
+    const btn = document.getElementById('create-building-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Creating...';
+  });
+
+  // For Create Washing Machine button
+  document.querySelector('form[action="{{ url_for("admin.create_machine") }}"]').addEventListener('submit', function (e) {
+    const btn = document.getElementById('create-machine-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Creating...';
+  });
+</script>
+
 {% endblock %}

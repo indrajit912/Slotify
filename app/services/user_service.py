@@ -55,6 +55,20 @@ def create_user(
 
     logger.info(f"Creating new user: {username} ({email})")
 
+    # Fetch building and course first
+    building = Building.query.filter_by(uuid=building_uuid).first()
+    if not building:
+        logger.error(f"Building not found with UUID: {building_uuid}")
+        raise ValueError(f"No building found with UUID: {building_uuid}")
+
+    course = None
+    if course_uuid:
+        course = Course.query.filter_by(uuid=course_uuid).first()
+        if not course:
+            logger.error(f"Course not found with UUID: {course_uuid}")
+            raise ValueError(f"No course found with UUID: {course_uuid}")
+
+    # Create user with relationships assigned
     user = User(
         username=username,
         first_name=first_name,
@@ -64,24 +78,13 @@ def create_user(
         contact_no=contact_no,
         room_no=room_no,
         role=role,
-        email_verified=email_verified
+        email_verified=email_verified,
+        building=building,
+        course=course,
     )
     user.set_hashed_password(password=password)
 
     db.session.add(user)  # ✅ Add to session before setting relationships
-
-    building = Building.query.filter_by(uuid=building_uuid).first()
-    if not building:
-        logger.error(f"Building not found with UUID: {building_uuid}")
-        raise ValueError(f"No building found with UUID: {building_uuid}")
-    user.building = building
-
-    if course_uuid:
-        course = Course.query.filter_by(uuid=course_uuid).first()
-        if not course:
-            logger.error(f"Course not found with UUID: {course_uuid}")
-            raise ValueError(f"No course found with UUID: {course_uuid}")
-        user.course = course
 
     try:
         db.session.commit()
