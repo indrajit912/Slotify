@@ -185,6 +185,7 @@ def update_user_by_uuid(user_uuid, **kwargs):
             logger.warning(f"Email already registered: {new_email}")
             raise ValueError("Email already registered.")
         user.email = new_email
+        user.email_verified = False
     
     if 'email_verified' in kwargs:
         new_val = kwargs['email_verified']

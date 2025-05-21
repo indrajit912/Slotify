@@ -7,7 +7,7 @@ import logging
 from datetime import date
 
 # Third-party imports
-from flask import flash, redirect, render_template, url_for, current_app, request, jsonify
+from flask import flash, redirect, render_template, url_for, current_app, request
 from flask_login import current_user, login_required, login_user, logout_user
 
 # Relative imports
@@ -18,10 +18,11 @@ from app.models.booking import Booking, TimeSlot
 from app.models.building import Building
 from app.models.course import Course
 from app.services import update_user_last_seen, create_user, get_user_by_email, update_user_by_uuid
-from app.utils.decorators import logout_required
+from app.utils.decorators import logout_required, email_verification_required
 from scripts.email_message import EmailMessage
 from app.utils.token import generate_registration_token, confirm_registration_token
 from config import EmailConfig
+from app.extensions import db
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,8 @@ def update_last_seen():
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = UserLoginForm()
+    show_verify_link = False
+    email_for_verification = None
 
     if form.validate_on_submit():
         user_input = form.username_or_email.data
@@ -47,10 +50,15 @@ def login():
 
         if user:
             if user.check_password(form.passwd.data):
-                login_user(user)
-                logger.info(f"User '{user.email}' successfully logged in.")
-                flash("Login successful!", 'success')
-                return redirect(url_for('auth.dashboard'))
+                if not user.email_verified:
+                    flash("Please verify your email address first.", "warning")
+                    show_verify_link = True
+                    email_for_verification = user.email
+                else:
+                    login_user(user)
+                    logger.info(f"User '{user.email}' successfully logged in.")
+                    flash("Login successful!", 'success')
+                    return redirect(url_for('auth.dashboard'))
             else:
                 flash("Invalid username or password. Please try again.", "error")
                 logger.warning(f"Failed login attempt: incorrect password for '{user_input}'")
@@ -58,13 +66,77 @@ def login():
             flash("That user doesn't exist! Try again...", 'error')
             logger.warning(f"Failed login attempt: no such user '{user_input}'")
 
+        # Clear form fields after failure
         form = UserLoginForm(formdata=None)
 
-    return render_template('login.html', form=form)
+    return render_template(
+        'login.html', form=form,
+        show_verify_link=show_verify_link,
+        email_for_verification=email_for_verification
+    )
+
+@auth_bp.route('/request-email-verification', methods=['POST'])
+def request_email_verification():
+    email = request.form.get('email')
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        logger.warning(f"Email verification request failed: no user found with email '{email}'")
+        flash("No user found with that email address.", "danger")
+        return redirect(url_for('auth.login'))
+
+    if user.email_verified:
+        logger.info(f"Email verification request skipped: '{email}' already verified.")
+        flash("Your email is already verified. You can log in.", "info")
+        return redirect(url_for('auth.login'))
+
+    token = user.generate_email_verification_token()
+    verify_url = url_for('auth.verify_email', token=token, _external=True)
+    html = render_template(
+        'email/email_id_verification_mail.html',
+        verification_link=verify_url,
+        user=user.first_name
+    )
+
+    msg = EmailMessage(
+        sender_email_id=EmailConfig.MAIL_USERNAME,
+        to=email,
+        subject=f"Action Required: Verify your Email Id for {current_app.config['FLASK_APP_NAME']}",
+        email_html_text=html,
+        formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
+    )
+
+    try:
+        msg.send(
+            sender_email_password=EmailConfig.MAIL_PASSWORD,
+            server_info=EmailConfig.GMAIL_SERVER,
+            print_success_status=False
+        )
+        logger.info(f"Verification email sent to '{email}' with token '{token}'.")
+        flash("A verification link has been sent to your email.", "info")
+        return redirect(url_for('auth.login'))
+    except Exception as e:
+        logger.exception(f"Failed to send verification email to {email}: {e}")
+        flash("Failed to send verification email. Please try again later.", "danger")
+        return redirect(url_for('auth.register'))    
+
+
+@auth_bp.route('/verify-email/<token>')
+def verify_email(token):
+    user = User.verify_email_verification_token(token)
+    if user:
+        user.email_verified = True
+        db.session.commit()
+        flash("Your email has been verified! You may now log in.", "success")
+        return redirect(url_for('auth.login'))
+    else:
+        flash("Invalid or expired verification link.", "danger")
+        return redirect(url_for('auth.login'))
 
 
 @auth_bp.route('/dashboard')
 @login_required
+@email_verification_required
 def dashboard():
     """
     Dashboard view for logged-in users.
@@ -159,7 +231,8 @@ def register():
             sender_email_id=EmailConfig.MAIL_USERNAME,
             to=form_data['email'],
             subject=f"Action Required: Confirm your email for {current_app.config['FLASK_APP_NAME']}",
-            email_html_text=html
+            email_html_text=html,
+            formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
         )
         
         try:
@@ -246,7 +319,8 @@ def forgot_password():
                 sender_email_id=EmailConfig.MAIL_USERNAME,
                 to=email,
                 subject=f"Reset Your {current_app.config['FLASK_APP_NAME']} Password",
-                email_html_text=html_body
+                email_html_text=html_body,
+                formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
             )
 
             try:

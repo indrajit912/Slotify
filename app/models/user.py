@@ -165,3 +165,30 @@ class User(db.Model, UserMixin):
         except Exception:
             return None
         return User.query.get(user_id)
+    
+    def generate_email_verification_token(self):
+        """
+        Generate a timed token for email verification.
+        """
+        serializer = URLSafeTimedSerializer(
+            secret_key=current_app.config['SECRET_KEY'], salt='email-verification'
+        )
+        return serializer.dumps({'user_id': self.id})
+    
+    
+    @staticmethod
+    def verify_email_verification_token(token):
+        """
+        Verify the email verification token.
+        """
+        serializer = URLSafeTimedSerializer(
+            secret_key=current_app.config['SECRET_KEY'], salt='email-verification'
+        )
+        try:
+            data = serializer.loads(token, max_age=3600 * 24)
+            user_id = data.get('user_id')
+            if user_id:
+                return User.query.get(user_id)
+        except Exception:
+            return None
+    

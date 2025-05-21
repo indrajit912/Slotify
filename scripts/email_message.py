@@ -53,7 +53,8 @@ class EmailMessage(MIMEMultipart):
         email_html_text:str=None,
         cc=None,
         bcc=None,
-        attachments=None
+        attachments=None,
+        formataddr_text="Indrajit's Bot"
     ):
 
         cc = [] if cc is None else cc
@@ -80,13 +81,7 @@ class EmailMessage(MIMEMultipart):
         MIMEMultipart.__init__(self)
 
         # Structure email
-        if sender_email_id in ["ma19d002@smail.iitm.ac.in", "indrajitghosh912@outlook.com"]:
-            self['From'] = formataddr(("Indrajit Ghosh (SRF, SMU, ISIBc)", sender_email_id))
-        elif sender_email_id == "indrajitsbot@gmail.com":
-            self['From'] = formataddr(("Indrajit's Bot", sender_email_id))
-        else:
-            self['From'] = self.sender
-
+        self['From'] = formataddr((formataddr_text, self.sender))   
         self['To'] = COMMASPACE.join(self.to)
         self['Cc'] = COMMASPACE.join(self.cc) if cc != [] else ''
         self['Bcc'] = COMMASPACE.join(self.bcc) if bcc != [] else ''

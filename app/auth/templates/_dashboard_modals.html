@@ -1,0 +1,224 @@
+
+<!-- Full Name Modal -->
+<div class="modal fade" id="editFullNameModal" tabindex="-1" aria-labelledby="editFullNameModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form method="POST" action="{{ url_for('auth.update_profile') }}">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editFullNameModalLabel">Edit Full Name</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+              <label for="first_name" class="form-label">First Name</label>
+              <input name="first_name" type="text" class="form-control" id="first_name" value="{{ user.first_name or '' }}" required>
+            </div>
+            <div class="mb-3">
+              <label for="middle_name" class="form-label">Middle Name</label>
+              <input name="middle_name" type="text" class="form-control" id="middle_name" value="{{ user.middle_name or '' }}">
+            </div>
+            <div class="mb-3">
+              <label for="last_name" class="form-label">Last Name</label>
+              <input name="last_name" type="text" class="form-control" id="last_name" value="{{ user.last_name or '' }}" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+    <!-- Username Modal -->
+<div class="modal fade" id="editUsernameModal" tabindex="-1" aria-labelledby="editUsernameModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('auth.update_profile') }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editUsernameModalLabel">Edit Username</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label for="username" class="form-label">Contact No</label>
+            <input name="username" type="text" class="form-control" id="username" value="{{ user.username }}" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+    <!-- Email Modal -->
+    <div class="modal fade" id="editEmailModal" tabindex="-1" aria-labelledby="editEmailModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('auth.update_profile') }}">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editEmailModalLabel">Update Email</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="mb-3">
+                <label for="email" class="form-label">Contact No</label>
+                <input name="email" type="email" class="form-control" id="email" value="{{ user.email }}" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  <!-- Contact no Modal -->
+<div class="modal fade" id="editContactModal" tabindex="-1" aria-labelledby="editContactModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('auth.update_profile') }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editContactModalLabel">Edit Contact No</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label for="contact_no" class="form-label">Contact No</label>
+            <input name="contact_no" type="text" class="form-control" id="contact_no" value="{{ user.contact_no or '' }}" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+ <!-- Room no Modal -->
+ <div class="modal fade" id="editRoomNoModal" tabindex="-1" aria-labelledby="editRoomNoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('auth.update_profile') }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editRoomNoModalLabel">Edit Room No</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label for="room_no" class="form-label">Room No</label>
+            <input name="room_no" type="text" class="form-control" id="room_no" value="{{ user.room_no or '' }}" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Password Modal -->
+<div class="modal fade" id="editPasswordModal" tabindex="-1" aria-labelledby="editPasswordModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('auth.update_profile') }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editPasswordModalLabel">Update Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          
+          <div class="mb-3">
+            <label for="password" class="form-label">New Password</label>
+            <input name="password" type="password" class="form-control" id="password" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="confirm_password" class="form-label">Confirm New Password</label>
+            <input name="confirm_password" type="password" class="form-control" id="confirm_password" required>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+  
+  <!-- Building Modal -->
+  <div class="modal fade" id="editBuildingModal" tabindex="-1" aria-labelledby="editBuildingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form method="POST" action="{{ url_for('auth.update_profile') }}">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editBuildingModalLabel">Edit Building</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+              <label for="building_uuid" class="form-label">Select Building</label>
+              <select name="building_uuid" id="building_uuid" class="form-select" required>
+                {% for b in all_buildings %}
+                  <option value="{{ b.uuid }}" {% if building and b.uuid == building.uuid %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Course Modal -->
+  <div class="modal fade" id="editCourseModal" tabindex="-1" aria-labelledby="editCourseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form method="POST" action="{{ url_for('auth.update_profile') }}">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editCourseModalLabel">Edit Course</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+              <label for="course_uuid" class="form-label">Select Course</label>
+              <select name="course_uuid" id="course_uuid" class="form-select" required>
+                {% for c in all_courses %}
+                  <option value="{{ c.uuid }}" {% if user.course and c.uuid == user.course.uuid %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
