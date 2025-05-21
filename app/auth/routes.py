@@ -113,7 +113,7 @@ def request_email_verification():
             print_success_status=False
         )
         logger.info(f"Verification email sent to '{email}' with token '{token}'.")
-        flash("A verification link has been sent to your email.", "info")
+        flash("A verification link has been sent to your email. Please check your Spam folder if you don't see it in your inbox.", "info")
         return redirect(url_for('auth.login'))
     except Exception as e:
         logger.exception(f"Failed to send verification email to {email}: {e}")
