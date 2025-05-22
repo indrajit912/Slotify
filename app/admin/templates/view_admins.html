@@ -39,7 +39,8 @@
                         {% if not admin.is_superadmin() %}
                         <form method="POST" action="{{ url_for('admin.revoke_admin', user_uuid=admin.uuid) }}"
                               onsubmit="return confirm('Revoke admin rights for {{ admin.username }}?');" class="mt-1 mb-0">
-                            <button type="submit" class="btn btn-sm btn-outline-danger p-1" title="Revoke Admin">
+                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                              <button type="submit" class="btn btn-sm btn-outline-danger p-1" title="Revoke Admin">
                                 <i class="bi bi-person-dash-fill"></i>
                             </button>
                         </form>

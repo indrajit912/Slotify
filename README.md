@@ -2,6 +2,8 @@
 
 **Slotify** is a Flask-based web application that digitizes washing machine slot booking in institute hostels. Instead of writing names on a printed chart, students can register, log in, and book available time slots for any washing machine in their hostel — all online!
 
+Access the web app by [clicking here](https://slotify.pythonanywhere.com/)!
+
 ---
 ## 👤 Author
 
@@ -63,15 +65,9 @@ FLASK_RUN_PORT=8080
 FLASK_DEBUG = 1
 ```
 
-### 🗃️ 5a. Initialize the Database
+### 🗃️ 5. Initialize the Database
 ```bash
 python manage.py setup-db --isi # This will setup the db for ISI
-```
-
-### 🗃️ 5b. Create Some Fake Users for Development Purposoe
-```bash
-pip install Faker # This package is needed to generate fake users
-python -m scripts.seed_data # Creates face users
 ```
 
 ### ▶️ 6. Run the Development Server
@@ -100,39 +96,6 @@ http://localhost:8080/
 to access the **Slotify** web app.
 
 > ⚠️ **Important**: Don’t close the terminal window while you're using the app. Closing it will shut down the development server and make the app inaccessible.
-
-🔐 **Logging In**
-
-By default, some **demo users** (including a few admins) have already been created for you.
-
-* You can log in using the following default credentials:
-
-  ```
-  Username: user1
-  Password: test@123
-  ```
-
-* All users (including admins) have the **default password**:
-
-  ```
-  test@123
-  ```
-
-* If you'd like to try logging in as an **admin**, simply do a bit of **trial and error** with the other usernames — a few of them have admin roles.
-
-> 💡 Once logged in, you can explore features like booking slots, viewing calendars, and managing access (if you’re an admin).
-
-
-
-## 📌 Todo
-
-- Registration. Email verification and password reset
-
-- Exportable QR for Calendar url: `/machine/uuid_str/calendar/year/month`
-
-- Notifications/reminders to the Users
-
----
 
 ## 🤝 Contributing
 

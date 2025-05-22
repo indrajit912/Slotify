@@ -34,6 +34,7 @@
 
                     <!-- Make Admin Button -->
                     <form method="POST" action="{{ url_for('admin.make_admin', user_uuid=user.uuid) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit"
                             class="btn btn-sm p-0 border-0"
                             title="Make admin"
@@ -44,6 +45,7 @@
 
                     <!-- Delete User Button -->
                     <form method="POST" action="{{ url_for('admin.delete_user', user_uuid=user.uuid) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit"
                             class="btn btn-sm p-0 border-0"
                             title="Delete user"
