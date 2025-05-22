@@ -27,11 +27,12 @@ class RegisterForm(FlaskForm):
     building_uuid = SelectField("Building", choices=[], validators=[DataRequired()])
     course_uuid = SelectField("Course", choices=[], validators=[DataRequired()])
     submit = SubmitField("Register")
-
-    def validate_email(self, email):
-        # Check if email ends with @isibang.ac.in
-        if not email.data.lower().endswith('@isibang.ac.in'):
-            raise ValidationError('Only ISIBANG residents with @isibang.ac.in email are allowed to register.')
+    
+    # TODO: Add a validator for ISIBang Current users
+    # def validate_email(self, email):
+    #     # Check if email ends with @isibang.ac.in
+    #     if not email.data.lower().endswith('@isibang.ac.in'):
+    #         raise ValidationError('Only ISIBANG residents with @isibang.ac.in email are allowed to register.')
 
 class ForgotPasswordForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])

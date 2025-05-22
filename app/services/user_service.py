@@ -44,8 +44,6 @@ def create_user(
         raise ValueError("Username is required.")
     if not first_name:
         raise ValueError("First name is required.")
-    if not last_name:
-        raise ValueError("Last name is required.")
     if not email:
         raise ValueError("Email is required.")
     if not password:
@@ -280,12 +278,12 @@ def update_user_last_seen(user_uuid: str):
         
         # Commit the changes to the database
         db.session.commit()
-        logger.info(f"User's last_seen updated: {user_uuid}")
+        logger.info(f"User's last_seen updated: {user.username}")
         return True
 
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error updating last_seen for user {user_uuid}: {e}")
+        logger.error(f"Error updating last_seen for user {user.username} <{user.uuid}>: {e}")
         return False
 
 def delete_user_by_uuid(user_uuid):
