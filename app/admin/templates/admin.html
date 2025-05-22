@@ -70,6 +70,21 @@
       </div>
     </div>
   </div>
+
+  <!-- New: Manage CurrentEnrolled Students -->
+<div class="col">
+  <div class="card h-100 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title"><i class="bi bi-journal-code me-2 text-danger"></i>Manage Current Students</h5>
+      <p class="card-text">Manage the current enrolled students at ISIBc webpage.</p>
+      <a href="{{ url_for('admin.current_enrolled_students') }}" class="btn btn-primary">
+        <i class="bi bi-people-fill me-1"></i> View Students
+      </a>
+    </div>
+  </div>
+</div>
+</div>
+
 </div>
 
 {% endblock %}

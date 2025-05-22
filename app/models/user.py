@@ -15,6 +15,19 @@ import uuid
 from app.extensions import db
 from scripts.utils import utcnow, sha256_hash
 
+class CurrentEnrolledStudent(db.Model):
+    __tablename__ = 'enrolled_student'
+
+    id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String(36), unique=True, nullable=False, default=lambda: uuid.uuid4().hex)
+    fullname = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    added_at = db.Column(db.DateTime, default=utcnow)
+
+    def __repr__(self):
+        return f"<EnrolledStudent {self.fullname} ({self.email})>"
+
+
 class User(db.Model, UserMixin):
     """
     User model for storing user related details.
@@ -34,12 +47,15 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(128), nullable=False)
     password_salt = db.Column(db.String(32), nullable=False)
     
-    role = db.Column(db.String(20), default='user')  # user, admin, superadmin
+    role = db.Column(db.String(20), default='user')  # user, admin, superadmin, guest
 
     date_joined = db.Column(db.DateTime(timezone=True), default=utcnow)
     last_updated = db.Column(db.DateTime(timezone=True), default=utcnow)
     last_seen = db.Column(db.DateTime(timezone=True), default=utcnow)
     email_verified = db.Column(db.Boolean, default=False)
+
+    # It will be for Guest only
+    departure_date = db.Column(db.Date, nullable=True) 
 
     # Optional fields
     contact_no = db.Column(db.String(20), nullable=True)
@@ -134,7 +150,8 @@ class User(db.Model, UserMixin):
             'last_seen': User.format_datetime_to_str(self.last_seen),
             'email_verified': self.email_verified,
             'building': self.building.name,
-            'course': self.course.name
+            'course': self.course.name,
+            'departure_date': self.departure_date
         }
         
     

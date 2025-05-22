@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Current Enrolled Students{% endblock %}
+
+
+{% block content %}
+{% include 'flash_msgs.html' %}
+<div class="container mt-4">
+
+  <h2 class="mb-4">Paste Enrolled Students List</h2>
+
+  <form method="POST" action="{{ url_for('admin.add_students') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="mb-3">
+      <textarea class="form-control" name="student_data" rows="10" placeholder="Paste the list here..." required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Students</button>
+  </form>
+
+  <hr class="my-5">
+
+  <h3>Currently Enrolled Students <span class="badge bg-secondary">{{ students|length }}</span></h3>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle mt-3">
+      <thead class="table-dark">
+        <tr>
+          <th scope="col">Full Name</th>
+          <th scope="col">Email</th>
+          <th scope="col">Added At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td>{{ student.fullname }}</td>
+          <td><a href="mailto:{{ student.email }}">{{ student.email }}</a></td>
+          <td>{{ moment(student.added_at).format('LLL') }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="3" class="text-center fst-italic">No students enrolled yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

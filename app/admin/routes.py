@@ -14,11 +14,12 @@ from sqlalchemy import desc
 
 # Local application imports
 from . import admin_bp
-from app.models.user import User
+from app.models.user import User, CurrentEnrolledStudent
 from app.models.washingmachine import WashingMachine
 from app.models.building import Building
 from app.models.course import Course
 from app.utils.decorators import admin_required
+from app.utils.student_parser import parse_enrolled_students
 from app.services import (
     create_washing_machine, 
     create_building,
@@ -29,6 +30,7 @@ from app.services import (
     create_new_course,
     update_building_by_uuid
 )
+from app.extensions import db
 
 logger = logging.getLogger(__name__)
 
@@ -287,3 +289,45 @@ def update_building_route(building_uuid):
         flash(str(e), "danger")
 
     return redirect(url_for('admin.view_buildings'))
+
+
+@admin_bp.route('/current-enrolled-students', methods=['GET'])
+@admin_required
+def current_enrolled_students():
+    """
+    Render page with form to paste students and preview the current enrolled students.
+    """
+    students = CurrentEnrolledStudent.query.order_by(CurrentEnrolledStudent.added_at.desc()).all()
+    return render_template('current_enrolled_students.html', students=students)
+
+
+@admin_bp.route('/add-students', methods=['POST'])
+@admin_required
+def add_students():
+    raw_text = request.form.get('student_data', '').strip()
+    if not raw_text:
+        flash('No student data provided.', 'warning')
+        return redirect(url_for('admin.current_enrolled_students'))
+
+    students = parse_enrolled_students(raw_text)
+
+    added_count = 0
+    skipped_count = 0
+
+    for fullname, email in students:
+        exists = CurrentEnrolledStudent.query.filter_by(email=email).first()
+        if exists:
+            skipped_count += 1
+            continue
+
+        new_student = CurrentEnrolledStudent(
+            fullname=fullname,
+            email=email
+        )
+        db.session.add(new_student)
+        added_count += 1
+
+    db.session.commit()
+
+    flash(f"Added {added_count} new students. Skipped {skipped_count} existing.", 'success')
+    return redirect(url_for('admin.current_enrolled_students'))

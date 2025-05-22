@@ -33,6 +33,7 @@ class Config:
     LOG_FILE = BASE_DIR / f'{FLASK_APP_NAME.lower()}.log'
     
     DATABASE_URI = os.environ.get("DATABASE_URI")
+    ISI_ROLL_PREFIXES = ['rs_', 'bmat', 'mmat', 'mlis', 'mqms']
 
     FLASK_ENV = os.environ.get("FLASK_ENV") or 'production'
     if FLASK_ENV in ['dev', 'developement']:

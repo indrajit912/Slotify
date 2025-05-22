@@ -188,6 +188,10 @@ def register():
     Handle user registration by displaying the form, validating it,
     generating a token, and sending a verification email.
     """
+    # TODO: Don't let any user without rs_ in their emails to choose RS Hostel as their building
+    # TODO: Don't let any user with bsdb initial in their email to register
+    # TODO: Handle guest registration.
+    # TODO: isi_enrolled_student and current_isi_initial
     logger.info("Accessed /register route")
     form = RegisterForm()
 
