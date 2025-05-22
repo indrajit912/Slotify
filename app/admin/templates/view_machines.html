@@ -3,66 +3,122 @@
 
 {% block content %}
 {% include 'flash_msgs.html' %}
-<h1 class="mb-4">All Washing Machines</h1>
 
-<table class="table table-striped align-middle">
-    <thead>
-        <tr>
-            <th><i class="bi bi-hash me-1"></i>Name</th>
-            <th><i class="bi bi-code-slash me-1"></i>Code</th>
-            <th><i class="bi bi-building me-1"></i>Building</th>
-            <th><i class="bi bi-power me-1"></i>Status</th>
-            <th><i class="bi bi-calendar-plus me-1"></i>Created At</th>
-            <th><i class="bi bi-arrow-repeat me-1"></i>Last Updated</th>
-            <th><i class="bi bi-calendar3 me-1"></i>Calendar</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for machine in machines %}
-        <tr>
-            <td>{{ machine.name }}
-                {% if current_user.is_authenticated and current_user.is_admin() %}
-                <form method="POST"
-                      action="{{ url_for('main.generate_machine_calendar_qr') }}"
-                      target="_blank"
-                      class="ms-2 d-inline">
-                    <input type="hidden" name="uuid_str" value="{{ machine.uuid }}">
-                    <input type="hidden" name="year" value="{{ current_year }}">
-                    <input type="hidden" name="month" value="{{ current_month_num }}">
-                    <button type="submit" class="btn btn-sm btn-outline-dark" title="Generate Printable QR Code">
-                        <i class="bi bi-qr-code-scan"></i>
-                    </button>
-                </form>
-                {% endif %}
-            </td>
-            <td>{{ machine.code or "N/A" }}</td>
-            <td>{{ machine.building.name }}</td>
-            <td>
-                {% if machine.status == 'active' %}
-                    <span class="text-success"><i class="bi bi-check-circle me-1"></i>{{ machine.status|capitalize }}</span>
-                {% elif machine.status == 'inactive' %}
-                    <span class="text-secondary"><i class="bi bi-slash-circle me-1"></i>{{ machine.status|capitalize }}</span>
-                {% else %}
-                    <span class="text-muted"><i class="bi bi-question-circle me-1"></i>{{ machine.status|capitalize }}</span>
-                {% endif %}
-            </td>
-            <td>{{ moment(machine.created_at).format('LLL') }}</td>
-            <td>
-                {% if machine.last_updated %}
-                    {{ moment(machine.last_updated).format('LLL') }}
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-            <td>
-                <button class="btn btn-outline-primary btn-sm open-calendar-modal" data-machine-id="{{ machine.id }}" data-machine-uuid="{{ machine.uuid }}" title="View Monthly Calendar">
-                    <i class="bi bi-calendar3"></i>
-                </button>
-            </td>
-        </tr>
+<!-- Back button -->
+<a href="{{ url_for('admin.home') }}" class="btn btn-outline-secondary mb-3">
+  <i class="bi bi-arrow-left"></i> Back to Dashboard
+</a>
+
+<!-- Add Washing Machine Card -->
+<div class="card mb-4">
+<div class="card-body">
+  <h5 class="card-title"><i class="bi bi-plus-circle-dotted me-2 text-success"></i>Create New Washing Machine</h5>
+  <form method="POST" action="{{ url_for('admin.create_machine') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="mb-3">
+      <label for="machine_name" class="form-label"><i class="bi bi-pc me-1"></i>Washing Machine Name</label>
+      <input type="text" class="form-control" id="machine_name" name="machine_name" placeholder="E.g. BOSCH Front Loaded Machine" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="machine_code" class="form-label"><i class="bi bi-code me-1"></i>Machine Code</label>
+      <input type="text" class="form-control" id="machine_code" name="machine_code" placeholder="E.g. RSH-BOSCH, DQ-2" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="machine_building_uuid" class="form-label"><i class="bi bi-geo-alt-fill me-1"></i>Machine Location</label>
+      <select class="form-select" id="machine_building_uuid" name="machine_building_uuid" required>
+        <option value="" disabled selected>Select a building</option>
+        {% for building in all_buildings %}
+          <option value="{{ building.uuid }}">{{ building.name }}</option>
         {% endfor %}
-    </tbody>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="time_slots" class="form-label"><i class="bi bi-clock-history me-1"></i>Time Slots</label>
+      <div id="time_slots">
+        <div class="d-flex flex-column flex-sm-row mb-2 gap-2">
+          <input type="text" class="form-control" name="slot_number" placeholder="Slot Number" required>
+          <input type="text" class="form-control" name="time_range" placeholder="Time Range (e.g., 07:00-10:30)" required>
+        </div>
+      </div>
+      <button type="button" id="add_slot" class="btn btn-secondary mt-2">
+        <i class="bi bi-plus-square me-1"></i>Add Another Slot
+      </button>
+    </div>
+
+    <button id="create-machine-btn" type="submit" class="btn btn-success w-100 w-sm-auto">
+      <i class="bi bi-plus-circle-fill me-1"></i>Create Machine
+    </button>
+  </form>
+</div>
+</div>
+
+<h2 class="mb-3">All Washing Machines</h2>
+
+<div class="table-responsive">
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th><i class="bi bi-hash me-1"></i>Name</th>
+      <th><i class="bi bi-code-slash me-1"></i>Code</th>
+      <th><i class="bi bi-building me-1"></i>Building</th>
+      <th><i class="bi bi-power me-1"></i>Status</th>
+      <th><i class="bi bi-calendar-plus me-1"></i>Created At</th>
+      <th><i class="bi bi-arrow-repeat me-1"></i>Last Updated</th>
+      <th><i class="bi bi-tools me-1"></i>Tools</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for machine in machines %}
+    <tr>
+      <td>{{ machine.name }}</td>
+      <td>{{ machine.code or "N/A" }}</td>
+      <td>{{ machine.building.name }}</td>
+      <td>
+        {% if machine.status == 'active' %}
+          <span class="text-success"><i class="bi bi-check-circle me-1"></i>{{ machine.status|capitalize }}</span>
+        {% elif machine.status == 'inactive' %}
+          <span class="text-secondary"><i class="bi bi-slash-circle me-1"></i>{{ machine.status|capitalize }}</span>
+        {% else %}
+          <span class="text-muted"><i class="bi bi-question-circle me-1"></i>{{ machine.status|capitalize }}</span>
+        {% endif %}
+      </td>
+      <td>{{ moment(machine.created_at).format('LLL') }}</td>
+      <td>
+        {% if machine.last_updated %}
+          {{ moment(machine.last_updated).format('LLL') }}
+        {% else %}
+          -
+        {% endif %}
+      </td>
+      <td>
+        {% if current_user.is_authenticated and current_user.is_admin() %}
+        <form method="POST"
+              action="{{ url_for('main.generate_machine_calendar_qr') }}"
+              target="_blank"
+              class="ms-2 d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="uuid_str" value="{{ machine.uuid }}">
+          <input type="hidden" name="year" value="{{ current_year }}">
+          <input type="hidden" name="month" value="{{ current_month_num }}">
+          <button type="submit" class="btn btn-sm btn-outline-dark" title="Generate Printable QR Code">
+            <i class="bi bi-qr-code-scan"></i>
+          </button>
+        </form>
+        <button class="btn btn-outline-primary btn-sm open-calendar-modal" data-machine-id="{{ machine.id }}" data-machine-uuid="{{ machine.uuid }}" title="View Monthly Calendar">
+          <i class="bi bi-calendar3"></i>
+        </button>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
+</div>
+
 
 <!-- Calendar Modal -->
 <div class="modal fade" id="calendarModal" tabindex="-1" aria-labelledby="calendarModalLabel" aria-hidden="true">
@@ -129,5 +185,27 @@
             window.location.href = `/machine/${uuid}/calendar/${year}/${month}`;
         });
     });
+</script>
+
+<script>
+    document.getElementById('add_slot').addEventListener('click', function() {
+      const slotDiv = document.createElement('div');
+      slotDiv.classList.add('d-flex', 'mb-2');
+      slotDiv.innerHTML = `
+        <input type="text" class="form-control me-2" name="slot_number" placeholder="Slot Number" required>
+        <input type="text" class="form-control" name="time_range" placeholder="Time Range (e.g., 07:00-10:30)" required>
+      `;
+      document.getElementById('time_slots').appendChild(slotDiv);
+    });
+  </script>
+
+<script>
+
+  // For Create Washing Machine button
+  document.querySelector('form[action="{{ url_for("admin.create_machine") }}"]').addEventListener('submit', function (e) {
+    const btn = document.getElementById('create-machine-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Creating...';
+  });
 </script>
 {% endblock %}

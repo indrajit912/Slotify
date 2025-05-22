@@ -62,3 +62,49 @@ def get_building_by_uuid(uuid_str: str):
         logger.warning(f"No building found with UUID {uuid_str}")
     
     return building
+
+def update_building_by_uuid(uuid: str, *, name: str = None, code: str = None):
+    """
+    Updates an existing building identified by UUID.
+
+    Args:
+        uuid (str): UUID of the building to update.
+        name (str, optional): New name for the building.
+        code (str, optional): New unique code for the building.
+
+    Returns:
+        Building: The updated building object.
+
+    Raises:
+        ValueError: If the building does not exist, or if the new name or code conflicts with another building.
+    """
+    building = Building.query.filter_by(uuid=uuid).first()
+    if not building:
+        logger.warning(f"Attempted to update non-existent building UUID: {uuid}")
+        raise ValueError("Building not found.")
+
+    logger.info(f"Updating building UUID: {uuid}")
+
+    # Check for name conflict
+    if name and name != building.name:
+        if Building.query.filter(Building.name == name, Building.uuid != uuid).first():
+            logger.warning(f"Building name already taken: {name}")
+            raise ValueError(f"A building with the name '{name}' already exists.")
+        building.name = name
+
+    # Check for code conflict
+    if code and code != building.code:
+        if Building.query.filter(Building.code == code, Building.uuid != uuid).first():
+            logger.warning(f"Building code already taken: {code}")
+            raise ValueError(f"A building with the code '{code}' already exists.")
+        building.code = code
+
+    try:
+        db.session.commit()
+        logger.info(f"Building UUID {uuid} updated successfully.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error updating building UUID {uuid}: {e}")
+        raise ValueError("Could not update building.")
+
+    return building

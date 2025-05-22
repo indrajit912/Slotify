@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}View Courses{% endblock %}
+
+{% block content %}
+{% include 'flash_msgs.html' %}
+<div class="container mt-4">
+    <a href="{{ url_for('admin.home') }}" class="btn btn-outline-secondary mb-3">
+      <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+    {% if courses %}
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-2">
+      <h2 class="mb-0">All Courses</h2>
+      <button class="btn btn-success ms-sm-auto" data-bs-toggle="modal" data-bs-target="#createCourseModal">
+        <i class="bi bi-plus-circle me-1"></i> Create New Course
+      </button>
+    </div>    
+
+  <!-- Create Course Modal -->
+<div class="modal fade" id="createCourseModal" tabindex="-1" aria-labelledby="createCourseModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('admin.create_course_route') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createCourseModalLabel">Create New Course</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="code" class="form-label">Code</label>
+              <input type="text" class="form-control" id="code" name="code" required>
+            </div>
+            <div class="col-md-6">
+              <label for="name" class="form-label">Name</label>
+              <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+
+            <div class="col-md-6">
+              <label for="short_name" class="form-label">Short Name</label>
+              <input type="text" class="form-control" id="short_name" name="short_name">
+            </div>
+            <div class="col-md-6">
+              <label for="level" class="form-label">Level</label>
+              <input type="text" class="form-control" id="level" name="level" required>
+            </div>
+
+            <div class="col-md-6">
+              <label for="department" class="form-label">Department</label>
+              <input type="text" class="form-control" id="department" name="department" required>
+            </div>
+            <div class="col-md-6">
+              <label for="duration_years" class="form-label">Duration (Years)</label>
+              <input type="number" min="1" class="form-control" id="duration_years" name="duration_years">
+            </div>
+
+            <div class="col-12">
+              <label for="description" class="form-label">Description</label>
+              <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+            </div>
+
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                <label class="form-check-label" for="is_active">Active</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Create Course</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+  
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle text-center">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Code</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Short Name</th>
+                    <th scope="col">Level</th>
+                    <th scope="col">Department</th>
+                    <th scope="col">Duration (yrs)</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Active</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in courses %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ c.code }}</td>
+                    <td class="text-start">
+                        {{ c.name }}
+                        <a href="#" class="text-decoration-none ms-2" title="Edit Course"
+                           data-bs-toggle="modal" data-bs-target="#editCourseModal{{ c.uuid }}">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                    </td>
+                    <td>{{ c.short_name or '-' }}</td>
+                    <td>{{ c.level }}</td>
+                    <td>{{ c.department }}</td>
+                    <td>{{ c.duration_years or '-' }}</td>
+                    <td class="text-start">{{ c.description or '-' }}</td>
+                    <td>
+                        {% if c.is_active %}
+                            <span class="badge bg-success">Yes</span>
+                        {% else %}
+                            <span class="badge bg-danger">No</span>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <!-- Modal per course -->
+                <div class="modal fade" id="editCourseModal{{ c.uuid }}" tabindex="-1" aria-labelledby="editCourseModalLabel{{ c.uuid }}" aria-hidden="true">
+                  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                      <form method="POST" action="{{ url_for('admin.update_course_route', course_uuid=c.uuid) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="editCourseModalLabel{{ c.uuid }}">Edit Course - {{ c.code }}</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="row g-3">
+                            <div class="col-md-6">
+                              <label for="code{{ c.uuid }}" class="form-label">Code</label>
+                              <input type="text" class="form-control" id="code{{ c.uuid }}" name="code" value="{{ c.code }}" required>
+                            </div>
+                            <div class="col-md-6">
+                              <label for="name{{ c.uuid }}" class="form-label">Name</label>
+                              <input type="text" class="form-control" id="name{{ c.uuid }}" name="name" value="{{ c.name }}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                              <label for="short_name{{ c.uuid }}" class="form-label">Short Name</label>
+                              <input type="text" class="form-control" id="short_name{{ c.uuid }}" name="short_name" value="{{ c.short_name or '' }}">
+                            </div>
+                            <div class="col-md-6">
+                              <label for="level{{ c.uuid }}" class="form-label">Level</label>
+                              <input type="text" class="form-control" id="level{{ c.uuid }}" name="level" value="{{ c.level }}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                              <label for="department{{ c.uuid }}" class="form-label">Department</label>
+                              <input type="text" class="form-control" id="department{{ c.uuid }}" name="department" value="{{ c.department }}" required>
+                            </div>
+                            <div class="col-md-6">
+                              <label for="duration_years{{ c.uuid }}" class="form-label">Duration (Years)</label>
+                              <input type="number" min="1" class="form-control" id="duration_years{{ c.uuid }}" name="duration_years" value="{{ c.duration_years or '' }}">
+                            </div>
+
+                            <div class="col-12">
+                              <label for="description{{ c.uuid }}" class="form-label">Description</label>
+                              <textarea class="form-control" id="description{{ c.uuid }}" name="description" rows="3">{{ c.description or '' }}</textarea>
+                            </div>
+
+                            <div class="col-12">
+                              <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active{{ c.uuid }}" name="is_active" {% if c.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active{{ c.uuid }}">Active</label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="modal-footer">
+                          <button type="submit" class="btn btn-primary">Save Changes</button>
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No courses found.</p>
+    {% endif %}
+</div>
+{% endblock %}

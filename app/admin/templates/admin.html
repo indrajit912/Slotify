@@ -5,134 +5,71 @@
 {% block content %}
 {% include 'flash_msgs.html' %}
 
-  <h1 class="heading mb-4"><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h1>
+<h1 class="heading mb-4"><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h1>
 
-  <!-- Admin Dashboard Cards -->
-  <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
-    <div class="col">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title"><i class="bi bi-gear-fill me-2 text-primary"></i>Manage Washing Machines</h5>
-          <p class="card-text">View and manage all washing machines in the system.</p>
-          <a href="{{ url_for('admin.view_machines') }}" class="btn btn-primary">
-            <i class="bi bi-eye-fill me-1"></i> View Machines
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title"><i class="bi bi-person-lock me-2 text-warning"></i>All Admins</h5>
-          <p class="card-text">See all users with admin or superadmin roles.</p>
-          <a href="{{ url_for('admin.view_admins') }}" class="btn btn-primary">
-            <i class="bi bi-shield-lock-fill me-1"></i> View Admins
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title"><i class="bi bi-people-fill me-2 text-success"></i>All Users</h5>
-          <p class="card-text">View all non-admin users in the system.</p>
-          <a href="{{ url_for('admin.view_users') }}" class="btn btn-primary">
-            <i class="bi bi-person-fill me-1"></i> View Users
-          </a>
-        </div>
+<!-- Admin Dashboard Cards -->
+<div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+  <div class="col">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-gear-fill me-2 text-primary"></i>Manage Washing Machines</h5>
+        <p class="card-text">View and manage all washing machines in the system.</p>
+        <a href="{{ url_for('admin.view_machines') }}" class="btn btn-primary">
+          <i class="bi bi-eye-fill me-1"></i> View Machines
+        </a>
       </div>
     </div>
   </div>
 
-  <!-- Add Building Card -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <h5 class="card-title"><i class="bi bi-building me-2 text-info"></i>Create New Building</h5>
-      <form method="POST" action="{{ url_for('admin.create_building_route') }}">
-        <div class="mb-3">
-          <label for="building_name" class="form-label"><i class="bi bi-pencil-square me-1"></i>Building Name</label>
-          <input type="text" class="form-control" id="building_name" name="building_name" placeholder="E.g. RS Hostel, Hostel 1, D Qtr" required>
-        </div>
-        <div class="mb-3">
-          <label for="building_code" class="form-label"><i class="bi bi-code me-1"></i>Building Code</label>
-          <input type="text" class="form-control" id="building_code" name="building_code" placeholder="E.g. RSH, H1, DQ, CQ" required>
-        </div>
-        <button id="create-building-btn" type="submit" class="btn btn-success">
-          <i class="bi bi-plus-circle me-1"></i>Create Building
-        </button>
-      </form>
+  <div class="col">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-person-lock me-2 text-warning"></i>All Admins</h5>
+        <p class="card-text">See all users with admin or superadmin roles.</p>
+        <a href="{{ url_for('admin.view_admins') }}" class="btn btn-primary">
+          <i class="bi bi-shield-lock-fill me-1"></i> View Admins
+        </a>
+      </div>
     </div>
   </div>
 
-  <!-- Add Washing Machine Card -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <h5 class="card-title"><i class="bi bi-plus-circle-dotted me-2 text-success"></i>Create New Washing Machine</h5>
-      <form method="POST" action="{{ url_for('admin.create_machine') }}">
-        <div class="mb-3">
-          <label for="machine_name" class="form-label"><i class="bi bi-pc me-1"></i>Washing Machine Name</label>
-          <input type="text" class="form-control" id="machine_name" name="machine_name" placeholder="E.g. BOSCH Front Loaded Machine" required>
-        </div>
-        <div class="mb-3">
-          <label for="machine_code" class="form-label"><i class="bi bi-code me-1"></i>Machine Code</label>
-          <input type="text" class="form-control" id="machine_code" name="machine_code" placeholder="E.g. RSH-BOSCH, DQ-2" required>
-        </div>
-        <div class="mb-3">
-          <label for="machine_building_uuid" class="form-label"><i class="bi bi-geo-alt-fill me-1"></i>Machine Location</label>
-          <select class="form-select" id="machine_building_uuid" name="machine_building_uuid" required>
-            <option value="" disabled selected>Select a building</option>
-            {% for building in buildings %}
-              <option value="{{ building.uuid }}">{{ building.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="mb-3">
-          <label for="time_slots" class="form-label"><i class="bi bi-clock-history me-1"></i>Time Slots</label>
-          <div id="time_slots">
-            <div class="d-flex mb-2">
-              <input type="text" class="form-control me-2" name="slot_number" placeholder="Slot Number" required>
-              <input type="text" class="form-control" name="time_range" placeholder="Time Range (e.g., 07:00-10:30)" required>
-            </div>
-          </div>
-          <button type="button" id="add_slot" class="btn btn-secondary mt-2">
-            <i class="bi bi-plus-square me-1"></i>Add Another Slot
-          </button>
-        </div>
-        <button id="create-machine-btn" type="submit" class="btn btn-success">
-          <i class="bi bi-plus-circle-fill me-1"></i>Create Machine
-        </button>
-      </form>
+  <div class="col">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-people-fill me-2 text-success"></i>All Users</h5>
+        <p class="card-text">View all non-admin users in the system.</p>
+        <a href="{{ url_for('admin.view_users') }}" class="btn btn-primary">
+          <i class="bi bi-person-fill me-1"></i> View Users
+        </a>
+      </div>
     </div>
   </div>
 
-  <script>
-    document.getElementById('add_slot').addEventListener('click', function() {
-      const slotDiv = document.createElement('div');
-      slotDiv.classList.add('d-flex', 'mb-2');
-      slotDiv.innerHTML = `
-        <input type="text" class="form-control me-2" name="slot_number" placeholder="Slot Number" required>
-        <input type="text" class="form-control" name="time_range" placeholder="Time Range (e.g., 07:00-10:30)" required>
-      `;
-      document.getElementById('time_slots').appendChild(slotDiv);
-    });
-  </script>
+  <!-- New: Manage Buildings -->
+  <div class="col">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-building me-2 text-info"></i>Manage Buildings</h5>
+        <p class="card-text">Create, update, and view all buildings in the system.</p>
+        <a href="{{ url_for('admin.view_buildings') }}" class="btn btn-primary">
+          <i class="bi bi-house-door-fill me-1"></i> View Buildings
+        </a>
+      </div>
+    </div>
+  </div>
 
-<script>
-  // For Create Building button
-  document.querySelector('form[action="{{ url_for("admin.create_building_route") }}"]').addEventListener('submit', function (e) {
-    const btn = document.getElementById('create-building-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Creating...';
-  });
-
-  // For Create Washing Machine button
-  document.querySelector('form[action="{{ url_for("admin.create_machine") }}"]').addEventListener('submit', function (e) {
-    const btn = document.getElementById('create-machine-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Creating...';
-  });
-</script>
+  <!-- New: Manage Courses -->
+  <div class="col">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-journal-code me-2 text-danger"></i>Manage Courses</h5>
+        <p class="card-text">Add new courses and manage existing ones.</p>
+        <a href="{{ url_for('admin.view_courses') }}" class="btn btn-primary">
+          <i class="bi bi-book-fill me-1"></i> View Courses
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}

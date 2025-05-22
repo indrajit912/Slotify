@@ -17,25 +17,26 @@ from . import admin_bp
 from app.models.user import User
 from app.models.washingmachine import WashingMachine
 from app.models.building import Building
+from app.models.course import Course
 from app.utils.decorators import admin_required
-from app.services import create_washing_machine, create_building, update_user_by_uuid, delete_user_by_uuid, get_user_by_uuid
+from app.services import (
+    create_washing_machine, 
+    create_building,
+    update_user_by_uuid, 
+    delete_user_by_uuid, 
+    get_user_by_uuid, 
+    update_course, 
+    create_new_course,
+    update_building_by_uuid
+)
 
 logger = logging.getLogger(__name__)
 
 @admin_bp.route('/')
 @admin_required
 def home():
-    # Retrieve all users and buildings from the database
-    users = User.query.order_by(desc(User.date_joined)).all()
-    buildings = Building.query.all()
-
-    logger.info(f"Admin dashboard visited by the admin '{current_user.email}'.")
-
-    return render_template(
-        'admin.html', 
-        users=users,
-        buildings=buildings
-    )
+    logger.info(f"Admin dashboard visited by the admin '{current_user.first_name} <{current_user.username}>'.")
+    return render_template('admin.html')
 
 
 @admin_bp.route('/admins')
@@ -43,7 +44,7 @@ def home():
 def view_admins():
     """View all users with role admin or superadmin."""
     admins = User.query.filter(User.role.in_(['admin', 'superadmin'])).order_by(desc(User.date_joined)).all()
-    logger.info(f"Admin '{current_user.email}' viewed all admins.")
+    logger.info(f"Admin '{current_user.first_name} <{current_user.username}>' viewed all admins.")
     return render_template('view_admins.html', admins=admins)
 
 
@@ -52,7 +53,7 @@ def view_admins():
 def view_users():
     """View all non-admin users."""
     users = User.query.filter(User.role == 'user').order_by(desc(User.date_joined)).all()
-    logger.info(f"Admin '{current_user.email}' viewed all users.")
+    logger.info(f"Admin '{current_user.first_name} <{current_user.username}>' viewed all users.")
     return render_template('view_users.html', users=users)
 
 
@@ -62,14 +63,32 @@ def view_machines():
     """View all washing machines."""
     current_year = datetime.now().year
     current_month_num = datetime.now().month
+    all_buildings = Building.query.all()
     machines = WashingMachine.query.order_by(desc(WashingMachine.created_at)).all()
-    logger.info(f"Admin '{current_user.email}' viewed all washing machines.")
+    logger.info(f"Admin '{current_user.first_name} <{current_user.username}>' viewed all washing machines.")
     return render_template(
         'view_machines.html', 
         machines=machines, 
         current_year=current_year, 
-        current_month_num=current_month_num
+        current_month_num=current_month_num,
+        all_buildings=all_buildings
     )
+
+@admin_bp.route('/buildings')
+@admin_required
+def view_buildings():
+    """View all buildings."""
+    buildings = Building.query.order_by(Building.name).all()
+    logger.info(f"Admin '{current_user.first_name} <{current_user.username}>' viewed all buildings.")
+    return render_template('view_buildings.html', buildings=buildings)
+
+@admin_bp.route('/courses')
+@admin_required
+def view_courses():
+    """View all courses."""
+    courses = Course.query.order_by(Course.name).all()
+    logger.info(f"Admin '{current_user.first_name} <{current_user.username}>' viewed all courses.")
+    return render_template('view_courses.html', courses=courses)
 
 @admin_bp.route('/create_building_route', methods=['POST'])
 @admin_required
@@ -82,7 +101,33 @@ def create_building_route():
         return redirect(url_for('admin.home'))  # Redirect back to the admin dashboard
     except ValueError as e:
         flash(str(e), "error")
-        return redirect(url_for('admin.home'))
+        return redirect(url_for('admin.view_buildings'))
+    
+@admin_bp.route('/courses/create', methods=['POST'])
+@admin_required
+def create_course_route():
+    try:
+        is_active = 'is_active' in request.form  # Checkbox handling
+
+        create_new_course(
+            code=request.form.get('code'),
+            name=request.form.get('name'),
+            short_name=request.form.get('short_name') or None,
+            level=request.form.get('level'),
+            department=request.form.get('department'),
+            duration_years=request.form.get('duration_years') or None,
+            description=request.form.get('description') or None,
+            is_active=is_active,
+        )
+
+        flash("Course created successfully.", "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    except Exception as e:
+        logger.error(f"Unexpected error creating course: {e}")
+        flash("An unexpected error occurred while creating the course.", "danger")
+
+    return redirect(url_for('admin.view_courses'))
     
 @admin_bp.route('/create_machine', methods=['POST'])
 @admin_required
@@ -196,3 +241,49 @@ def delete_user(user_uuid):
     flash(f"User '{user_to_delete.username}' has been deleted.", "success")
 
     return redirect(url_for('admin.view_users'))
+
+@admin_bp.route('/update-course/<string:course_uuid>', methods=['POST'])
+@admin_required
+def update_course_route(course_uuid):
+    """Admin route to update a course."""
+    try:
+        kwargs = {
+            'code': request.form.get('code'),
+            'name': request.form.get('name'),
+            'short_name': request.form.get('short_name'),
+            'level': request.form.get('level'),
+            'department': request.form.get('department'),
+            'duration_years': int(request.form.get('duration_years')) if request.form.get('duration_years') else None,
+            'description': request.form.get('description'),
+            'is_active': 'is_active' in request.form
+        }
+
+        # Remove None values for fields not submitted
+        kwargs = {k: v for k, v in kwargs.items() if v is not None}
+
+        updated = update_course(course_uuid, **kwargs)
+        flash(f"Course '{updated.code}' updated successfully.", "success")
+    except ValueError as ve:
+        flash(str(ve), "danger")
+    except Exception as e:
+        logger.exception(f"Unexpected error in updating course UUID: {course_uuid}")
+        flash("An unexpected error occurred while updating the course.", "danger")
+
+    return redirect(url_for('admin.view_courses'))
+
+@admin_bp.route('/buildings/<uuid:building_uuid>/update', methods=['POST'])
+def update_building_route(building_uuid):
+    name = request.form.get('name', '').strip()
+    code = request.form.get('code', '').strip()
+
+    if not name or not code:
+        flash("Both name and code are required.", "danger")
+        return redirect(url_for('admin.view_buildings'))
+
+    try:
+        update_building_by_uuid(str(building_uuid), name=name, code=code)
+        flash("Building updated successfully.", "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+
+    return redirect(url_for('admin.view_buildings'))
