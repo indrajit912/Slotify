@@ -5,7 +5,7 @@
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, EmailField, SelectField
-from wtforms.validators import DataRequired, EqualTo, Optional, Length, Email
+from wtforms.validators import DataRequired, EqualTo, ValidationError, Length, Email
 
 
 class UserLoginForm(FlaskForm):
@@ -27,6 +27,11 @@ class RegisterForm(FlaskForm):
     building_uuid = SelectField("Building", choices=[], validators=[DataRequired()])
     course_uuid = SelectField("Course", choices=[], validators=[DataRequired()])
     submit = SubmitField("Register")
+
+    def validate_email(self, email):
+        # Check if email ends with @isibang.ac.in
+        if not email.data.lower().endswith('@isibang.ac.in'):
+            raise ValidationError('Only ISIBANG residents with @isibang.ac.in email are allowed to register.')
 
 class ForgotPasswordForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
