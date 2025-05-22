@@ -5,23 +5,48 @@
 {% block content %}
 {% include 'flash_msgs.html' %}
 
+{# Calculate previous and next months with year roll-over #}
+{% set prev_month = month_num - 1 if month_num > 1 else 12 %}
+{% set prev_year = year if month_num > 1 else year - 1 %}
+{% set next_month = month_num + 1 if month_num < 12 else 1 %}
+{% set next_year = year if month_num < 12 else year + 1 %}
+
 <div class="calendar-container my-4">
 
     <div class="card shadow-sm p-4">
-        <div class="d-flex justify-content-center align-items-center mb-3 flex-wrap">
-            <h2 class="display-6 text-center mb-0 me-2">
-                <i class="bi bi-gear-wide-connected me-1 text-primary"></i> {{ machine.name }} 
-            </h2>
-        </div>
+        <div class="mb-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+                <a href="{{ url_for('main.view_machine_calendar', uuid_str=machine.uuid, year=prev_year, month=prev_month) }}"
+                   class="btn btn-outline-primary btn-sm"
+                   title="Previous month">
+                    <i class="bi bi-chevron-left"></i> Prev Month
+                </a>
         
-        <p class="text-center text-muted mb-1">
-            <i class="bi bi-upc-scan me-1"></i> <code>{{ machine.code }}</code>
-            &nbsp;|&nbsp;
-            <i class="bi bi-building me-1"></i> {{ machine.building.name }}
-        </p>        
-        <p class="text-center lead">
-            <i class="bi bi-calendar-week"></i> {{ month }} {{ year }}
-        </p>
+                <div class="text-center">
+                    <h2 class="display-6 mb-1 d-none d-md-block">
+                        <i class="bi bi-gear-wide-connected me-1 text-primary"></i> {{ machine.name }}
+                    </h2>
+                    <h4 class="fs-5 mb-1 d-block d-md-none">
+                        <i class="bi bi-gear-wide-connected me-1 text-primary"></i> {{ machine.name }}
+                    </h4>
+                    <p class="text-center text-muted mb-1">
+                        <i class="bi bi-upc-scan me-1"></i> <code>{{ machine.code }}</code>
+                        &nbsp;|&nbsp;
+                        <i class="bi bi-building me-1"></i> {{ machine.building.name }}
+                    </p> 
+                    <p class="text-muted lead mb-0 d-block d-md-block">
+                        <i class="bi bi-calendar-week"></i> {{ month }} {{ year }}
+                    </p>
+                </div>
+        
+                <a href="{{ url_for('main.view_machine_calendar', uuid_str=machine.uuid, year=next_year, month=next_month) }}"
+                   class="btn btn-outline-primary btn-sm"
+                   title="Next month">
+                    Next Month <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+        </div>        
+        
 
         <div id="alert-placeholder" class="my-3"></div>
 
