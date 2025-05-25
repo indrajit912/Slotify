@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}All Users{% endblock %}
+
+{% block content %}
+{% include 'flash_msgs.html' %}
+<!-- Back button -->
+<a href="{{ url_for('admin.home') }}" class="btn btn-outline-secondary mb-3">
+    <i class="bi bi-arrow-left"></i> Back to Dashboard
+</a>
+
+<h2 class="mb-4"><i class="bi bi-people me-2"></i>All Guests</h2>
+
+<div class="table-responsive">
+    <table class="table table-hover table-bordered align-middle shadow-sm rounded overflow-hidden" aria-describedby="usersTableCaption">
+        <caption id="usersTableCaption" class="visually-hidden">List of all guests with details</caption>
+        <thead class="table-light">
+            <tr>
+                <th scope="col"><i class="bi bi-person me-1"></i>Username</th>
+                <th scope="col"><i class="bi bi-person-badge me-1"></i>Full Name</th>
+                <th scope="col"><i class="bi bi-envelope-at me-1"></i>Email</th>
+                <th scope="col"><i class="bi bi-telephone me-1"></i>Contact No</th>
+                <th scope="col"><i class="bi bi-door-closed me-1"></i>Room No</th>
+                <th scope="col"><i class="bi bi-building me-1"></i>Building</th>
+                <th scope="col"><i class="bi bi-mortarboard me-1"></i>Departure</th>
+                <th scope="col"><i class="bi bi-person-plus me-1"></i>Date Joined</th>
+                <th scope="col"><i class="bi bi-person-plus me-1"></i>Host</th>
+                <th scope="col"><i class="bi bi-clock-history me-1"></i>Last Seen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="fw-semibold">{{ user.username }}</span>
+
+                    <!-- Delete User Button -->
+                    <form method="POST" action="{{ url_for('admin.delete_user', user_uuid=user.uuid) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                            class="btn btn-sm p-0 border-0"
+                            title="Delete user"
+                            onclick="return confirm('Are you sure you want to delete {{ user.username }}? This action cannot be undone.');">
+                            <i class="bi bi-trash-fill text-danger fs-5"></i>
+                        </button>
+                    </form>
+                </td>
+
+                <td>{{ user.fullname }}</td>
+
+                <td>
+                    <a href="mailto:{{ user.email }}" class="text-decoration-none text-truncate d-block" style="max-width: 180px;">
+                        <i class="bi bi-envelope-fill text-secondary me-1"></i>{{ user.email }}
+                    </a>
+                </td>
+
+                <td>
+                    {% if user.contact_no %}
+                        <a href="tel:{{ user.contact_no }}" class="text-decoration-none">
+                            <i class="bi bi-phone-fill text-success me-1"></i>{{ user.contact_no }}
+                        </a>
+                    {% else %}
+                        <span class="text-muted">N/A</span>
+                    {% endif %}
+                </td>
+
+                <td>{{ user.room_no }}</td>
+                <td>{{ user.building.name }}</td>
+
+                <td>
+                    <span class="badge bg-info text-dark">{{ moment(user.departure_date).format('LL') }}</span>
+                </td>
+
+                <td>
+                    {% if user.date_joined %}
+                        <i class="bi bi-calendar2-check me-1 text-primary"></i>{{ moment(user.date_joined).format('LLL') }}
+                    {% else %}
+                        <span class="text-muted">N/A</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <i class="bi bi-clock me-1 text-secondary"></i>{{ user.host_name }}
+                </td>
+
+                <td>
+                    {% if user.last_seen %}
+                        <i class="bi bi-clock me-1 text-secondary"></i>{{ moment(user.last_seen).fromNow() }}
+                    {% else %}
+                        <span class="text-muted">N/A</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

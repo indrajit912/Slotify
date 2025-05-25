@@ -26,6 +26,18 @@
 
                 {{ form.hidden_tag() }}
 
+                <!-- Role Choice -->
+                <div class="form-floating mb-3">
+                    {{ form.role_choice(class="form-select", id="role_choice") }}
+                    <label for="role_choice">
+                        <i class="bi bi-person-badge"></i> {{ form.role_choice.label.text }} <span class="text-danger">*</span>
+                    </label>
+                    {% if form.role_choice.errors %}
+                    <div class="text-danger small">{{ form.role_choice.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+
                 <!-- Username -->
                 <div class="form-floating mb-3">
                     {{ form.username(class="form-control", placeholder="Choose a username", id="username") }}
@@ -94,11 +106,18 @@
                     {% endif %}
                 </div>
 
-                <!-- Contact Number (optional) -->
+                <!-- Contact Number (conditionally required for guests) -->
                 <div class="form-floating mb-3">
-                    {{ form.contact_no(class="form-control", placeholder="Contact number (optional)", id="contact_no") }}
-                    <label for="contact_no"><i class="bi bi-telephone"></i> {{ form.contact_no.label.text }}</label>
-                </div>
+                    {{ form.contact_no(class="form-control", placeholder="Contact number", id="contact_no") }}
+                    <label for="contact_no">
+                        <i class="bi bi-telephone"></i> {{ form.contact_no.label.text }}
+                        <span id="contact-required-asterisk" class="text-danger" style="display: none;">*</span>
+                    </label>
+                    {% if form.contact_no.errors %}
+                    <div class="text-danger small">{{ form.contact_no.errors[0] }}</div>
+                    {% endif %}
+                </div>                
+
 
                 <!-- Room Number -->
                 <div class="form-floating mb-3">
@@ -125,6 +144,29 @@
                     </label>
                     {% if form.course_uuid.errors %}
                     <div class="text-danger small">{{ form.course_uuid.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Departure Date (for guests only) -->
+                <div class="form-floating mb-4 form-group">
+                    {{ form.departure_date(class="form-control", type="date", id="departure_date") }}
+                    <label for="departure_date">
+                        <i class="bi bi-calendar-x"></i> {{ form.departure_date.label.text }}
+                    </label>
+                    {% if form.departure_date.errors %}
+                    <div class="text-danger small">{{ form.departure_date.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Host Name (for guests only) -->
+                <div class="form-floating mb-4" id="host_name_field" style="display:none;">
+                    {{ form.host_name(class="form-control", placeholder="Whom you're visiting?", id="host_name") }}
+                    <label for="host_name">
+                        <i class="bi bi-person"></i> {{ form.host_name.label.text }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    {% if form.host_name.errors %}
+                    <div class="text-danger small">{{ form.host_name.errors[0] }}</div>
                     {% endif %}
                 </div>
 
@@ -155,4 +197,41 @@
         btnText.textContent = 'Registering...';
     });
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const roleSelect = document.getElementById("role_choice");
+        
+        const courseField = document.getElementById("course_uuid").closest(".form-floating");
+        const departureField = document.getElementById("departure_date").closest(".form-floating");
+        
+        const contactNoInput = document.getElementById("contact_no");
+        const contactAsterisk = document.getElementById("contact-required-asterisk");
+        
+        const hostNameField = document.getElementById("host_name_field");
+        const hostNameInput = document.getElementById("host_name");
+
+        function toggleFields() {
+            if (roleSelect.value === "user") {
+                courseField.style.display = "block";
+                departureField.style.display = "none";
+                contactNoInput.removeAttribute("required");
+                contactAsterisk.style.display = "none";
+                hostNameField.style.display = "none";
+                hostNameInput.removeAttribute("required");
+            } else if (roleSelect.value === "guest") {
+                courseField.style.display = "none";
+                departureField.style.display = "block";
+                contactNoInput.setAttribute("required", "required");
+                contactAsterisk.style.display = "inline";
+                hostNameField.style.display = "block";
+                hostNameInput.setAttribute("required", "required");
+            }
+        }
+
+        roleSelect.addEventListener("change", toggleFields);
+        toggleFields();  // Initial call
+    });
+</script>
+
+
 {% endblock %}

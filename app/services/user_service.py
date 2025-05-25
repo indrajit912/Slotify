@@ -7,6 +7,7 @@
 # Provides reusable functions for creating and retrieving user accounts.
 #
 import logging
+from datetime import datetime
 
 from sqlalchemy.exc import IntegrityError
 
@@ -17,6 +18,8 @@ from app.extensions import db
 from scripts.utils import utcnow
 
 logger = logging.getLogger(__name__)
+
+# TODO: Create methods for CurrentEnrolledStudents
 
 def create_user(
     *,
@@ -32,6 +35,8 @@ def create_user(
     middle_name: str | None = None,
     last_name: str | None = None,
     email_verified: bool = False,
+    departure_date = None,
+    host_name = None
 ):
     if get_user_by_email(email):
         logger.warning(f"Email already registered: {email}")
@@ -79,6 +84,8 @@ def create_user(
         email_verified=email_verified,
         building=building,
         course=course,
+        departure_date=departure_date,
+        host_name = host_name
     )
     user.set_hashed_password(password=password)
 
@@ -241,6 +248,20 @@ def update_user_by_uuid(user_uuid, **kwargs):
             user.course = course
         else:
             user.course = None  # Allow clearing course
+
+    if 'departure_date' in kwargs:
+        try:
+            if kwargs['departure_date']:
+                if isinstance(kwargs['departure_date'], str):
+                    user.departure_date = datetime.strptime(kwargs['departure_date'], "%Y-%m-%d").date()
+                else:
+                    user.departure_date = kwargs['departure_date']
+            else:
+                user.departure_date = None  # allow clearing the date
+        except Exception as e:
+            logger.error(f"Invalid departure_date: {kwargs['departure_date']} — {e}")
+            raise ValueError("Invalid departure_date format. Use 'YYYY-MM-DD'.")
+
 
     if kwargs:
         user.last_updated = utcnow()

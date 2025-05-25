@@ -181,17 +181,15 @@ def logout():
 
     return redirect(url_for('auth.login'))
 
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 @logout_required
 def register():
     """
     Handle user registration by displaying the form, validating it,
     generating a token, and sending a verification email.
+    If the user registers as a guest, send the token only to admins for verification.
     """
-    # TODO: Don't let any user without rs_ in their emails to choose RS Hostel as their building
-    # TODO: Don't let any user with bsdb initial in their email to register
-    # TODO: Handle guest registration.
-    # TODO: isi_enrolled_student and current_isi_initial
     logger.info("Accessed /register route")
     form = RegisterForm()
 
@@ -218,41 +216,87 @@ def register():
             "contact_no": form.contact_no.data,
             "room_no": form.room_no.data,
             "building_uuid": form.building_uuid.data,
-            "course_uuid": form.course_uuid.data
+            "role": form.role_choice.data,
+            "course_uuid": form.course_uuid.data if form.role_choice.data == "user" else None,
+            "departure_date": form.departure_date.data.isoformat() if form.role_choice.data == "guest" else None,
+            "host_name": form.host_name.data if form.role_choice.data == "guest" else None
         }
-
+        building_name = next((name for (uuid, name) in form.building_uuid.choices if uuid == form_data['building_uuid']), None)
+        
         token = generate_registration_token(form_data)
         verification_link = url_for('auth.complete_registration', token=token, _external=True)
-        html = render_template(
-            'email/verify_email.html',
-            verification_link=verification_link,
-            user=form_data['first_name']
-        )
 
-        logger.info(f"Registration token generated and email prepared for {form_data['email']}")
+        if form_data['role'] == 'guest':
+            # Send email only to admins, not the guest
+            admins = User.query.filter(User.role.in_(['admin', 'superadmin'])).all()
+            admin_emails = [admin.email for admin in admins if admin.email_verified]
 
-        msg = EmailMessage(
-            sender_email_id=EmailConfig.MAIL_USERNAME,
-            to=form_data['email'],
-            subject=f"Action Required: Confirm your email for {current_app.config['FLASK_APP_NAME']}",
-            email_html_text=html,
-            formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
-        )
-        
-        try:
-            msg.send(
-                sender_email_password=EmailConfig.MAIL_PASSWORD,
-                server_info=EmailConfig.GMAIL_SERVER,
-                print_success_status=False
+            if not admin_emails:
+                logger.warning("No verified admin emails found to notify guest registration.")
+                flash("Registration is temporarily unavailable. Please try again later.", "danger")
+                return redirect(url_for('auth.register'))
+
+            guest_info_html = render_template(
+                'email/notify_admin_guest_registration.html',
+                guest=form_data,
+                building_name=building_name,
+                verification_link=verification_link,
+                config=current_app.config
             )
-            logger.info(f"Verification email successfully sent to {form_data['email']}")
-        except Exception as e:
-            logger.exception(f"Failed to send verification email to {form_data['email']}: {e}")
-            flash("Failed to send verification email. Please try again later.", "danger")
-            return redirect(url_for('auth.register'))
 
-        flash("A confirmation email has been sent. Please verify to complete registration. If you don't see it, please check your spam folder.", "info")
-        return redirect(url_for('auth.login'))
+            admin_msg = EmailMessage(
+                sender_email_id=EmailConfig.MAIL_USERNAME,
+                to=admin_emails,  # sending to list directly
+                subject=f"Guest Registration Request: {form_data['first_name']} {form_data['last_name'] or ''}",
+                email_html_text=guest_info_html,
+                formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
+            )
+
+            try:
+                admin_msg.send(
+                    sender_email_password=EmailConfig.MAIL_PASSWORD,
+                    server_info=EmailConfig.GMAIL_SERVER,
+                    print_success_status=False
+                )
+                logger.info(f"Admin notification sent to: {admin_emails}")
+            except Exception as e:
+                logger.exception(f"Failed to notify admins: {e}")
+                flash("Failed to send registration request to admins. Please try again later.", "danger")
+                return redirect(url_for('auth.register'))
+
+            flash("Your request has been submitted. Admins will verify your details and complete your registration. You will be notified after verification.", "info")
+            return redirect(url_for('auth.login'))
+
+        else:
+            # Regular user: Send email verification to user
+            html = render_template(
+                'email/verify_email.html',
+                verification_link=verification_link,
+                user=form_data['first_name']
+            )
+
+            msg = EmailMessage(
+                sender_email_id=EmailConfig.MAIL_USERNAME,
+                to=form_data['email'],
+                subject=f"Action Required: Confirm your email for {current_app.config['FLASK_APP_NAME']}",
+                email_html_text=html,
+                formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
+            )
+
+            try:
+                msg.send(
+                    sender_email_password=EmailConfig.MAIL_PASSWORD,
+                    server_info=EmailConfig.GMAIL_SERVER,
+                    print_success_status=False
+                )
+                logger.info(f"Verification email successfully sent to {form_data['email']}")
+            except Exception as e:
+                logger.exception(f"Failed to send verification email to {form_data['email']}: {e}")
+                flash("Failed to send verification email. Please try again later.", "danger")
+                return redirect(url_for('auth.register'))
+
+            flash("A confirmation email has been sent. Please verify to complete registration. If you don't see it, please check your spam folder.", "info")
+            return redirect(url_for('auth.login'))
 
     if form.errors:
         logger.debug(f"Form validation errors: {form.errors}")
@@ -279,9 +323,23 @@ def complete_registration(token):
         return redirect(url_for('auth.login'))
 
     building = Building.query.filter_by(uuid=data['building_uuid']).first_or_404()
-    course = Course.query.filter_by(uuid=data['course_uuid']).first_or_404()
+
+    role = data.get('role', 'user')  # default to user
+
+    if role == 'user':
+        course = Course.query.filter_by(uuid=data['course_uuid']).first_or_404()
+    else:
+        course = None  # guests do not require course
+
+    if role == 'guest':
+        if not data.get('contact_no') or not data.get('departure_date') or not data.get('host_name'):
+            logger.warning("Guest registration missing required contact_no or departure_date or host_name")
+            flash("Incomplete registration data for guest.", "danger")
+            return redirect(url_for('auth.register'))
 
     try:
+        departure_date_str = data.get('departure_date')
+        departure_date = date.fromisoformat(departure_date_str) if departure_date_str else None
         new_user = create_user(
             username=data['username'],
             password=data['password'],
@@ -292,7 +350,10 @@ def complete_registration(token):
             contact_no=data.get('contact_no'),
             room_no=data.get('room_no'),
             building_uuid=building.uuid,
-            course_uuid=course.uuid,
+            course_uuid=course.uuid if course else None,
+            role=role,
+            departure_date=departure_date,
+            host_name=data.get('host_name'),
             email_verified=True
         )
         logger.info(f"User created successfully: {new_user.username}")
@@ -389,7 +450,8 @@ def update_profile():
         'contact_no',
         'room_no',
         'building_uuid',
-        'course_uuid'
+        'course_uuid',
+        'departure_date'
     }
 
     # Filter only allowed fields

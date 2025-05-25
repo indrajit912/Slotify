@@ -58,6 +58,14 @@ def view_users():
     logger.info(f"Admin '{current_user.first_name} <{current_user.username}>' viewed all users.")
     return render_template('view_users.html', users=users)
 
+@admin_bp.route('/guests')
+@admin_required
+def view_guests():
+    """View all Guests."""
+    users = User.query.filter(User.role == 'guest').order_by(desc(User.date_joined)).all()
+    logger.info(f"Admin '{current_user.first_name} <{current_user.username}>' viewed all guests.")
+    return render_template('view_guests.html', users=users)
+
 
 @admin_bp.route('/machines')
 @admin_required

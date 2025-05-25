@@ -49,13 +49,14 @@
                 <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
                    data-bs-toggle="modal" data-bs-target="#editRoomNoModal" role="button" aria-label="Edit Room No"></i>
             </p>
-
-            <p class="mb-1 d-flex align-items-center">
-                <i class="bi bi-mortarboard me-1"></i>
-                <strong class="me-1">Course:</strong> {{ user.course.name or 'N/A' }}
-                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
-                   data-bs-toggle="modal" data-bs-target="#editCourseModal" role="button" aria-label="Edit Course"></i>
-            </p>
+            {% if not user.is_guest() %}
+                <p class="mb-1 d-flex align-items-center">
+                    <i class="bi bi-mortarboard me-1"></i>
+                    <strong class="me-1">Course:</strong> {{ user.course.name or 'N/A' }}
+                    <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
+                       data-bs-toggle="modal" data-bs-target="#editCourseModal" role="button" aria-label="Edit Course"></i>
+                </p>
+            {% endif %}
 
             <p class="mb-0 d-flex align-items-center">
                 <i class="bi bi-building me-1"></i>
@@ -72,6 +73,22 @@
             </p>
 
             <p class="mb-1"><i class="bi bi-person-badge me-1"></i><strong>Role:</strong> <code>{{ user.role }}</code></p>
+            {% if user.is_guest() %}
+            <p class="mb-1 d-flex align-items-center">
+                <i class="bi bi-calendar-x me-1"></i>
+                <strong class="me-1">Departure Date:</strong> {{ moment(user.departure_date).format('LL') if user.departure_date else 'N/A' }}
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
+                   data-bs-toggle="modal" data-bs-target="#editDepartureDateModal" role="button" aria-label="Edit Departure Date"></i>
+            </p>
+
+            <p class="mb-1 d-flex align-items-center">
+                <i class="bi bi-person me-1"></i> 
+                <strong class="me-1">Host name:</strong> {{ user.host_name }}
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
+                   data-bs-toggle="modal" data-bs-target="#editHostNameModal" role="button" aria-label="Edit Host Name"></i>
+            </p>
+            {% endif %}
+
         </div>
     </div>
 </div>

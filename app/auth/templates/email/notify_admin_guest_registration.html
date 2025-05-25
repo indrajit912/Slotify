@@ -1,0 +1,45 @@
+{% extends "email_base.html" %}
+
+{% block title %}Guest Registration Approval Needed – Slotify{% endblock %}
+
+{% block content %}
+<h2>Guest Registration Request</h2>
+
+<p>Dear Admin,</p>
+
+<p>A new guest has requested to register on <strong>Slotify</strong>. Please verify their details before approving the registration.</p>
+
+<p><strong>Guest Details:</strong></p>
+
+<ul>
+    <li><strong>Name:</strong> {{ guest.first_name }} {% if guest.middle_name %}{{ guest.middle_name }}{% endif %} {{ guest.last_name }}</li>
+    <li><strong>Username:</strong> {{ guest.username }}</li>
+    <li><strong>Email:</strong> {{ guest.email }}</li>
+    <li><strong>Contact No.:</strong> {{ guest.contact_no }}</li>
+    <li><strong>Room No.:</strong> {{ guest.room_no }}</li>
+    <li><strong>Building:</strong> {{ building_name }}</li>
+    <li><strong>Departure Date:</strong> {{ guest.departure_date }}</li>
+    <li><strong>Host Name:</strong> {{ guest.host_name }}</li>
+</ul>
+  
+
+<p>Please verify the contact number and email ID before proceeding.</p>
+
+<div style="text-align: center; margin: 2rem 0;">
+  <a href="{{ verification_link }}"
+     style="
+       background-color: #2b6cb0;
+       color: #ffffff;
+       padding: 12px 24px;
+       border-radius: 6px;
+       font-weight: 600;
+       font-size: 16px;
+       text-decoration: none;
+       display: inline-block;
+       border: none;
+       text-align: center;
+     ">Approve Guest Registration</a>
+</div>
+
+<p>If you do not recognize this request, you may safely ignore this email.</p>
+{% endblock %}

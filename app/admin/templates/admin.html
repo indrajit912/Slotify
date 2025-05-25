@@ -36,14 +36,19 @@
   <div class="col">
     <div class="card h-100 shadow-sm">
       <div class="card-body">
-        <h5 class="card-title"><i class="bi bi-people-fill me-2 text-success"></i>All Users</h5>
+        <h5 class="card-title">
+          <i class="bi bi-people-fill me-2 text-success"></i>All Users
+        </h5>
         <p class="card-text">View all non-admin users in the system.</p>
         <a href="{{ url_for('admin.view_users') }}" class="btn btn-primary">
-          <i class="bi bi-person-fill me-1"></i> View Users
+          <i class="bi bi-person-badge-fill me-1"></i> View Users
+        </a>
+        <a href="{{ url_for('admin.view_guests') }}" class="btn btn-primary">
+          <i class="bi bi-person-check-fill me-1"></i> View Guests
         </a>
       </div>
     </div>
-  </div>
+  </div>  
 
   <!-- New: Manage Buildings -->
   <div class="col">

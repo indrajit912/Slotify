@@ -218,6 +218,7 @@ def create_isi_specific_data():
         ("PHD-LIS", "Doctor of Philosophy in Library Science", "PhD", "Documentation Research And Training Centre", "PhD Library Sc.", 5, "Doctoral programme in Library Science"),
         ("PHD-AS", "Doctor of Philosophy in Applied Statistics", "PhD", "Applied Statistics Unit", "PhD Applied Stat", 5, "Doctoral programme in Applied Statistics"),
         ("PHD-CS", "Doctor of Philosophy in Computer Science", "PhD", "System Science and Informatics Unit", "PhD Computer Sc", 5, "Doctoral programme in Computer Science"),
+        ("PHD-PHYS", "Doctor of Philosophy in Physics", "PhD", "System Science and Informatics Unit", "PhD Physics", 5, "Doctoral programme in Physics"),
         ("PHD-ECA", "Doctor of Philosophy in Economics", "PhD", "Economic Analysis Unit", "PhD Economics", 5, "Doctoral programme in Economics"),
         ("MS-QMS", "Master of Science in Quality Management Science", "PG", "Statistical Quality Control & Operations Research Unit", "MSc Quality Management Sc", 1, ""),
         ("MS-LIS", "Master of Science in Library & Information Science", "PG", "Documentation Research And Training Centre", "MSc Library Sc", 2, ""),

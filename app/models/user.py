@@ -56,6 +56,7 @@ class User(db.Model, UserMixin):
 
     # It will be for Guest only
     departure_date = db.Column(db.Date, nullable=True) 
+    host_name = db.Column(db.String(255), nullable=True)
 
     # Optional fields
     contact_no = db.Column(db.String(20), nullable=True)
@@ -75,17 +76,17 @@ class User(db.Model, UserMixin):
     
     @property
     def fullname(self):
-        parts = [self.first_name]
-        if self.middle_name:
-            parts.append(self.middle_name)
-        parts.append(self.last_name)
-        return ' '.join(parts)
+        return ' '.join(part for part in [self.first_name, self.middle_name, self.last_name] if part and part.strip())
+
     
     def is_admin(self):
         return self.role in ("admin", "superadmin")
     
     def is_superadmin(self):
         return self.role == "superadmin"
+    
+    def is_guest(self):
+        return self.role == "guest"
     
     def set_hashed_password(self, password):
         """
@@ -149,11 +150,12 @@ class User(db.Model, UserMixin):
             'last_updated': User.format_datetime_to_str(self.last_updated),
             'last_seen': User.format_datetime_to_str(self.last_seen),
             'email_verified': self.email_verified,
-            'building': self.building.name,
-            'course': self.course.name,
-            'departure_date': self.departure_date
+            'building': self.building.name if self.building else None,
+            'course': self.course.name if self.course else None,
+            'departure_date': self.departure_date.isoformat() if self.departure_date else None,
+            'host_name': self.host_name
         }
-        
+
     
     @staticmethod
     def format_datetime_to_str(dt):
