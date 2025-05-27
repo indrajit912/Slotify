@@ -101,6 +101,12 @@ def create_user(
 
     return user
 
+def get_all_admins():
+    """
+    Returns a list of all users with role 'admin' or 'superadmin'.
+    """
+    return User.query.filter(User.role.in_(['admin', 'superadmin'])).all()
+
 
 def get_user_by_uuid(uuid_str: str):
     """

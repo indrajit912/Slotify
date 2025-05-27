@@ -25,6 +25,7 @@ from .course_service import *
 
 __all__ = [
     "create_user",
+    "get_all_admins",
     "get_user_by_uuid",
     "get_user_by_email",
     "get_user_by_username",

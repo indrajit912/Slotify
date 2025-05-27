@@ -19,7 +19,7 @@ from flask_login import login_required, current_user
 from . import main_bp
 from app.models.washingmachine import WashingMachine
 from app.models.booking import TimeSlot
-from app.services import get_machine_monthly_slots, book_slot, cancel_booking
+from app.services import get_machine_monthly_slots, book_slot, cancel_booking, get_all_admins
 from app.utils.decorators import admin_required
 from config import Config
 
@@ -33,6 +33,11 @@ logger = logging.getLogger(__name__)
 def index():
     logger.info("Visited homepage.")
     return render_template("index.html")
+
+@main_bp.route('/view-all-admins')
+def view_all_admins():
+    admins = get_all_admins()
+    return render_template('view_all_admins.html', admins=admins)
 
 
 @main_bp.route('/machine/<uuid_str>/calendar/<int:year>/<int:month>')
