@@ -96,6 +96,14 @@ def book_slot_route():
     if not (machine_id and slot_number and date_str):
         return jsonify({'success': False, 'message': 'Missing parameters'}), 400
     
+    # Fetch machine and check availability
+    machine = WashingMachine.query.get(machine_id)
+    if not machine:
+        return jsonify({'success': False, 'message': 'Washing machine not found'}), 404
+
+    if not machine.is_available():
+        return jsonify({'success': False, 'message': 'Machine is not available for booking'}), 403
+    
     try:
         date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:

@@ -26,3 +26,6 @@ class WashingMachine(db.Model):
 
     def __repr__(self):
         return f"<WashingMachine(name={self.name}, code={self.code})>"
+    
+    def is_available(self):
+        return self.status.lower() == 'available'

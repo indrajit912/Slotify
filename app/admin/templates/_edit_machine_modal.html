@@ -25,10 +25,6 @@
                 <option value="offline">Offline</option>
               </select>
             </div>
-            <div class="mb-3">
-              <label for="machineBuildingUuidInput" class="form-label">Building UUID</label>
-              <input type="text" class="form-control" id="machineBuildingUuidInput" name="building_uuid" required>
-            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -48,14 +44,12 @@
       const name = button.getAttribute('data-name')
       const code = button.getAttribute('data-code')
       const status = button.getAttribute('data-status')
-      const buildingUuid = button.getAttribute('data-building-uuid')
   
       // Populate form fields
       document.getElementById('machineUuidInput').value = uuid
       document.getElementById('machineNameInput').value = name
       document.getElementById('machineCodeInput').value = code
       document.getElementById('machineStatusInput').value = status
-      document.getElementById('machineBuildingUuidInput').value = buildingUuid
   
       // Update form action dynamically
       document.getElementById('editMachineForm').action = `/admin/edit_machine/${uuid}`

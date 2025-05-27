@@ -190,7 +190,6 @@ def edit_machine(machine_uuid):
         name = request.form.get('name')
         code = request.form.get('code')
         status = request.form.get('status')
-        building_uuid = request.form.get('building_uuid')
 
         update_fields = {}
         if name:
@@ -199,8 +198,6 @@ def edit_machine(machine_uuid):
             update_fields['code'] = code
         if status:
             update_fields['status'] = status
-        if building_uuid:
-            update_fields['building_uuid'] = building_uuid
 
         update_washing_machine(machine_uuid, **update_fields)
         flash(f"Washing machine '{name}' updated successfully.", "success")
