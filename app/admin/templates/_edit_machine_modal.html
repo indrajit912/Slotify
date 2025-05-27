@@ -1,0 +1,64 @@
+<div class="modal fade" id="editMachineModal" tabindex="-1" aria-labelledby="editMachineModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form method="POST" id="editMachineForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editMachineModalLabel">Edit Washing Machine</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="machine_uuid" id="machineUuidInput">
+            <div class="mb-3">
+              <label for="machineNameInput" class="form-label">Name</label>
+              <input type="text" class="form-control" id="machineNameInput" name="name" required>
+            </div>
+            <div class="mb-3">
+              <label for="machineCodeInput" class="form-label">Code</label>
+              <input type="text" class="form-control" id="machineCodeInput" name="code" required>
+            </div>
+            <div class="mb-3">
+              <label for="machineStatusInput" class="form-label">Status</label>
+              <select class="form-select" id="machineStatusInput" name="status" required>
+                <option value="available">Available</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="offline">Offline</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="machineBuildingUuidInput" class="form-label">Building UUID</label>
+              <input type="text" class="form-control" id="machineBuildingUuidInput" name="building_uuid" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update Machine</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+  <script>
+    const editMachineModal = document.getElementById('editMachineModal')
+    editMachineModal.addEventListener('show.bs.modal', event => {
+      const button = event.relatedTarget
+      const uuid = button.getAttribute('data-uuid')
+      const name = button.getAttribute('data-name')
+      const code = button.getAttribute('data-code')
+      const status = button.getAttribute('data-status')
+      const buildingUuid = button.getAttribute('data-building-uuid')
+  
+      // Populate form fields
+      document.getElementById('machineUuidInput').value = uuid
+      document.getElementById('machineNameInput').value = name
+      document.getElementById('machineCodeInput').value = code
+      document.getElementById('machineStatusInput').value = status
+      document.getElementById('machineBuildingUuidInput').value = buildingUuid
+  
+      // Update form action dynamically
+      document.getElementById('editMachineForm').action = `/admin/edit_machine/${uuid}`
+    })
+  </script>
+  

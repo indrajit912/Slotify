@@ -29,7 +29,8 @@ from app.services import (
     update_course, 
     create_new_course,
     update_building_by_uuid,
-    delete_all_enrolled_students
+    delete_all_enrolled_students,
+    update_washing_machine
 )
 from app.extensions import db
 
@@ -180,6 +181,33 @@ def create_machine():
         logger.error(f"Error creating washing machine: {str(e)}")
         flash("An error occurred while creating the washing machine. Please try again.", "danger")
         return redirect(url_for('admin.home'))
+    
+
+@admin_bp.route('/edit_machine/<string:machine_uuid>', methods=['POST'])
+@admin_required
+def edit_machine(machine_uuid):
+    try:
+        name = request.form.get('name')
+        code = request.form.get('code')
+        status = request.form.get('status')
+        building_uuid = request.form.get('building_uuid')
+
+        update_fields = {}
+        if name:
+            update_fields['name'] = name
+        if code:
+            update_fields['code'] = code
+        if status:
+            update_fields['status'] = status
+        if building_uuid:
+            update_fields['building_uuid'] = building_uuid
+
+        update_washing_machine(machine_uuid, **update_fields)
+        flash(f"Washing machine '{name}' updated successfully.", "success")
+    except Exception as e:
+        flash(str(e), "danger")
+
+    return redirect(request.referrer or url_for('admin.machines_list'))
     
 
 @admin_bp.route('/make_admin/<user_uuid>', methods=['POST'])

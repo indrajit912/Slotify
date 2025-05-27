@@ -112,7 +112,7 @@ def update_washing_machine(machine_uuid: str, **kwargs):
     
     Args:
         machine_uuid (str): UUID of the washing machine to update.
-        kwargs: Fields to update. Supported keys: 'name', 'code', 'building_uuid'.
+        kwargs: Fields to update. Supported keys: 'name', 'code', 'building_uuid', 'status'.
         
     Returns:
         WashingMachine: The updated washing machine object.
@@ -155,6 +155,11 @@ def update_washing_machine(machine_uuid: str, **kwargs):
             if not new_building:
                 raise ValueError(f"No building found with UUID: {new_building_uuid}")
             washing_machine.building = new_building
+        
+        # Update status if 'status' given
+        if 'status' in kwargs:
+            new_status = kwargs['status']
+            washing_machine.status = new_status
         
         if kwargs:
             washing_machine.last_updated = utcnow()

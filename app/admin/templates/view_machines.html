@@ -96,23 +96,38 @@
       </td>
       <td>
         {% if current_user.is_authenticated and current_user.is_admin() %}
-        <form method="POST"
-              action="{{ url_for('main.generate_machine_calendar_qr') }}"
-              target="_blank"
-              class="ms-2 d-inline">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="uuid_str" value="{{ machine.uuid }}">
-          <input type="hidden" name="year" value="{{ current_year }}">
-          <input type="hidden" name="month" value="{{ current_month_num }}">
-          <button type="submit" class="btn btn-sm btn-outline-dark" title="Generate Printable QR Code">
-            <i class="bi bi-qr-code-scan"></i>
+          <button type="button" class="btn btn-outline-warning btn-sm me-1" 
+                  data-bs-toggle="modal" data-bs-target="#editMachineModal"
+                  data-uuid="{{ machine.uuid }}"
+                  data-name="{{ machine.name }}"
+                  data-code="{{ machine.code }}"
+                  data-status="{{ machine.status }}"
+                  data-building-uuid="{{ machine.building.uuid }}"
+                  title="Edit Machine">
+            <i class="bi bi-pencil"></i>
           </button>
-        </form>
-        <button class="btn btn-outline-primary btn-sm open-calendar-modal" data-machine-id="{{ machine.id }}" data-machine-uuid="{{ machine.uuid }}" title="View Monthly Calendar">
-          <i class="bi bi-calendar3"></i>
-        </button>
+      
+          <form method="POST"
+                action="{{ url_for('main.generate_machine_calendar_qr') }}"
+                target="_blank"
+                class="d-inline me-1">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="uuid_str" value="{{ machine.uuid }}">
+            <input type="hidden" name="year" value="{{ current_year }}">
+            <input type="hidden" name="month" value="{{ current_month_num }}">
+            <button type="submit" class="btn btn-sm btn-outline-dark" title="Generate Printable QR Code">
+              <i class="bi bi-qr-code-scan"></i>
+            </button>
+          </form>
+      
+          <button class="btn btn-outline-primary btn-sm open-calendar-modal" 
+                  data-machine-id="{{ machine.id }}" data-machine-uuid="{{ machine.uuid }}" 
+                  title="View Monthly Calendar">
+            <i class="bi bi-calendar3"></i>
+          </button>
         {% endif %}
       </td>
+      
     </tr>
     {% endfor %}
   </tbody>
@@ -153,6 +168,8 @@
         </form>
     </div>
 </div>
+
+{% include '_edit_machine_modal.html' %}
 {% endblock %}
 
 {% block scripts %}
