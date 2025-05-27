@@ -7,7 +7,7 @@
 import logging
 
 # Third-party imports
-from flask import Flask
+from flask import Flask, render_template
 from flask_wtf.csrf import generate_csrf
 
 # Local application imports
@@ -70,5 +70,11 @@ def create_app(config_class=get_config()):
     @app.route('/test/')
     def test():
         return '<h1>Testing page of Slotify Flask Application!</h1>'
+    
+    @app.errorhandler(Exception)
+    def unhandled_exception(e):
+        app.logger.exception("Unhandled exception: %s", e)
+        return render_template("errors/500.html"), 500
+
     
     return app

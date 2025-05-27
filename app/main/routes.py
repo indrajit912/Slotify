@@ -13,7 +13,7 @@ import calendar
 from datetime import datetime, date
 
 import qrcode
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import login_required, current_user
 
 from . import main_bp
@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 def index():
     logger.info("Visited homepage.")
     return render_template("index.html")
+    
 
 @main_bp.route('/view-all-admins')
 def view_all_admins():
@@ -175,3 +176,33 @@ def generate_machine_calendar_qr():
         qr_b64=qr_b64,
         current_year=datetime.now().year
     )
+
+
+@main_bp.route('/dev/error/<int:code>')
+def dev_error(code):
+    """
+    Test route to manually trigger error pages.
+
+    Supported codes:
+        401 - Unauthorized
+        403 - Forbidden
+        404 - Not Found
+        422 - Unprocessable Entity
+        500 - Internal Server Error
+
+    Example usage:
+        /dev/error/403
+    """
+    if code == 401:
+        abort(401)
+    elif code == 403:
+        abort(403)
+    elif code == 404:
+        abort(404)
+    elif code == 422:
+        abort(422)
+    elif code == 500:
+        # This triggers the 500 error page by causing an exception
+        raise Exception("Simulated server error for 500 page test.")
+    else:
+        return f"Unsupported error code {code}. Try 401, 403, 404, 422, or 500."

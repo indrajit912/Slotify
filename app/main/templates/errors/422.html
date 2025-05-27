@@ -1,0 +1,11 @@
+{% extends 'error_base.html' %}
+
+{% block title %}Unprocessable Request{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1 class="display-4">422</h1>
+    <p class="lead">We couldn’t process your request. Please check your input and try again.</p>
+    <a href="{{ url_for('main.index') }}" class="btn btn-info">Go Home</a>
+</div>
+{% endblock %}
