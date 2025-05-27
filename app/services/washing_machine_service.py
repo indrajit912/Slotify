@@ -238,7 +238,7 @@ def get_machine_monthly_slots(uuid_str: str, year: int, month: int, exclude_past
                     "room_no": booking.user.room_no,
                     "contact_no": booking.user.contact_no,
                     "avatar": booking.user.avatar(size=120),
-                    "course": booking.user.course.short_name,
+                    "course": booking.user.course.short_name if not booking.user.is_guest() else 'Guest',
                     "building": booking.user.building.name if booking.user.building else "N/A"
                 } if booking else None
             })

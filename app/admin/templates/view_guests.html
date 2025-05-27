@@ -21,9 +21,9 @@
                 <th scope="col"><i class="bi bi-telephone me-1"></i>Contact No</th>
                 <th scope="col"><i class="bi bi-door-closed me-1"></i>Room No</th>
                 <th scope="col"><i class="bi bi-building me-1"></i>Building</th>
-                <th scope="col"><i class="bi bi-mortarboard me-1"></i>Departure</th>
-                <th scope="col"><i class="bi bi-person-plus me-1"></i>Date Joined</th>
-                <th scope="col"><i class="bi bi-person-plus me-1"></i>Host</th>
+                <th scope="col"><i class="bi bi-calendar-check me-1"></i>Departure</th>
+                <th scope="col"><i class="bi bi-calendar2-check me-1 text-primary"></i>Date Joined</th>
+                <th scope="col"><i class="bi bi-person-heart me-1"></i>Host</th>
                 <th scope="col"><i class="bi bi-clock-history me-1"></i>Last Seen</th>
             </tr>
         </thead>
@@ -72,18 +72,18 @@
 
                 <td>
                     {% if user.date_joined %}
-                        <i class="bi bi-calendar2-check me-1 text-primary"></i>{{ moment(user.date_joined).format('LLL') }}
+                        {{ moment(user.date_joined).format('LLL') }}
                     {% else %}
                         <span class="text-muted">N/A</span>
                     {% endif %}
                 </td>
                 <td>
-                    <i class="bi bi-clock me-1 text-secondary"></i>{{ user.host_name }}
+                    {{ user.host_name }}
                 </td>
 
                 <td>
                     {% if user.last_seen %}
-                        <i class="bi bi-clock me-1 text-secondary"></i>{{ moment(user.last_seen).fromNow() }}
+                        {{ moment(user.last_seen).fromNow() }}
                     {% else %}
                         <span class="text-muted">N/A</span>
                     {% endif %}

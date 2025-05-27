@@ -356,8 +356,39 @@ def complete_registration(token):
             host_name=data.get('host_name'),
             email_verified=True
         )
-        logger.info(f"User created successfully: {new_user.username}")
-        flash("Registration complete! You can now log in.", "success")
+        if role == 'user':
+            logger.info(f"User created successfully: {new_user.username}")
+            flash("Registration complete! You can now log in.", "success")
+        elif role == 'guest':
+            logger.info(f"Guest created successfully: {new_user.username}")
+            flash("Registration complete! The guest can now log in.", "success")
+            
+            # Send account activation email to the guest
+            html = render_template(
+                'email/guest_confirmation_email.html',
+                guest=new_user.first_name
+            )
+
+            msg = EmailMessage(
+                sender_email_id=EmailConfig.MAIL_USERNAME,
+                to=new_user.email,
+                subject=f"Welcome! Your account has been activated on {current_app.config['FLASK_APP_NAME']}",
+                email_html_text=html,
+                formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
+            )
+
+            try:
+                msg.send(
+                    sender_email_password=EmailConfig.MAIL_PASSWORD,
+                    server_info=EmailConfig.GMAIL_SERVER,
+                    print_success_status=False
+                )
+                logger.info(f"Account activation email successfully sent to {new_user.email}.")
+            except Exception as e:
+                logger.exception(f"Failed to send account activation email to {new_user.email}: {e}")
+                flash("We were unable to send the confirmation email to the guest. Please try again later.", "danger")
+                return redirect(url_for('auth.register'))
+
         return redirect(url_for('auth.login'))
     except Exception as e:
         logger.exception(f"Error during user creation: {e}")

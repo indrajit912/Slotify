@@ -47,12 +47,10 @@ class Config:
 
 class DevelopmentConfig(Config):
     PORT = os.environ.get("PORT") or 8080
-    DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(Config.BASE_DIR, f'{Config.FLASK_APP_NAME.lower()}.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class ProductionConfig(Config):
-    DEBUG = False
     SQLALCHEMY_DATABASE_URI = Config.DATABASE_URI or \
         'sqlite:///' + os.path.join(Config.BASE_DIR, f'{Config.FLASK_APP_NAME.lower()}.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False

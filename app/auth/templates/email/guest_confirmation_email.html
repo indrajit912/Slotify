@@ -1,0 +1,19 @@
+{% extends "email_base.html" %}
+
+{% block title %}Welcome to Slotify!{% endblock %}
+
+{% block content %}
+<h2>Welcome, {{ guest }}!</h2>
+
+<p>Your guest account has been successfully activated on <strong>Slotify</strong>.</p>
+
+<p>You can now log in and start booking washing machine slots with ease.</p>
+
+<p>If you have any questions or face issues, feel free to reach out to your host or an admin for assistance.</p>
+
+<div class="link-box">
+  👉 <strong>Login here:</strong> <a href="{{ url_for('auth.login', _external=True) }}">Slotify Login Page</a>
+</div>
+
+<p>We’re happy to have you on board. Enjoy your stay!</p>
+{% endblock %}
