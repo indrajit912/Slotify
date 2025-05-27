@@ -47,5 +47,6 @@ __all__ = [
     "get_course",
     "update_course",
     "delete_course",
-    "update_building_by_uuid"
+    "update_building_by_uuid",
+    "delete_all_enrolled_students"
 ]

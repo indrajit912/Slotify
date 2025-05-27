@@ -28,7 +28,8 @@ from app.services import (
     get_user_by_uuid, 
     update_course, 
     create_new_course,
-    update_building_by_uuid
+    update_building_by_uuid,
+    delete_all_enrolled_students
 )
 from app.extensions import db
 
@@ -338,4 +339,17 @@ def add_students():
     db.session.commit()
 
     flash(f"Added {added_count} new students. Skipped {skipped_count} existing.", 'success')
+    return redirect(url_for('admin.current_enrolled_students'))
+
+
+@admin_bp.route('/delete_enrolled_students', methods=['POST'])
+@admin_required
+def delete_enrolled_students():
+    success = delete_all_enrolled_students()
+    if success:
+        logger.info(f"Admin {current_user.first_name} (Username: {current_user.username}) deleted all enrolled students.")
+        flash("All enrolled students have been deleted successfully.", "success")
+    else:
+        logger.error(f"Admin {current_user.first_name} (Username: {current_user.username}) failed to delete enrolled students.")
+        flash("Failed to delete enrolled students. Please try again.", "danger")
     return redirect(url_for('admin.current_enrolled_students'))

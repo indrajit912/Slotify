@@ -164,10 +164,6 @@ def generate_machine_calendar_qr():
         'machine_qr.html',
         machine=machine,
         building=building,
-        year=year,
-        month=month,
-        month_name=calendar.month_name[month],
-        calendar_url=calendar_url,
         qr_b64=qr_b64,
         current_year=datetime.now().year
     )

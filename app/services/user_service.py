@@ -11,7 +11,7 @@ from datetime import datetime
 
 from sqlalchemy.exc import IntegrityError
 
-from app.models.user import User
+from app.models.user import User, CurrentEnrolledStudent
 from app.models.course import Course
 from app.models.building import Building
 from app.extensions import db
@@ -342,3 +342,15 @@ def delete_user_by_uuid(user_uuid):
         db.session.rollback()
         logger.error(f"Error deleting user UUID {user_uuid}: {e}")
         raise ValueError("Could not delete user.")
+
+
+def delete_all_enrolled_students():
+    try:
+        num_deleted = db.session.query(CurrentEnrolledStudent).delete()
+        db.session.commit()
+        logger.info(f"Deleted {num_deleted} enrolled students from the database.")
+        return True
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to delete enrolled students: {e}")
+        return False

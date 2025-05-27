@@ -11,14 +11,34 @@
   <form method="POST" action="{{ url_for('admin.add_students') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="mb-3">
-      <textarea class="form-control" name="student_data" rows="10" placeholder="Paste the list here..." required></textarea>
+      <textarea class="form-control" name="student_data" rows="10" 
+        placeholder="First, please visit https://www.isibang.ac.in/~adean/people.html
+Use your mouse to select and copy BOTH the names and roll columns simultaneously.
+Then paste the copied list here.
+It should look like this:
+    Anshul Raj Singh 	bmat2405
+    Anshuman Sharma 	bmat2406
+    Anuvab De 	        bmat2407
+NOTE: Please verify if all names and rolls are properly added to the database.
+If something is missing, use the 'Clear Database' button to reset and try again."
+        required></textarea>
     </div>
     <button type="submit" class="btn btn-primary">Add Students</button>
-  </form>
+    <a href="{{ url_for('admin.home') }}" class="btn btn-secondary ms-2">Back</a>
+</form>
+
 
   <hr class="my-5">
 
   <h3>Currently Enrolled Students <span class="badge bg-secondary">{{ students|length }}</span></h3>
+
+  <form method="POST" action="{{ url_for('admin.delete_enrolled_students') }}" onsubmit="return confirm('Are you sure you want to delete all enrolled students? This action cannot be undone.')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-danger mb-3">
+      <i class="bi bi-trash-fill me-1"></i> Delete All Enrolled Students
+    </button>
+  </form>
+  
 
   <div class="table-responsive">
     <table class="table table-striped table-hover align-middle mt-3">
