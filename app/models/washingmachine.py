@@ -4,6 +4,7 @@
 # Created On: May 10, 2025
 # 
 import uuid
+from datetime import datetime
 
 from scripts.utils import utcnow
 from flask import url_for
@@ -101,6 +102,10 @@ class WashingMachine(db.Model):
                 wm = WashingMachine.from_json(json_data, building_lookup)
     
         """
+        def parse_dt(key):
+            val = data.get(key)
+            return datetime.fromisoformat(val) if val else None
+        
         building = building_lookup.get(data["building_uuid"])
         if not building:
             raise ValueError(f"Building with UUID {data['building_uuid']} not found for WashingMachine import")
@@ -111,9 +116,9 @@ class WashingMachine(db.Model):
             code=data["code"],
             status=data.get("status", "available"),
             image_path=data.get("image_path"),
-            created_at=data.get("created_at"),
-            last_updated=data.get("last_updated"),
+            created_at=parse_dt("created_at"),
+            last_updated=parse_dt("last_updated"),
             building=building
         )
-        wm.time_slots = [TimeSlot.from_json(ts) for ts in data.get("time_slots", [])]
+        # wm.time_slots = [TimeSlot.from_json(ts) for ts in data.get("time_slots", [])]
         return wm

@@ -4,6 +4,8 @@
 # Created On: May 10, 2025
 # 
 import uuid
+from datetime import datetime
+
 from app.extensions import db
 
 class TimeSlot(db.Model):
@@ -22,13 +24,18 @@ class TimeSlot(db.Model):
         return {
             "uuid": self.uuid,
             "slot_number": self.slot_number,
+            "machine_uuid": self.machine.uuid if self.machine else None,
             "time_range": self.time_range
         }
     
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, machine_lookup):
+        machine = machine_lookup.get(data["machine_uuid"])
+        if not machine:
+            raise ValueError(f"Machine with UUID {data['machine_uuid']} not found for TimeSlot import")
         return cls(
             uuid=data["uuid"],
+            machine=machine,
             slot_number=data["slot_number"],
             time_range=data["time_range"]
         )
@@ -96,6 +103,10 @@ class Booking(db.Model):
             Then import:
                 booking = Booking.from_json(json_data, user_lookup, time_slot_lookup)
         """
+        def parse_dt(key):
+            val = data.get(key)
+            return datetime.fromisoformat(val) if val else None
+        
         user = user_lookup.get(data["user_uuid"])
         if not user:
             raise ValueError(f"User with UUID {data['user_uuid']} not found for Booking import")
@@ -108,6 +119,6 @@ class Booking(db.Model):
             uuid=data["uuid"],
             user=user,
             time_slot=time_slot,
-            date=data.get("date"),
+            date=parse_dt("date"),
         )
 

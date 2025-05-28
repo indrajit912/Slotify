@@ -488,6 +488,12 @@ def update_profile():
     # Filter only allowed fields
     update_data = {k: v for k, v in data.items() if k in allowed_fields}
 
+    # TODO: Check whether update_data.get('building_uuid') is there.
+    # TODO: Get the rsh_building_uuid = Building.Query(code='RSH')
+    # TODO: If the user is not an admin and tries to update to RSH building then
+    # flash them that they should contact admin to update their building and not 
+    # let them to change.
+
     try:
         updated_user = update_user_by_uuid(current_user.uuid, **update_data)
         logger.info(f"User '{updated_user.username}' updated their profile successfully.")

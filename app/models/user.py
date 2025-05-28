@@ -3,6 +3,7 @@
 # Author: Indrajit Ghosh
 # Created On: May 10, 2025
 # 
+from datetime import datetime
 
 # Third-party imports
 from flask import current_app
@@ -201,16 +202,20 @@ class User(db.Model, UserMixin):
     
             user = User.from_json(json_data, building_lookup, course_lookup)
         """
+        def parse_dt(key):
+            val = data.get(key)
+            return datetime.fromisoformat(val) if val else None
+
         building = building_lookup.get(data.get("building_uuid"))
         if not building:
             raise ValueError(f"Building with UUID {data.get('building_uuid')} not found for User import")
-    
+
         course = None
         if data.get("course_uuid"):
             course = course_lookup.get(data["course_uuid"])
             if not course:
                 raise ValueError(f"Course with UUID {data['course_uuid']} not found for User import")
-    
+
         return cls(
             uuid=data.get("uuid"),
             username=data.get("username"),
@@ -223,16 +228,15 @@ class User(db.Model, UserMixin):
             role=data.get("role", "user"),
             contact_no=data.get("contact_no"),
             room_no=data.get("room_no"),
-            date_joined=data.get("date_joined"),
-            last_updated=data.get("last_updated"),
-            last_seen=data.get("last_seen"),
+            date_joined=parse_dt("date_joined"),
+            last_updated=parse_dt("last_updated"),
+            last_seen=parse_dt("last_seen"),
             email_verified=data.get("email_verified", False),
             building=building,
             course=course,
-            departure_date=data.get("departure_date"),
+            departure_date=parse_dt("departure_date"),
             host_name=data.get("host_name"),
         )
-    
 
     
     @staticmethod
