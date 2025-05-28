@@ -19,21 +19,19 @@ from scripts.utils import utcnow
 
 logger = logging.getLogger(__name__)
 
+from app.utils.image_utils import save_machine_image
+from werkzeug.datastructures import FileStorage
 
-def create_washing_machine(name: str, code: str, building_uuid: str, time_slots: list[dict]):
+def create_washing_machine(name: str, code: str, building_uuid: str, time_slots: list[dict], image_file: FileStorage = None):
     """
-    Creates a new washing machine with given time slots and building UUID.
+    Creates a new washing machine with optional image and associated time slots.
 
     Args:
         name (str): Name of the washing machine.
         code (str): Unique code for the washing machine.
         building_uuid (str): UUID of the building where the machine is located.
         time_slots (list of dict): Each dict should have 'slot_number' and 'time_range'.
-            Example: [
-                        {"slot_number": 1, "time_range": "07:00-10:30"},
-                        {"slot_number": 2, "time_range": "11:30-15:00"},
-                        ...
-                     ]
+        image_file (FileStorage, optional): Optional image file of the washing machine.
 
     Returns:
         WashingMachine: The created machine object.
@@ -50,10 +48,12 @@ def create_washing_machine(name: str, code: str, building_uuid: str, time_slots:
         logger.error(f"Building not found with UUID: {building_uuid}")
         raise ValueError(f"No building found with UUID: {building_uuid}")
 
+    # Create machine
     machine = WashingMachine(name=name, code=code, building=building)
     db.session.add(machine)
     db.session.flush()  # Ensures machine.id is available before adding related time slots
 
+    # Save time slots
     for slot in time_slots:
         ts = TimeSlot(
             machine_id=machine.id,
@@ -61,6 +61,15 @@ def create_washing_machine(name: str, code: str, building_uuid: str, time_slots:
             time_range=slot["time_range"]
         )
         db.session.add(ts)
+
+    # Save image if provided
+    if image_file:
+        try:
+            image_path = save_machine_image(image_file, machine.uuid)
+            if image_path:
+                machine.image_path = image_path
+        except Exception as e:
+            logger.warning(f"Failed to save image for machine '{name}': {e}")
 
     try:
         db.session.commit()
