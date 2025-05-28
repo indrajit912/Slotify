@@ -26,3 +26,25 @@ class Building(db.Model):
 
     def __repr__(self):
         return f"<Building(name={self.name}, code={self.code})>"
+
+    def to_json(self):
+        """
+        Serialize Building to JSON-friendly dict.
+        Machines and users are NOT included by default to avoid recursion and large payload.
+        """
+        return {
+            "uuid": self.uuid,
+            "name": self.name,
+            "code": self.code
+        }
+
+    @classmethod
+    def from_json(cls, data):
+        """
+        Create Building instance from JSON dict.
+        """
+        return cls(
+            uuid=data.get("uuid"),
+            name=data["name"],
+            code=data["code"]
+        )
