@@ -20,7 +20,6 @@ from scripts.utils import utcnow
 
 logger = logging.getLogger(__name__)
 
-# TODO: Create methods for CurrentEnrolledStudents
 
 def create_user(
     *,

@@ -2,7 +2,7 @@
 # Author: Indrajit Ghosh
 # Created On: May 11, 2025
 #
-
+# TODO: Create one route for admins to view logs
 # Standard library imports
 import logging
 from datetime import datetime
@@ -36,7 +36,6 @@ from app.services import (
     create_new_enrolled_student,
     update_enrolled_student
 )
-from app.extensions import db
 
 logger = logging.getLogger(__name__)
 

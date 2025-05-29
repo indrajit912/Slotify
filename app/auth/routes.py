@@ -26,6 +26,8 @@ from app.extensions import db
 
 logger = logging.getLogger(__name__)
 
+# TODO: Add email notification facility for User.
+
 @auth_bp.before_request
 def update_last_seen():
     if current_user.is_authenticated:
