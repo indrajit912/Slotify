@@ -39,6 +39,23 @@ class TimeSlot(db.Model):
             slot_number=data["slot_number"],
             time_range=data["time_range"]
         )
+    
+    @property
+    def start_time(self):
+        """
+        Returns the starting time as a `datetime.time` object.
+        Assumes `time_range` is of format "HH:MM-HH:MM"
+        """
+        start_str = self.time_range.split('-')[0]
+        return datetime.strptime(start_str, "%H:%M").time()
+
+    @property
+    def end_time(self):
+        """
+        Returns the ending time as a `datetime.time` object.
+        """
+        end_str = self.time_range.split('-')[1]
+        return datetime.strptime(end_str, "%H:%M").time()
 
 
 class Booking(db.Model):

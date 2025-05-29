@@ -3,7 +3,7 @@
 # Author: Indrajit Ghosh
 # Created On: May 10, 2025
 # 
-from datetime import datetime
+from datetime import datetime, date
 
 # Third-party imports
 from flask import current_app
@@ -71,6 +71,7 @@ class User(db.Model, UserMixin):
     last_updated = db.Column(db.DateTime(timezone=True), default=utcnow)
     last_seen = db.Column(db.DateTime(timezone=True), default=utcnow)
     email_verified = db.Column(db.Boolean, default=False)
+    email_reminder_hours = db.Column(db.Integer, nullable=False, default=0)
 
     # It will be for Guest only
     departure_date = db.Column(db.Date, nullable=True) 
@@ -147,6 +148,35 @@ class User(db.Model, UserMixin):
         email_hash = sha256_hash(self.email.lower())
         return f"https://gravatar.com/avatar/{email_hash}?d=identicon&s={size}"
     
+    def get_upcoming_bookings(self):
+        """
+        Returns a list of future bookings (today and later), sorted by date and time.
+        """
+        today = date.today()
+        return sorted(
+            [b for b in self.bookings if b.date >= today],
+            key=lambda b: (b.date, b.time_slot.start_time)
+        )
+
+    def get_next_booking(self):
+        """
+        Returns the nearest upcoming booking (i.e., next in order).
+        Returns None if no future bookings exist.
+        """
+        upcoming = self.get_upcoming_bookings()
+        return upcoming[0] if upcoming else None
+
+    def get_bookings_on(self, target_date):
+        """
+        Returns all bookings for the user on the given date.
+
+        Args:
+            target_date (datetime.date): Date to filter bookings.
+        """
+        return [
+            b for b in self.bookings if b.date == target_date
+        ]
+
     
     def to_json(self):
         """
@@ -192,6 +222,7 @@ class User(db.Model, UserMixin):
             "course_uuid": self.course.uuid if self.course else None,
             "departure_date": self.departure_date.isoformat() if self.departure_date else None,
             "host_name": self.host_name,
+            "email_reminder_hours": self.email_reminder_hours
         }
     
     @classmethod
@@ -253,6 +284,7 @@ class User(db.Model, UserMixin):
             course=course,
             departure_date=parse_dt("departure_date"),
             host_name=data.get("host_name"),
+            email_reminder_hours=data.get("email_reminder_hours", 0),
         )
 
     
