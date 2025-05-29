@@ -3,10 +3,15 @@
 {% block title %}Server Error{% endblock %}
 
 {% block content %}
-<div class="container text-center mt-5">
-    <h1 class="display-4">500</h1>
-    <p class="lead">Oops! Something went wrong on our end.</p>
-    <p>We're working to fix it. Please try again later.</p>
-    <a href="{{ url_for('main.index') }}" class="btn btn-danger">Go Back Home</a>
-</div>
+<img
+        src={{ url_for('main.static', filename='img/server_error.png') }}
+        alt="server_error"
+        class="icon"
+/>
+<div class="error-code">500</div>
+    <p class="title">Server Error</p>
+    <p> Oops! An unexpected error occurred at our end </p>
+    <p> Sit tight while we try to fix it</p>
 {% endblock %}
+
+{% block footer %}Icon made by <a href="https://www.flaticon.com/authors/leremy" style="color:#888">Leremy</a> from <a href="https://www.flaticon.com" style="color:#888">www.flaticon.com</a>{% endblock %}

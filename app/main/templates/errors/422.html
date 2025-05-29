@@ -3,9 +3,15 @@
 {% block title %}Unprocessable Request{% endblock %}
 
 {% block content %}
-<div class="container text-center mt-5">
-    <h1 class="display-4">422</h1>
-    <p class="lead">We couldn’t process your request. Please check your input and try again.</p>
-    <a href="{{ url_for('main.index') }}" class="btn btn-info">Go Home</a>
-</div>
+<img
+        src={{ url_for('main.static', filename='img/bad_request.gif') }}
+        alt="bad_request"
+        class="gif"
+/>
+<div class="error-code">422</div>
+    <p class="title">Unprocessable Request</p>
+    <p> There was a problem with your request</p>
+    <p> Please check your input and retry </p>
 {% endblock %}
+
+{% block footer %}gif credit: <a href="https://steamcommunity.com/id/WashingM" style="color:#888;">dragoșșșș{% endblock %}

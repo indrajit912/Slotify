@@ -3,14 +3,15 @@
 {% block title %}Page Not Found{% endblock %}
 
 {% block content %}
-<div class="mx-auto p-5 bg-white rounded shadow" style="max-width: 420px;">
-    <h1 class="display-1 text-danger fw-bold mb-4">404</h1>
-    <p class="lead fs-4 mb-4">😕 Oops! The page you're looking for can't be found.</p>
-    <p class="mb-4 text-muted">
-        It might have been moved or deleted. Try returning to the homepage.
-    </p>
-    <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg shadow">
-        <i class="bi bi-house-door-fill me-2"></i>Go Home
-    </a>
-</div>
+<img
+        src={{ url_for('main.static', filename='img/file_not_found.png') }}
+        alt="file_not_found"
+        class="icon"
+/>
+<div class="error-code">404</div>
+    <p class="title">Page Not Found</p>
+    <p> The page you were looking for might have been moved or deleted </p>
+    <p> Although, we believe <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley">this</a> is what you were looking for</p>
 {% endblock %}
+
+{% block footer %}Icon made by <a href="https://www.flaticon.com/authors/leremy" style="color:#888">Leremy</a> from <a href="https://www.flaticon.com" style="color:#888">www.flaticon.com</a>{% endblock %}

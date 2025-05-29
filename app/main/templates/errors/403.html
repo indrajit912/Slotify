@@ -3,9 +3,15 @@
 {% block title %}Access Denied{% endblock %}
 
 {% block content %}
-<div class="container text-center mt-5">
-    <h1 class="display-4">403</h1>
-    <p class="lead">You don't have permission to access this page.</p>
-    <a href="{{ url_for('main.index') }}" class="btn btn-warning">Return to Home</a>
-</div>
+<img
+        src={{ url_for('main.static', filename='img/yoda.png') }}
+        alt="yoda"
+        class="icon"
+/>
+<div class="error-code">403</div>
+    <p class="title">Access Denied</p>
+    <p>Allowed here you are not</p>
+    <p>Home or back to where you came from you can go</p>
 {% endblock %}
+
+{% block footer %}Icon made by <a href="https://www.iconfinder.com/vectto" style="color:#888">Kristian Pettyhjohn</a> from <a href="https://www.iconfinder.com" style="color:#888">www.iconfinder.com</a>{% endblock %}

@@ -1,0 +1,101 @@
+* {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 20px;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 300;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        text-align: center;
+        background-color: #f9f9f9;
+    }
+    img.icon {
+        width: 60%;
+        max-width: 300px;
+        height: auto;
+        margin-bottom: 10px;
+    }
+
+    img.gif {
+        width: 80%;
+        max-width: 300px;
+        height: auto;
+        margin-bottom: 10px;
+    }
+
+    .error-code {
+        font-size: 5em;
+        color: #555;
+        margin: 10px 0;
+    }
+
+    p {
+        margin: 10px 0;
+        font-size: 1.2em;
+    }
+
+    p.title {
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .button-container {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+    }
+
+    button {
+        background-color: #2563eb;
+        color: #fff;
+        border: none;
+        padding: 15px 30px;
+        cursor: pointer;
+        font-size: 1.5em;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    button:hover {
+        background-color: #1e40af;
+    }
+
+    button img,
+    button svg {
+        height: 20px;
+        width: 20px;
+    }
+
+    svg {
+        fill: none;
+        stroke: white;
+        stroke-width: 3;
+    }
+
+    @media (max-width: 480px) {
+        .error-code {
+            font-size: 3em;
+        }
+
+        button {
+            font-size: 1em;
+            padding: 10px 20px;
+        }
+    }
+.page-footer {
+    font-size: 0.2em;
+    color: #888;
+    text-align: center;
+    margin-top: 40px;
+}
