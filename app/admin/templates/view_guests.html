@@ -11,7 +11,8 @@
 <h2 class="mb-4"><i class="bi bi-people me-2"></i>All Guests</h2>
 
 <div class="table-responsive">
-    <table class="table table-hover table-bordered align-middle shadow-sm rounded overflow-hidden" aria-describedby="usersTableCaption">
+    <table class="table table-hover table-bordered align-middle shadow-sm rounded overflow-hidden"
+        aria-describedby="usersTableCaption">
         <caption id="usersTableCaption" class="visually-hidden">List of all guests with details</caption>
         <thead class="table-light">
             <tr>
@@ -33,12 +34,19 @@
                 <td class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="fw-semibold">{{ user.username }}</span>
 
+                    <!-- Update User Modal Trigger -->
+                    <button type="button" class="btn btn-sm p-0 border-0" title="Update building" data-bs-toggle="modal"
+                        data-bs-target="#updateUserModal-{{ user.uuid }}">
+                        <i class="bi bi-pencil-square text-primary fs-5"></i>
+                    </button>
+
+                    {% include '_update_user_modal.html' %}
+
                     <!-- Delete User Button -->
-                    <form method="POST" action="{{ url_for('admin.delete_user', user_uuid=user.uuid) }}" style="display:inline;">
+                    <form method="POST" action="{{ url_for('admin.delete_user', user_uuid=user.uuid) }}"
+                        style="display:inline;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit"
-                            class="btn btn-sm p-0 border-0"
-                            title="Delete user"
+                        <button type="submit" class="btn btn-sm p-0 border-0" title="Delete user"
                             onclick="return confirm('Are you sure you want to delete {{ user.username }}? This action cannot be undone.');">
                             <i class="bi bi-trash-fill text-danger fs-5"></i>
                         </button>
@@ -48,18 +56,19 @@
                 <td>{{ user.fullname }}</td>
 
                 <td>
-                    <a href="mailto:{{ user.email }}" class="text-decoration-none text-truncate d-block" style="max-width: 180px;">
+                    <a href="mailto:{{ user.email }}" class="text-decoration-none text-truncate d-block"
+                        style="max-width: 180px;">
                         <i class="bi bi-envelope-fill text-secondary me-1"></i>{{ user.email }}
                     </a>
                 </td>
 
                 <td>
                     {% if user.contact_no %}
-                        <a href="tel:{{ user.contact_no }}" class="text-decoration-none">
-                            <i class="bi bi-phone-fill text-success me-1"></i>{{ user.contact_no }}
-                        </a>
+                    <a href="tel:{{ user.contact_no }}" class="text-decoration-none">
+                        <i class="bi bi-phone-fill text-success me-1"></i>{{ user.contact_no }}
+                    </a>
                     {% else %}
-                        <span class="text-muted">N/A</span>
+                    <span class="text-muted">N/A</span>
                     {% endif %}
                 </td>
 
@@ -72,9 +81,9 @@
 
                 <td>
                     {% if user.date_joined %}
-                        {{ moment(user.date_joined).format('LLL') }}
+                    {{ moment(user.date_joined).format('LLL') }}
                     {% else %}
-                        <span class="text-muted">N/A</span>
+                    <span class="text-muted">N/A</span>
                     {% endif %}
                 </td>
                 <td>
@@ -83,9 +92,9 @@
 
                 <td>
                     {% if user.last_seen %}
-                        {{ moment(user.last_seen).fromNow() }}
+                    {{ moment(user.last_seen).fromNow() }}
                     {% else %}
-                        <span class="text-muted">N/A</span>
+                    <span class="text-muted">N/A</span>
                     {% endif %}
                 </td>
             </tr>

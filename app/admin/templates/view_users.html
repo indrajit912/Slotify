@@ -32,6 +32,14 @@
                 <td class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="fw-semibold">{{ user.username }}</span>
 
+                    <!-- Update User Modal Trigger -->
+                    <button type="button" class="btn btn-sm p-0 border-0" title="Update building" data-bs-toggle="modal"
+                        data-bs-target="#updateUserModal-{{ user.uuid }}">
+                        <i class="bi bi-pencil-square text-primary fs-5"></i>
+                    </button>
+
+                    {% include '_update_user_modal.html' %}
+
                     <!-- Make Admin Button -->
                     <form method="POST" action="{{ url_for('admin.make_admin', user_uuid=user.uuid) }}" style="display:inline;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

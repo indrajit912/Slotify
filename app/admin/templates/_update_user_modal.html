@@ -1,0 +1,53 @@
+<!-- Update User Modal -->
+<div class="modal fade" id="updateUserModal-{{ user.uuid }}" tabindex="-1" aria-labelledby="updateUserModalLabel-{{ user.uuid }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <form method="POST" action="{{ url_for('admin.update_user', user_uuid=user.uuid) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateUserModalLabel-{{ user.uuid }}">
+                        Update Details for {{ user.username }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Building Dropdown -->
+                    <div class="mb-3">
+                        <label for="buildingSelect-{{ user.uuid }}" class="form-label">Building</label>
+                        <select class="form-select" id="buildingSelect-{{ user.uuid }}" name="building_uuid">
+                            <option value="">-- Select Building --</option>
+                            {% for building in buildings %}
+                                <option value="{{ building.uuid }}"
+                                    {% if user.building and user.building.uuid == building.uuid %}selected{% endif %}>
+                                    {{ building.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Placeholder for future fields -->
+                    {# 
+                    <div class="mb-3">
+                        <label for="roomInput-{{ user.uuid }}" class="form-label">Room No</label>
+                        <input type="text" class="form-control" id="roomInput-{{ user.uuid }}" name="room_no" value="{{ user.room_no or '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="roleSelect-{{ user.uuid }}" class="form-label">Role</label>
+                        <select class="form-select" id="roleSelect-{{ user.uuid }}" name="role">
+                            <option value="user" {% if user.role == 'user' %}selected{% endif %}>ISI Resident</option>
+                            <option value="guest" {% if user.role == 'guest' %}selected{% endif %}>Guest</option>
+                        </select>
+                    </div>
+                    #}
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update User</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

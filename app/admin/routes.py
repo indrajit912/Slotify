@@ -57,16 +57,18 @@ def view_admins():
 def view_users():
     """View all non-admin users."""
     users = User.query.filter(User.role == 'user').order_by(desc(User.date_joined)).all()
+    buildings = Building.query.order_by(Building.name).all()
     logger.info(f"Admin '{current_user.first_name} <{current_user.username}>' viewed all users.")
-    return render_template('view_users.html', users=users)
+    return render_template('view_users.html', users=users, buildings=buildings)
 
 @admin_bp.route('/guests')
 @admin_required
 def view_guests():
     """View all Guests."""
     users = User.query.filter(User.role == 'guest').order_by(desc(User.date_joined)).all()
+    buildings = Building.query.order_by(Building.name).all()
     logger.info(f"Admin '{current_user.first_name} <{current_user.username}>' viewed all guests.")
-    return render_template('view_guests.html', users=users)
+    return render_template('view_guests.html', users=users, buildings=buildings)
 
 
 @admin_bp.route('/machines')
@@ -248,6 +250,37 @@ def revoke_admin(user_uuid):
         logger.info(f"[{current_admin.username}] revoked admin privileges from {user.username}.")
 
     return redirect(url_for('admin.view_admins'))
+
+@admin_bp.route('/update_user/<user_uuid>', methods=['POST'])
+@admin_required
+def update_user(user_uuid):
+    """
+    Update user details via admin panel.
+    Only accessible to admins.
+    """
+    logger.info(f"Admin '{current_user.username}' requested update for user {user_uuid}")
+
+    user = get_user_by_uuid(user_uuid)
+    if not user:
+        logger.warning(f"Attempted to update non-existent user: {user_uuid}")
+        flash("User not found.", "danger")
+        return redirect(url_for('admin.view_users'))
+
+    form_data = request.form.to_dict()
+
+    try:
+        update_user_by_uuid(user_uuid, **form_data)
+        logger.info(f"User '{user.username}' (UUID: {user_uuid}) updated by '{current_user.username}'")
+        flash(f"User '{user.username}' has been updated successfully.", "success")
+    except ValueError as ve:
+        logger.warning(f"Update failed for user '{user.username}' (UUID: {user_uuid}) — {ve}")
+        flash(str(ve), "danger")
+    except Exception as e:
+        logger.exception(f"Unexpected error while updating user {user_uuid}")
+        flash("An unexpected error occurred while updating the user.", "danger")
+
+    return redirect(url_for('admin.view_users'))
+
 
 @admin_bp.route('/delete_user/<user_uuid>', methods=['POST'])
 @admin_required
