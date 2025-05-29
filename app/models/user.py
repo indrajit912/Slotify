@@ -28,6 +28,23 @@ class CurrentEnrolledStudent(db.Model):
     def __repr__(self):
         return f"<EnrolledStudent {self.fullname} ({self.email})>"
 
+    def to_json(self):
+        return {
+            "uuid": self.uuid,
+            "fullname": self.fullname,
+            "email": self.email,
+            "added_at": self.added_at.isoformat() if self.added_at else None
+        }
+
+    @classmethod
+    def from_json(cls, data):
+        return cls(
+            uuid=data.get("uuid", uuid.uuid4().hex),
+            fullname=data["fullname"],
+            email=data["email"],
+            added_at=datetime.fromisoformat(data["added_at"]) if data.get("added_at") else utcnow()
+        )
+
 
 class User(db.Model, UserMixin):
     """

@@ -8,7 +8,7 @@ from datetime import datetime
 
 from app.models.building import Building
 from app.models.course import Course
-from app.models.user import User
+from app.models.user import User, CurrentEnrolledStudent
 from app.models.washingmachine import WashingMachine
 from app.models.booking import Booking, TimeSlot
 from app.utils.data_io import export_model_data, import_model_data, EXPORT_DIR, IMPORT_DIR
@@ -23,6 +23,7 @@ def export_all_zipped(session):
     # Export all JSON files into the temp dir
     export_model_data(session, Building, temp_dir / "buildings.json")
     export_model_data(session, Course, temp_dir / "courses.json")
+    export_model_data(session, CurrentEnrolledStudent, temp_dir / "current_enrolled_students.json")
     export_model_data(session, User, temp_dir / "users.json")
     export_model_data(session, WashingMachine, temp_dir / "machines.json")
     export_model_data(session, Booking, temp_dir / "bookings.json")
@@ -48,7 +49,9 @@ def import_all_zipped(session, zip_file_path):
     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
         zip_ref.extractall(extract_dir)
 
-    # Now call import_model_data with paths in extract_dir
+    # Call import_model_data with paths in extract_dir
+    print(import_model_data(session, extract_dir / "current_enrolled_students.json", CurrentEnrolledStudent.from_json))
+
     print(import_model_data(session, extract_dir / "buildings.json", Building.from_json))
     building_lookup = {b.uuid: b for b in Building.query.all()}
 
