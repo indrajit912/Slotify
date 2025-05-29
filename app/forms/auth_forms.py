@@ -20,19 +20,51 @@ class RegisterForm(FlaskForm):
     role_choice = SelectField(
         "Registering as", 
         choices=[("user", "ISI Resident"), ("guest", "Guest")],
-        validators=[DataRequired()]
+        validators=[DataRequired()],
+        description="Choose 'Guest' from the dropdown if you're not an ISI resident."
     )
-    username = StringField("Username", validators=[DataRequired(), Length(max=100)])
+
+    username = StringField(
+        "Username",
+        validators=[DataRequired(), Length(max=100)],
+        description="Make it cool. Make it unique. Just don't make it 'admin'. That never ends well."
+    )
+
     first_name = StringField("First Name", validators=[DataRequired(), Length(max=50)])
     middle_name = StringField("Middle Name", validators=[Length(max=50)])
     last_name = StringField("Last Name", validators=[Length(max=50)])
-    email = StringField("Email", validators=[DataRequired(), Email(), Length(max=120)])
-    password = PasswordField("Password", validators=[DataRequired(), Length(min=8)])
+    email = StringField(
+        "Email", 
+        validators=[DataRequired(), Email(), Length(max=120)],
+        description="If you are an ISI student or employee, please use your ISI email ID. If you stay outside campus (e.g., BSDS students), contact an admin for registration."
+    )
+    password = PasswordField(
+        "Password",
+        validators=[DataRequired(), Length(min=8)],
+        description="We don’t store your password in our database. Keep your password secure and don’t share it with anyone."
+    )
+
     confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password')])
-    contact_no = StringField("Contact No", validators=[Length(max=20)])
+    contact_no = StringField(
+        "Contact No", 
+        validators=[Length(max=20)],
+        description="You don’t have to share it, but we promise we won’t call you at 3 AM (unless it’s about your socks)."
+    )
+
     room_no = StringField("Room No", validators=[Length(max=20)])
-    building_uuid = SelectField("Building", choices=[], validators=[DataRequired()])
-    course_uuid = SelectField("Course", choices=[], validators=[Optional()])
+    building_uuid = SelectField(
+        "Building", 
+        choices=[], 
+        validators=[DataRequired()],
+        description="Select your building carefully. You will only be able to book washing machines within your building. This selection cannot be changed later without admin approval."
+    )
+    course_uuid = SelectField(
+        "Course",
+        choices=[],
+        validators=[Optional()],
+        description="Can’t spot your course here? Blame Indrajit — he probably hasn’t updated this yet. Shoot him a message before you start a rebellion!"
+    )
+
     departure_date = DateField("Departure Date", validators=[Optional()])
     host_name = StringField(
         "Host Name", 

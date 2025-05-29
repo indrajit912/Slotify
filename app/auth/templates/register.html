@@ -35,6 +35,9 @@
                     {% if form.role_choice.errors %}
                     <div class="text-danger small">{{ form.role_choice.errors[0] }}</div>
                     {% endif %}
+                    {% if form.role_choice.description %}
+                        <div class="form-text">{{ form.role_choice.description }}</div>
+                    {% endif %}
                 </div>
 
 
@@ -46,6 +49,9 @@
                     </label>
                     {% if form.username.errors %}
                     <div class="text-danger small">{{ form.username.errors[0] }}</div>
+                    {% endif %}
+                    {% if form.username.description %}
+                        <div class="form-text">{{ form.username.description }}</div>
                     {% endif %}
                 </div>
 
@@ -84,6 +90,9 @@
                     {% if form.email.errors %}
                     <div class="text-danger small">{{ form.email.errors[0] }}</div>
                     {% endif %}
+                    {% if form.email.description %}
+                        <div class="form-text">{{ form.email.description }}</div>
+                    {% endif %}
                 </div>
 
                 <!-- Password -->
@@ -94,6 +103,9 @@
                     </label>
                     {% if form.password.errors %}
                     <div class="text-danger small">{{ form.password.errors[0] }}</div>
+                    {% endif %}
+                    {% if form.password.description %}
+                        <div class="form-text">{{ form.password.description }}</div>
                     {% endif %}
                 </div>
 
@@ -116,6 +128,9 @@
                     {% if form.contact_no.errors %}
                     <div class="text-danger small">{{ form.contact_no.errors[0] }}</div>
                     {% endif %}
+                    {% if form.contact_no.description %}
+                        <div class="form-text">{{ form.contact_no.description }}</div>
+                    {% endif %}
                 </div>                
 
 
@@ -134,6 +149,9 @@
                     {% if form.building_uuid.errors %}
                     <div class="text-danger small">{{ form.building_uuid.errors[0] }}</div>
                     {% endif %}
+                    {% if form.building_uuid.description %}
+                        <div class="form-text">{{ form.building_uuid.description }}</div>
+                    {% endif %}
                 </div>
 
                 <!-- Course UUID (select) -->
@@ -144,6 +162,9 @@
                     </label>
                     {% if form.course_uuid.errors %}
                     <div class="text-danger small">{{ form.course_uuid.errors[0] }}</div>
+                    {% endif %}
+                    {% if form.course_uuid.description %}
+                        <div class="form-text">{{ form.course_uuid.description }}</div>
                     {% endif %}
                 </div>
 

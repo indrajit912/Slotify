@@ -61,8 +61,15 @@
             <p class="mb-0 d-flex align-items-center">
                 <i class="bi bi-building me-1"></i>
                 <strong class="me-1">Building:</strong> {{ building.name if building else "N/A" }}
-                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
-                   data-bs-toggle="modal" data-bs-target="#editBuildingModal" role="button" aria-label="Edit Building"></i>
+                {% if user.is_admin() %}
+                    <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
+                        data-bs-toggle="modal" data-bs-target="#editBuildingModal" role="button" aria-label="Edit Building">
+                    </i>
+                {% else %}
+                    <span class="ms-2 text-warning">
+                        (Contact an admin to change.)
+                    </span>
+                {% endif %}
             </p>
 
             <p class="mb-1 d-flex align-items-center">
