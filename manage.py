@@ -164,14 +164,14 @@ def create_isi_specific_data():
     """
     Creates ISI-specific initial data:
     - Buildings
-    - Washing Machine with time slots
+    - Washing Machines with default time slots for RSH
     - Academic courses
     """
     logger.info("Creating ISI-specific initial data...")
 
     # Create buildings
     building_codes = {
-        "Research Scholars' Hostel": "RSH",
+        "Research Scholars Hostel": "RSH",
         "Hostel 1": "HOS-1",
         "Hostel 2": "HOS-2",
         "Quarter B": "QTR-B",
@@ -191,55 +191,32 @@ def create_isi_specific_data():
 
     building = buildings["RSH"]
 
-    # Create washing machine for RSH
-    machine = WashingMachine.query.filter_by(code="RSH-BOSCH").first()
-    if not machine:
-        print("No washing machine with code 'RSH-BOSCH' found.")
-        logger.info("No washing machine with code 'RSH-BOSCH' found.")
-        print("Preparing to create one with default or custom time slots.")
-        logger.info("Preparing to create one with default or custom time slots.")
+    # Default time slots for RSH washing machines
+    default_time_slots = [
+        {"slot_number": 1, "time_range": "07:00-10:30"},
+        {"slot_number": 2, "time_range": "11:30-15:00"},
+        {"slot_number": 3, "time_range": "16:00-19:30"},
+        {"slot_number": 4, "time_range": "20:30-00:00"}
+    ]
 
-        _rsh_default_time_slots = [
-            {"slot_number": 1, "time_range": "07:00-10:30"},
-            {"slot_number": 2, "time_range": "11:30-15:00"},
-            {"slot_number": 3, "time_range": "16:00-19:30"},
-            {"slot_number": 4, "time_range": "20:30-00:00"}
-        ]
-
-        for slot in _rsh_default_time_slots:
-            print(f"  Default Slot {slot['slot_number']}: {slot['time_range']}")
-
-        choice = input("Use default time slots? (y/n): ").strip().lower()
-        if choice == 'n':
-            custom_slots = []
-            print("Enter custom time slots in the format HH:MM-HH:MM.")
-            print("Type 'done' when finished.\n")
-            slot_number = 1
-            while True:
-                user_input = input(f"  Time range for slot {slot_number}: ").strip()
-                if user_input.lower() == "done":
-                    break
-                # Optional: Validate time format here
-                custom_slots.append({
-                    "slot_number": slot_number,
-                    "time_range": user_input
-                })
-                slot_number += 1
-            time_slots = custom_slots
+    def create_machine_if_not_exists(name, code):
+        if not WashingMachine.query.filter_by(code=code).first():
+            new_machine = create_washing_machine(
+                name=name,
+                code=code,
+                building_uuid=building.uuid,
+                time_slots=default_time_slots
+            )
+            logger.info(f"Washing machine '{name}' created at RSH.")
+            print(f"Washing machine '{name}' created at RSH.")
         else:
-            time_slots = _rsh_default_time_slots
+            logger.warning(f"Washing machine '{code}' already exists.")
+            print(f"Washing machine '{code}' already exists.")
 
-        new_machine = create_washing_machine(
-            name="BOSCH Front Loaded Machine",
-            code="RSH-BOSCH",
-            building_uuid=building.uuid,
-            time_slots=time_slots
-        )
-        logger.info(f"Washing machine '{new_machine.name}' created at RSH.")
-        print(f"Washing machine '{new_machine.name}' created at RSH.")
-    else:
-        logger.warning("Washing machine 'RSH-BOSCH' already exists.")
-        print("Washing machine 'RSH-BOSCH' already exists.")
+    # Create three washing machines in RSH
+    create_machine_if_not_exists("BOSCH Front Loaded Machine", "RSH-BOSCH-1")
+    create_machine_if_not_exists("Samsung Top Loaded Machine Black", "RSH-SAM-1")
+    create_machine_if_not_exists("Whirlpool Top Loaded Machine", "RSH-WHRPL-1")
 
     # Create courses
     course_data = [
@@ -266,8 +243,9 @@ def create_isi_specific_data():
             logger.warning(f"Course with code {code} already exists.")
             print(f"Course with code {code} already exists.")
 
-    logger.info("ISI-specific data initialization complete.") 
+    logger.info("ISI-specific data initialization complete.")
     print("ISI-specific data initialization complete.")
+
 
 @cli.command("setup-db")
 @click.option('--isi', is_flag=True, default=False, help="Create ISI specific data after setup")

@@ -8,91 +8,93 @@
 
 <div class="card mb-4 shadow-sm p-4">
     <div class="d-flex flex-column flex-sm-row align-items-center">
-        <img src="{{ user.avatar(size=150) }}" alt="Avatar of {{ user.fullname or user.username }}" 
-             class="rounded-circle mb-3 mb-sm-0 me-sm-4" width="128" height="128">
+        <img src="{{ user.avatar(size=150) }}" alt="Avatar of {{ user.fullname or user.username }}"
+            class="rounded-circle mb-3 mb-sm-0 me-sm-4" width="128" height="128">
         <div>
             <h2 class="mb-3 text-center text-sm-start">
                 <i class="bi bi-person-circle me-2"></i>Welcome, {{ user.first_name }}!
             </h2>
 
             <p class="mb-1 d-flex align-items-center">
-              <i class="bi bi-person-badge-fill me-1"></i>
-              <strong class="me-1">Username:</strong> {{ user.username }}
-              <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" 
-                 data-bs-toggle="modal" data-bs-target="#editUsernameModal" role="button" aria-label="Edit Username"></i>
+                <i class="bi bi-person-badge-fill me-1"></i>
+                <strong class="me-1">Username:</strong> {{ user.username }}
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                    data-bs-target="#editUsernameModal" role="button" aria-label="Edit Username"></i>
             </p>
 
             <p class="mb-1 d-flex align-items-center">
                 <i class="bi bi-person-lines-fill me-1"></i>
                 <strong class="me-1">Fullname:</strong> {{ user.fullname }}
-                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" 
-                   data-bs-toggle="modal" data-bs-target="#editFullNameModal" role="button" aria-label="Edit Fullname"></i>
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                    data-bs-target="#editFullNameModal" role="button" aria-label="Edit Fullname"></i>
             </p>
 
             <p class="mb-1 d-flex align-items-center">
                 <i class="bi bi-envelope me-1"></i>
                 <strong class="me-1">Email:</strong> {{ user.email }}
-                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
-                   data-bs-toggle="modal" data-bs-target="#editEmailModal" role="button" aria-label="Edit Email"></i>
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                    data-bs-target="#editEmailModal" role="button" aria-label="Edit Email"></i>
             </p>
 
             <p class="mb-1 d-flex align-items-center">
                 <i class="bi bi-telephone me-1"></i>
                 <strong class="me-1">Contact No:</strong> {{ user.contact_no or 'N/A' }}
-                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
-                   data-bs-toggle="modal" data-bs-target="#editContactModal" role="button" aria-label="Edit Contact No"></i>
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                    data-bs-target="#editContactModal" role="button" aria-label="Edit Contact No"></i>
             </p>
 
             <p class="mb-1 d-flex align-items-center">
                 <i class="bi bi-door-open me-1"></i>
                 <strong class="me-1">Room No:</strong> {{ user.room_no or 'N/A' }}
-                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
-                   data-bs-toggle="modal" data-bs-target="#editRoomNoModal" role="button" aria-label="Edit Room No"></i>
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                    data-bs-target="#editRoomNoModal" role="button" aria-label="Edit Room No"></i>
             </p>
             {% if not user.is_guest() %}
-                <p class="mb-1 d-flex align-items-center">
-                    <i class="bi bi-mortarboard me-1"></i>
-                    <strong class="me-1">Course:</strong> {{ user.course.name or 'N/A' }}
-                    <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
-                       data-bs-toggle="modal" data-bs-target="#editCourseModal" role="button" aria-label="Edit Course"></i>
-                </p>
+            <p class="mb-1 d-flex align-items-center">
+                <i class="bi bi-mortarboard me-1"></i>
+                <strong class="me-1">Course:</strong> {{ user.course.name or 'N/A' }}
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                    data-bs-target="#editCourseModal" role="button" aria-label="Edit Course"></i>
+            </p>
             {% endif %}
 
             <p class="mb-0 d-flex align-items-center">
                 <i class="bi bi-building me-1"></i>
                 <strong class="me-1">Building:</strong> {{ building.name if building else "N/A" }}
                 {% if user.is_admin() %}
-                    <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
-                        data-bs-toggle="modal" data-bs-target="#editBuildingModal" role="button" aria-label="Edit Building">
-                    </i>
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                    data-bs-target="#editBuildingModal" role="button" aria-label="Edit Building">
+                </i>
                 {% else %}
-                    <span class="ms-2 text-warning">
-                        (Contact an admin to change.)
-                    </span>
+                <span class="ms-2 text-warning">
+                    (Contact an admin to change.)
+                </span>
                 {% endif %}
             </p>
 
             <p class="mb-1 d-flex align-items-center">
                 <i class="bi bi-key me-1"></i>
                 <strong class="me-1">Password:</strong> ********
-                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
-                   data-bs-toggle="modal" data-bs-target="#editPasswordModal" role="button" aria-label="Edit Password"></i>
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                    data-bs-target="#editPasswordModal" role="button" aria-label="Edit Password"></i>
             </p>
 
-            <p class="mb-1"><i class="bi bi-person-badge me-1"></i><strong>Role:</strong> <code>{{ user.role }}</code></p>
+            <p class="mb-1"><i class="bi bi-person-badge me-1"></i><strong>Role:</strong> <code>{{ user.role }}</code>
+            </p>
             {% if user.is_guest() %}
             <p class="mb-1 d-flex align-items-center">
                 <i class="bi bi-calendar-x me-1"></i>
-                <strong class="me-1">Departure Date:</strong> {{ moment(user.departure_date).format('LL') if user.departure_date else 'N/A' }}
-                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
-                   data-bs-toggle="modal" data-bs-target="#editDepartureDateModal" role="button" aria-label="Edit Departure Date"></i>
+                <strong class="me-1">Departure Date:</strong> {{ moment(user.departure_date).format('LL') if
+                user.departure_date else 'N/A' }}
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                    data-bs-target="#editDepartureDateModal" role="button" aria-label="Edit Departure Date"></i>
             </p>
 
             <p class="mb-1 d-flex align-items-center">
-                <i class="bi bi-person me-1"></i> 
+                <i class="bi bi-person me-1"></i>
                 <strong class="me-1">Host name:</strong> {{ user.host_name }}
-                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer"
-                   data-bs-toggle="modal" data-bs-target="#editHostNameModal" role="button" aria-label="Edit Host Name"></i>
+                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                    data-bs-target="#editHostNameModal" role="button" aria-label="Edit Host Name"></i>
             </p>
             {% endif %}
 
@@ -109,13 +111,14 @@
     <div class="alert alert-info d-flex flex-column flex-md-row align-items-start align-items-md-center" role="alert">
         <i class="bi bi-info-circle-fill mb-2 mb-md-0 me-md-2 fs-4"></i>
         <div>
-            Use the "<strong>View Calendar</strong>" button to see available slots for a particular month and make a booking.
+            Use the "<strong>View Calendar</strong>" button to see available slots for a particular month and make a
+            booking.
         </div>
     </div>
-    
+
 
     {% if machines %}
-    <div class="row g-3">  <!-- Added gutter for spacing -->
+    <div class="row g-3"> <!-- Added gutter for spacing -->
         {% for machine in machines %}
         <div class="col-12 col-sm-6 col-lg-4"> <!-- full width on xs, 2 per row on sm, 3 per row on lg -->
             <div class="card h-100 shadow-sm">
@@ -125,19 +128,34 @@
                         <span class="me-2"><i class="bi bi-upc-scan me-1"></i><code>{{ machine.code }}</code></span>
                         <span><i class="bi bi-building me-1"></i>{{ machine.building.name }}</span>
                     </div>
-                    <button class="btn btn-outline-primary mt-auto open-calendar-modal"
-                            data-machine-uuid="{{ machine.uuid }}"
-                            aria-label="View calendar for {{ machine.name }}">
-                        <i class="bi bi-calendar3 me-1"></i> View Calendar
-                    </button>
+
+                    {% if machine.is_available() %}
+                    <div class="d-flex gap-2 mt-auto">
+                        <button class="btn btn-outline-primary flex-grow-1 open-calendar-modal"
+                            data-machine-uuid="{{ machine.uuid }}" aria-label="View calendar for {{ machine.name }}">
+                            <i class="bi bi-calendar3 me-1"></i> View Calendar
+                        </button>
+
+                        <button type="button" class="btn btn-outline-secondary"
+                            aria-label="View image of {{ machine.name }}"
+                            onclick="window.open('{{ machine.get_image_url() }}', '_blank', 'noopener,noreferrer')">
+                            <i class="bi bi-image"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning mt-auto" role="alert">
+                        Machine unavailable: {{ machine.status }}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
-        </div>        
+        </div>
         {% endfor %}
     </div>
     {% else %}
     <p class="text-muted">No machines available in your building.</p>
     {% endif %}
+
 </div>
 
 <hr class="my-5">
@@ -147,19 +165,20 @@
     {% if bookings %}
     <ul class="list-group" id="bookings-list">
         {% for booking in bookings %}
-        <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center" data-booking-uuid="{{ booking.uuid }}">
+        <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center"
+            data-booking-uuid="{{ booking.uuid }}">
             <div class="mb-2 mb-md-0">
                 <strong><i class="bi bi-calendar-event me-1"></i>{{ moment(booking.date).format('LL') }}</strong><br>
-                <i class="bi bi-clock me-1"></i>Slot {{ booking.time_slot.slot_number }} – {{ booking.time_slot.time_range }}<br>
+                <i class="bi bi-clock me-1"></i>Slot {{ booking.time_slot.slot_number }} – {{
+                booking.time_slot.time_range }}<br>
                 <small class="text-muted">
                     <i class="bi bi-gear-wide-connected me-1"></i>{{ booking.time_slot.machine.name }}
                     [<code>{{ booking.time_slot.machine.code }}</code>]
                 </small>
             </div>
             <button class="btn btn-outline-danger btn-sm cancel-booking-btn"
-                    data-slot-uuid="{{ booking.time_slot.uuid }}"
-                    data-date="{{ booking.date }}"
-                    aria-label="Cancel this booking">
+                data-slot-uuid="{{ booking.time_slot.uuid }}" data-date="{{ booking.date }}"
+                aria-label="Cancel this booking">
                 <i class="bi bi-x-circle me-1"></i> Cancel
             </button>
         </li>
@@ -186,7 +205,8 @@
                     <input type="hidden" id="modal-machine-uuid">
                     <div class="mb-3">
                         <label for="calendar-year" class="form-label">Year</label>
-                        <input type="number" id="calendar-year" name="year" class="form-control" min="2020" max="2100" required aria-required="true">
+                        <input type="number" id="calendar-year" name="year" class="form-control" min="2020" max="2100"
+                            required aria-required="true">
                     </div>
                     <div class="mb-3">
                         <label for="calendar-month" class="form-label">Month</label>

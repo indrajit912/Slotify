@@ -22,7 +22,14 @@ logger = logging.getLogger(__name__)
 from app.utils.image_utils import save_machine_image
 from werkzeug.datastructures import FileStorage
 
-def create_washing_machine(name: str, code: str, building_uuid: str, time_slots: list[dict], image_file: FileStorage = None):
+def create_washing_machine(
+    name: str,
+    code: str,
+    building_uuid: str,
+    time_slots: list[dict],
+    image_file: FileStorage = None,
+    image_url: str = None
+):
     """
     Creates a new washing machine with optional image and associated time slots.
 
@@ -31,7 +38,8 @@ def create_washing_machine(name: str, code: str, building_uuid: str, time_slots:
         code (str): Unique code for the washing machine.
         building_uuid (str): UUID of the building where the machine is located.
         time_slots (list of dict): Each dict should have 'slot_number' and 'time_range'.
-        image_file (FileStorage, optional): Optional image file of the washing machine.
+        image_file (FileStorage, optional): Optional uploaded image file.
+        image_url (str, optional): Optional direct URL to an image (e.g., Google Drive or Dropbox).
 
     Returns:
         WashingMachine: The created machine object.
@@ -62,7 +70,7 @@ def create_washing_machine(name: str, code: str, building_uuid: str, time_slots:
         )
         db.session.add(ts)
 
-    # Save image if provided
+    # Handle image upload
     if image_file:
         try:
             image_path = save_machine_image(image_file, machine.uuid)
@@ -70,6 +78,8 @@ def create_washing_machine(name: str, code: str, building_uuid: str, time_slots:
                 machine.image_path = image_path
         except Exception as e:
             logger.warning(f"Failed to save image for machine '{name}': {e}")
+    elif image_url:
+        machine.image_url = image_url.strip()
 
     try:
         db.session.commit()
@@ -121,7 +131,8 @@ def update_washing_machine(machine_uuid: str, **kwargs):
     
     Args:
         machine_uuid (str): UUID of the washing machine to update.
-        kwargs: Fields to update. Supported keys: 'name', 'code', 'building_uuid', 'status'.
+        kwargs: Fields to update. Supported keys: 'name', 'code', 'building_uuid', 'status',
+                'image_file' (FileStorage), 'image_url' (str).
         
     Returns:
         WashingMachine: The updated washing machine object.
@@ -134,7 +145,6 @@ def update_washing_machine(machine_uuid: str, **kwargs):
         # Find the washing machine by UUID
         washing_machine = db.session.query(WashingMachine).filter_by(uuid=machine_uuid).first()
         
-        # Check if the machine exists
         if not washing_machine:
             logger.error(f"Washing machine with UUID {machine_uuid} not found.")
             raise ValueError(f"No washing machine found with UUID: {machine_uuid}")
@@ -167,9 +177,26 @@ def update_washing_machine(machine_uuid: str, **kwargs):
         
         # Update status if 'status' given
         if 'status' in kwargs:
-            new_status = kwargs['status']
-            washing_machine.status = new_status
-        
+            washing_machine.status = kwargs['status']
+
+        # Handle image update
+        image_file = kwargs.get("image_file")
+        image_url = kwargs.get("image_url")
+
+        if image_file:
+            try:
+                image_path = save_machine_image(image_file, washing_machine.uuid)
+                if image_path:
+                    washing_machine.image_path = image_path
+                    washing_machine.image_url = None  # Clear URL if uploading new file
+            except Exception as e:
+                logger.warning(f"Failed to save new image file for machine '{washing_machine.name}': {e}")
+
+        elif image_url:
+            washing_machine.image_url = image_url.strip()
+            washing_machine.image_path = None  # Clear path if using URL
+
+        # If any changes were made
         if kwargs:
             washing_machine.last_updated = utcnow()
 

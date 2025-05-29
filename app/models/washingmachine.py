@@ -10,7 +10,6 @@ from scripts.utils import utcnow
 from flask import url_for
 
 from app.extensions import db
-from app.models.booking import TimeSlot
 
 class WashingMachine(db.Model):
     __tablename__ = 'washingmachine'
@@ -23,6 +22,9 @@ class WashingMachine(db.Model):
 
     # Store images in app/main/static/uploads/machines/
     image_path = db.Column(db.String(255), nullable=True)
+
+    # External image URL (e.g., Google Drive, Dropbox)
+    image_url = db.Column(db.String(512), nullable=True)
 
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow)
     last_updated = db.Column(db.DateTime(timezone=True), default=utcnow)
@@ -39,28 +41,30 @@ class WashingMachine(db.Model):
         return self.status.lower() == 'available'
     
     def get_image_url(self):
-        # If full URL (e.g., from S3), return it directly
-        if self.image_path.startswith("http"):
-            return self.image_path
-        # Otherwise return relative static path
-        return url_for("static", filename=self.image_path, _external=True)
+        """
+        Return the appropriate image URL: external if provided, otherwise local.
+        """
+        if self.image_url:
+            return self.image_url
+        elif self.image_path:
+            return url_for("static", filename=self.image_path, _external=True)
+        return None
+    
     
     def to_json(self):
-        """
-        Serialize the washing machine to a JSON-compatible dict.
-        """
         return {
             "uuid": self.uuid,
             "name": self.name,
             "code": self.code,
             "status": self.status,
             "image_path": self.image_path,
+            "image_url": self.image_url,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "last_updated": self.last_updated.isoformat() if self.last_updated else None,
             "building_uuid": self.building.uuid if self.building else None,
             "time_slots": [slot.to_json() for slot in self.time_slots]
-        }
-    
+        }  
+      
     @classmethod
     def from_json(cls, data, building_lookup):
         """
@@ -116,9 +120,9 @@ class WashingMachine(db.Model):
             code=data["code"],
             status=data.get("status", "available"),
             image_path=data.get("image_path"),
+            image_url=data.get("image_url"),
             created_at=parse_dt("created_at"),
             last_updated=parse_dt("last_updated"),
             building=building
         )
-        # wm.time_slots = [TimeSlot.from_json(ts) for ts in data.get("time_slots", [])]
         return wm

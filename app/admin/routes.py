@@ -20,6 +20,7 @@ from app.models.building import Building
 from app.models.course import Course
 from app.utils.decorators import admin_required
 from app.utils.student_parser import parse_enrolled_students
+from app.utils.image_utils import save_machine_image
 from app.services import (
     create_washing_machine, 
     create_building,
@@ -192,6 +193,9 @@ def edit_machine(machine_uuid):
         name = request.form.get('name')
         code = request.form.get('code')
         status = request.form.get('status')
+        image_url = request.form.get('image_url')
+        image_file = request.files.get('image_file')
+
 
         update_fields = {}
         if name:
@@ -200,6 +204,15 @@ def edit_machine(machine_uuid):
             update_fields['code'] = code
         if status:
             update_fields['status'] = status
+
+        # If image file uploaded, save it and update image_path
+        if image_file and image_file.filename:
+            image_path = save_machine_image(image_file, machine_uuid)
+            if image_path:
+                update_fields['image_path'] = image_path
+        # Else if image_url provided, update image_url field
+        elif image_url:
+            update_fields['image_url'] = image_url
 
         update_washing_machine(machine_uuid, **update_fields)
         flash(f"Washing machine '{name}' updated successfully.", "success")

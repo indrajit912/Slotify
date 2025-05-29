@@ -23,12 +23,6 @@ from pathlib import Path
 from flask_sqlalchemy import SQLAlchemy
 from config import Config
 
-from app.models.building import Building
-from app.models.course import Course
-from app.models.washingmachine import WashingMachine
-from app.models.user import User
-from app.models.booking import Booking, TimeSlot
-
 # Define data directories using pathlib for portability and readability
 APP_DATA_DIR = Path(Config.APP_DATA_DIR)
 EXPORT_DIR = APP_DATA_DIR / "export"
