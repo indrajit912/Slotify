@@ -9,6 +9,7 @@
 import logging
 from datetime import datetime
 
+from sqlalchemy import or_, and_
 from sqlalchemy.exc import IntegrityError
 
 from app.models.user import User, CurrentEnrolledStudent
@@ -100,6 +101,57 @@ def create_user(
         raise ValueError("Could not create user due to a database error.")
 
     return user
+
+def search_users(
+    uuid=None,
+    username=None,
+    first_name=None,
+    middle_name=None,
+    last_name=None,
+    fullname=None,
+    email=None,
+    role=None,
+    contact_no=None,
+    building_uuid=None,
+    course_uuid=None
+):
+    query = User.query
+
+    if uuid:
+        query = query.filter(User.uuid == uuid)
+    if username:
+        query = query.filter(User.username.ilike(f"%{username}%"))
+    if first_name:
+        query = query.filter(User.first_name.ilike(f"%{first_name}%"))
+    if middle_name:
+        query = query.filter(User.middle_name.ilike(f"%{middle_name}%"))
+    if last_name:
+        query = query.filter(User.last_name.ilike(f"%{last_name}%"))
+    if email:
+        query = query.filter(User.email.ilike(f"%{email}%"))
+    if role:
+        query = query.filter(User.role == role)
+    if contact_no:
+        query = query.filter(User.contact_no.ilike(f"%{contact_no}%"))
+
+    # Handle fullname: match any part of name concatenation
+    if fullname:
+        query = query.filter(
+            or_(
+                (User.first_name + " " + User.last_name).ilike(f"%{fullname}%"),
+                (User.first_name + " " + User.middle_name + " " + User.last_name).ilike(f"%{fullname}%"),
+                User.first_name.ilike(f"%{fullname}%"),
+                User.last_name.ilike(f"%{fullname}%")
+            )
+        )
+
+    # Join building and course to match by their UUIDs
+    if building_uuid:
+        query = query.join(Building).filter(Building.uuid == building_uuid)
+    if course_uuid:
+        query = query.join(Course).filter(Course.uuid == course_uuid)
+
+    return query.all()
 
 def get_all_admins():
     """
@@ -342,6 +394,72 @@ def delete_user_by_uuid(user_uuid):
         db.session.rollback()
         logger.error(f"Error deleting user UUID {user_uuid}: {e}")
         raise ValueError("Could not delete user.")
+
+
+def create_new_enrolled_student(
+    *,
+    fullname: str,
+    email: str,
+    added_at: datetime | None = None
+):
+    if not fullname:
+        raise ValueError("Full name is required.")
+    if not email:
+        raise ValueError("Email is required.")
+
+    existing = CurrentEnrolledStudent.query.filter_by(email=email).first()
+    if existing:
+        logger.warning(f"Enrolled student with email already exists: {email}")
+        raise ValueError("Student with this email is already enrolled.")
+
+    student = CurrentEnrolledStudent(
+        fullname=fullname,
+        email=email,
+        added_at=added_at or datetime.utcnow()
+    )
+
+    db.session.add(student)
+
+    try:
+        db.session.commit()
+        logger.info(f"Enrolled student created: {fullname} ({email})")
+    except IntegrityError as e:
+        db.session.rollback()
+        logger.error(f"DB error while creating enrolled student: {e}")
+        raise ValueError("Database error occurred while enrolling student.")
+
+    return student
+
+
+def update_enrolled_student(
+    *,
+    uuid: str,
+    fullname: str | None = None,
+    email: str | None = None
+):
+    student = CurrentEnrolledStudent.query.filter_by(uuid=uuid).first()
+    if not student:
+        logger.error(f"No enrolled student found with UUID: {uuid}")
+        raise ValueError("Enrolled student not found.")
+
+    if email and email != student.email:
+        if CurrentEnrolledStudent.query.filter_by(email=email).first():
+            logger.warning(f"Another student already uses this email: {email}")
+            raise ValueError("Email already in use by another student.")
+        student.email = email
+
+    if fullname:
+        student.fullname = fullname
+
+    try:
+        db.session.commit()
+        logger.info(f"Enrolled student updated: {student.fullname} ({student.email})")
+    except IntegrityError as e:
+        db.session.rollback()
+        logger.error(f"DB error while updating enrolled student: {e}")
+        raise ValueError("Database error occurred while updating student.")
+
+    return student
 
 
 def delete_all_enrolled_students():

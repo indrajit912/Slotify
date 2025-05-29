@@ -26,6 +26,7 @@ from .course_service import *
 __all__ = [
     "create_user",
     "get_all_admins",
+    "search_users",
     "get_user_by_uuid",
     "get_user_by_email",
     "get_user_by_username",
@@ -48,5 +49,7 @@ __all__ = [
     "update_course",
     "delete_course",
     "update_building_by_uuid",
+    "create_new_enrolled_student",
+    "update_enrolled_student",
     "delete_all_enrolled_students"
 ]

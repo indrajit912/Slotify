@@ -24,6 +24,7 @@ from app.utils.image_utils import save_machine_image
 from app.services import (
     create_washing_machine, 
     create_building,
+    search_users,
     update_user_by_uuid, 
     delete_user_by_uuid, 
     get_user_by_uuid, 
@@ -31,7 +32,9 @@ from app.services import (
     create_new_course,
     update_building_by_uuid,
     delete_all_enrolled_students,
-    update_washing_machine
+    update_washing_machine,
+    create_new_enrolled_student,
+    update_enrolled_student
 )
 from app.extensions import db
 
@@ -395,22 +398,64 @@ def add_students():
     skipped_count = 0
 
     for fullname, email in students:
-        exists = CurrentEnrolledStudent.query.filter_by(email=email).first()
-        if exists:
+        try:
+            create_new_enrolled_student(fullname=fullname, email=email)
+            added_count += 1
+        except ValueError as e:
+            # Most likely: "Email already exists"
             skipped_count += 1
             continue
-
-        new_student = CurrentEnrolledStudent(
-            fullname=fullname,
-            email=email
-        )
-        db.session.add(new_student)
-        added_count += 1
-
-    db.session.commit()
+        except Exception as e:
+            # For unexpected errors
+            flash(f"Unexpected error while adding student {fullname}: {e}", "danger")
+            continue
 
     flash(f"Added {added_count} new students. Skipped {skipped_count} existing.", 'success')
     return redirect(url_for('admin.current_enrolled_students'))
+
+
+@admin_bp.route('/update-student', methods=['POST'])
+@admin_required
+def update_student():
+    student_uuid = request.form.get('uuid')
+    fullname = request.form.get('fullname', '').strip()
+    email = request.form.get('email', '').strip()
+
+    if not student_uuid:
+        flash("Student UUID is required for update.", "danger")
+        return redirect(url_for('admin.current_enrolled_students'))
+
+    try:
+        updated_student = update_enrolled_student(
+            uuid=student_uuid,
+            fullname=fullname if fullname else None,
+            email=email if email else None
+        )
+        flash(f"Updated student: {updated_student.fullname}", "success")
+    except ValueError as ve:
+        flash(str(ve), "warning")
+    except Exception as e:
+        flash(f"Unexpected error: {e}", "danger")
+
+    return redirect(url_for('admin.current_enrolled_students'))
+
+
+@admin_bp.route('/get-student-by-email')
+@admin_required
+def get_student_by_email():
+    email = request.args.get('email', '').strip()
+    if not email:
+        return {"error": "Email required"}, 400
+
+    student = CurrentEnrolledStudent.query.filter_by(email=email).first()
+    if not student:
+        return {"error": "Student not found"}, 404
+
+    return {
+        "uuid": student.uuid,
+        "fullname": student.fullname,
+        "email": student.email
+    }
 
 
 @admin_bp.route('/delete_enrolled_students', methods=['POST'])
@@ -424,3 +469,16 @@ def delete_enrolled_students():
         logger.error(f"Admin {current_user.first_name} (Username: {current_user.username}) failed to delete enrolled students.")
         flash("Failed to delete enrolled students. Please try again.", "danger")
     return redirect(url_for('admin.current_enrolled_students'))
+
+@admin_bp.route('/users/search')
+def search_users_page():
+    users = search_users(
+        username=request.args.get('username'),
+        fullname=request.args.get('fullname'),
+        email=request.args.get('email'),
+        contact_no=request.args.get('contact_no'),
+        role=request.args.get('role'),
+        building_uuid=request.args.get('building_uuid'),
+        course_uuid=request.args.get('course_uuid')
+    )
+    return render_template('search_users.html', users=users)

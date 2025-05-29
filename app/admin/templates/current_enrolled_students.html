@@ -38,6 +38,34 @@ If something is missing, use the 'Clear Database' button to reset and try again.
       <i class="bi bi-trash-fill me-1"></i> Delete All Enrolled Students
     </button>
   </form>
+
+  <div class="card mt-4 mb-4 p-3">
+  <h5>Update Student</h5>
+
+  <div class="mb-3">
+      <label for="loadEmailInput" class="form-label">Enter Student Email to Load</label>
+      <input type="email" id="loadEmailInput" class="form-control" placeholder="Student Email" />
+      <button id="loadStudentBtn" class="btn btn-primary mt-2">Load Student</button>
+    </div>
+
+    <form id="updateStudentForm" method="POST" action="{{ url_for('admin.update_student') }}" style="display:none;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="uuid" id="updateStudentUuid" />
+
+      <div class="mb-3">
+        <label for="updateFullname" class="form-label">Full Name</label>
+        <input type="text" name="fullname" id="updateFullname" class="form-control" required />
+      </div>
+
+      <div class="mb-3">
+        <label for="updateEmail" class="form-label">Email</label>
+        <input type="email" name="email" id="updateEmail" class="form-control" required />
+      </div>
+
+      <button type="submit" class="btn btn-success">Save Changes</button>
+    </form>
+  </div>
+
   
 
   <div class="table-responsive">
@@ -66,4 +94,43 @@ If something is missing, use the 'Clear Database' button to reset and try again.
   </div>
 
 </div>
+
+
+<script>
+document.getElementById('loadStudentBtn').addEventListener('click', function(e) {
+  e.preventDefault();
+  const email = document.getElementById('loadEmailInput').value.trim();
+
+  if (!email) {
+    alert('Please enter an email to load the student.');
+    return;
+  }
+
+  fetch(`/admin/get-student-by-email?email=${encodeURIComponent(email)}`)
+    .then(response => {
+      if (!response.ok) throw response;
+      return response.json();
+    })
+    .then(data => {
+      // Fill form fields with student data
+      document.getElementById('updateStudentUuid').value = data.uuid;
+      document.getElementById('updateFullname').value = data.fullname;
+      document.getElementById('updateEmail').value = data.email;
+
+      // Show the update form
+      document.getElementById('updateStudentForm').style.display = 'block';
+    })
+    .catch(async err => {
+      let msg = 'Failed to load student.';
+      if (err.json) {
+        const errorData = await err.json();
+        if (errorData.error) msg = errorData.error;
+      }
+      alert(msg);
+      // Hide form if visible
+      document.getElementById('updateStudentForm').style.display = 'none';
+    });
+});
+</script>
+
 {% endblock %}
