@@ -237,7 +237,8 @@ class User(db.Model, UserMixin):
             "course_uuid": self.course.uuid if self.course else None,
             "departure_date": self.departure_date.isoformat() if self.departure_date else None,
             "host_name": self.host_name,
-            "email_reminder_hours": self.email_reminder_hours
+            "email_reminder_hours": self.email_reminder_hours,
+            "reminder_email": self.reminder_email
         }
     
     @classmethod
@@ -300,6 +301,7 @@ class User(db.Model, UserMixin):
             departure_date=parse_dt("departure_date"),
             host_name=data.get("host_name"),
             email_reminder_hours=data.get("email_reminder_hours", 0),
+            reminder_email=data.get("reminder_email")
         )
 
     
