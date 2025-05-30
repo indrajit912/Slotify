@@ -8,8 +8,11 @@
 
 <div class="card mb-4 shadow-sm p-4">
     <div class="d-flex flex-column flex-sm-row align-items-center">
-        <img src="{{ user.avatar(size=150) }}" alt="Avatar of {{ user.fullname or user.username }}"
+        <a href="https://gravatar.com/" target="_blank">
+            <img src="{{ user.avatar(size=150) }}" alt="Avatar of {{ user.fullname or user.username }}"
             class="rounded-circle mb-3 mb-sm-0 me-sm-4" width="128" height="128">
+        </a>
+        
         <div>
             <h2 class="mb-3 text-center text-sm-start">
                 <i class="bi bi-person-circle me-2"></i>Welcome, {{ user.first_name }}!
@@ -29,16 +32,19 @@
                     data-bs-target="#editFullNameModal" role="button" aria-label="Edit Fullname"></i>
             </p>
 
-            <p class="mb-1 d-flex align-items-center">
+            <p class="mb-1 d-flex flex-wrap align-items-center">
                 <i class="bi bi-envelope me-1"></i>
                 <strong class="me-1">Email:</strong> {{ user.email }}
                 {% if user.is_admin() %}
                     <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
                         data-bs-target="#editEmailModal" role="button" aria-label="Edit Email"></i>
                 {% else %}
-                    <span class="ms-2 text-muted fst-italic">Contact an admin to change your email</span>
+                    <span class="ms-0 ms-sm-2 text-warning w-100 w-sm-auto">
+                        (Contact an admin to change.)
+                    </span>
                 {% endif %}
-            </p>            
+            </p>
+                       
 
             <p class="mb-1 d-flex align-items-center">
                 <i class="bi bi-telephone me-1"></i>
@@ -62,19 +68,19 @@
             </p>
             {% endif %}
 
-            <p class="mb-0 d-flex align-items-center">
+            <p class="mb-0 d-flex flex-wrap align-items-center">
                 <i class="bi bi-building me-1"></i>
                 <strong class="me-1">Building:</strong> {{ building.name if building else "N/A" }}
                 {% if user.is_admin() %}
-                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
-                    data-bs-target="#editBuildingModal" role="button" aria-label="Edit Building">
-                </i>
+                    <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                        data-bs-target="#editBuildingModal" role="button" aria-label="Edit Building"></i>
                 {% else %}
-                <span class="ms-2 text-warning">
-                    (Contact an admin to change.)
-                </span>
+                    <span class="ms-0 ms-sm-2 text-warning w-100 w-sm-auto">
+                        (Contact an admin to change.)
+                    </span>
                 {% endif %}
             </p>
+            
 
             <p class="mb-1 d-flex align-items-center">
                 <i class="bi bi-key me-1"></i>
@@ -107,10 +113,14 @@
 
     <hr>
 <div class="mt-4">
-    <h5 class="mb-3"><i class="bi bi-bell-fill me-1"></i>Email Reminders</h5>
+    <h5 class="mb-3">
+      <i class="bi bi-bell-fill me-1"></i>Email Reminders
+    </h5>
+    <small class="text-warning">This feature is coming soon.</small>
+    
     <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" id="emailReminderToggle"
-            {% if user.is_email_reminder_on() %}checked{% endif %}>
+            {% if user.is_email_reminder_on() %}checked{% endif %} disabled>  <!--TODO: remove this 'disabled'-->
         <label class="form-check-label" for="emailReminderToggle">
             {% if user.is_email_reminder_on() %}
                 Reminders are ON

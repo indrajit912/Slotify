@@ -11,6 +11,7 @@
       <thead class="table-light">
         <tr>
           <th scope="col"><i class="bi bi-person-circle me-1"></i>Name</th>
+          <th scope="col"><i class="bi bi-person-badge-fill me-1"></i>Username</th>
           <th scope="col"><i class="bi bi-envelope-fill me-1"></i>Email</th>
           <th scope="col"><i class="bi bi-building me-1"></i>Building</th>
         </tr>
@@ -18,19 +19,21 @@
       <tbody>
         {% for admin in admins %}
         <tr>
-          <td>{{ admin.fullname }}
+          <td>
+            {{ admin.fullname }}
             {% if admin.is_superadmin() %}
             <span class="badge bg-danger text-white" title="Superadmin">
-                <i class="bi bi-shield-lock-fill"></i> S
+              <i class="bi bi-shield-lock-fill"></i> S
             </span>
             {% endif %}
           </td>
+          <td>{{ admin.username }}</td>
           <td><a href="mailto:{{ admin.email }}">{{ admin.email }}</a></td>
           <td>{{ admin.building.name }}</td>
         </tr>
         {% else %}
         <tr>
-          <td colspan="5" class="text-center text-muted">No admins found.</td>
+          <td colspan="4" class="text-center text-muted">No admins found.</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -38,3 +41,4 @@
   </div>
 </div>
 {% endblock %}
+
