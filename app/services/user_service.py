@@ -254,6 +254,16 @@ def update_user_by_uuid(user_uuid, **kwargs):
         user.email_verified = new_val
         logger.info(f"{user.username}'s email_verified updated to '{new_val}'.")
 
+    if 'reminder_email' in kwargs:
+        new_val = kwargs['reminder_email']
+        user.reminder_email = new_val
+        logger.info(f"{user.username}'s reminder_email updated to '{new_val}'.")
+
+    if 'email_reminder_hours' in kwargs:
+        new_val = kwargs['email_reminder_hours']
+        user.email_reminder_hours = new_val
+        logger.info(f"{user.username}'s email_reminder_hours updated to '{new_val}'.")
+
     # Update name parts individually or via fullname if provided
     if 'fullname' in kwargs:
         name_parts = kwargs['fullname'].strip().split()

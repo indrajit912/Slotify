@@ -32,9 +32,13 @@
             <p class="mb-1 d-flex align-items-center">
                 <i class="bi bi-envelope me-1"></i>
                 <strong class="me-1">Email:</strong> {{ user.email }}
-                <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
-                    data-bs-target="#editEmailModal" role="button" aria-label="Edit Email"></i>
-            </p>
+                {% if user.is_admin() %}
+                    <i class="bi bi-pencil-square ms-2 text-primary cursor-pointer" data-bs-toggle="modal"
+                        data-bs-target="#editEmailModal" role="button" aria-label="Edit Email"></i>
+                {% else %}
+                    <span class="ms-2 text-muted fst-italic">Contact an admin to change your email</span>
+                {% endif %}
+            </p>            
 
             <p class="mb-1 d-flex align-items-center">
                 <i class="bi bi-telephone me-1"></i>
@@ -100,6 +104,51 @@
 
         </div>
     </div>
+
+    <hr>
+<div class="mt-4">
+    <h5 class="mb-3"><i class="bi bi-bell-fill me-1"></i>Email Reminders</h5>
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="emailReminderToggle"
+            {% if user.is_email_reminder_on() %}checked{% endif %}>
+        <label class="form-check-label" for="emailReminderToggle">
+            {% if user.is_email_reminder_on() %}
+                Reminders are ON
+            {% else %}
+                Reminders are OFF
+            {% endif %}
+        </label>
+    </div>
+
+    {% if not user.is_email_reminder_on() %}
+        <div id="reminderHelp" class="form-text text-muted mt-2">
+            Turning this on will send you email reminders <strong>before your reserved washing machine slot</strong>
+            so that you don’t miss it. You can customize the time and recipient email once enabled.
+        </div>
+    {% endif %}
+
+
+    <div id="reminderFields" class="mt-3 row g-3 {% if not user.is_email_reminder_on() %}d-none{% endif %}">
+        <div class="col-md-6">
+            <label for="reminderHours" class="form-label">Reminder lead time (in hours)</label>
+            <input type="number" class="form-control" id="reminderHours" name="email_reminder_hours"
+                min="1" value="{{ user.email_reminder_hours }}">
+        </div>
+        <div class="col-md-6">
+            <label for="reminderEmail" class="form-label">Reminder email address</label>
+            <input type="email" class="form-control" id="reminderEmail" name="reminder_email"
+                value="{{ user.get_reminder_email() }}">
+        </div>
+        <div class="col-12 text-end">
+            <button id="saveReminderBtn" class="btn btn-sm btn-primary">
+                <i class="bi bi-save me-1"></i>Save Reminder Settings
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
 </div>
 
 
@@ -291,5 +340,88 @@
         });
     });
 </script>
+
+<script>
+    const toggle = document.getElementById('emailReminderToggle');
+    const reminderFields = document.getElementById('reminderFields');
+    const saveButton = document.getElementById('saveReminderBtn');
+    const reminderHoursInput = document.getElementById('reminderHours');
+    const reminderEmailInput = document.getElementById('reminderEmail');
+    const toggleLabel = document.querySelector('label[for="emailReminderToggle"]');
+
+    toggle.addEventListener('change', function () {
+        if (this.checked) {
+            // Update label and show fields
+            toggleLabel.textContent = "Reminders are ON";
+            reminderFields.classList.remove('d-none');
+            if (reminderHelp) reminderHelp.style.display = 'none';
+
+            // Set default hour if empty
+            if (!reminderHoursInput.value || parseInt(reminderHoursInput.value) < 1) {
+                reminderHoursInput.value = 1;
+            }
+
+            // POST to enable
+            fetch('{{ url_for("auth.update_profile") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: new URLSearchParams({
+                    'email_reminder_hours': reminderHoursInput.value
+                })
+            })
+            .catch(err => alert("Failed to enable reminder: " + err.message));
+        } else {
+            // Update label and hide fields
+            toggleLabel.textContent = "Reminders are OFF";
+            reminderFields.classList.add('d-none');
+            if (reminderHelp) reminderHelp.style.display = 'block';
+
+            // POST to disable
+            fetch('{{ url_for("auth.update_profile") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: new URLSearchParams({
+                    'email_reminder_hours': 0
+                })
+            })
+            .catch(err => alert("Failed to disable reminder: " + err.message));
+        }
+    });
+
+    saveButton.addEventListener('click', function () {
+        const hours = reminderHoursInput.value;
+        const email = reminderEmailInput.value;
+
+        if (!hours || parseInt(hours) < 1) {
+            alert("Please enter a valid number of hours (1 or more).");
+            return;
+        }
+
+        fetch('{{ url_for("auth.update_profile") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: new URLSearchParams({
+                'email_reminder_hours': hours,
+                'reminder_email': email
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Network error");
+            alert("Reminder settings saved.");
+        })
+        .catch(err => alert("Failed to save reminder settings: " + err.message));
+    });
+</script>
+
+
 
 {% endblock %}

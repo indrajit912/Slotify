@@ -71,7 +71,9 @@ class User(db.Model, UserMixin):
     last_updated = db.Column(db.DateTime(timezone=True), default=utcnow)
     last_seen = db.Column(db.DateTime(timezone=True), default=utcnow)
     email_verified = db.Column(db.Boolean, default=False)
+    
     email_reminder_hours = db.Column(db.Integer, nullable=False, default=0)
+    reminder_email = db.Column(db.String(120), nullable=True)  # Optional email ID for reminders
 
     # It will be for Guest only
     departure_date = db.Column(db.Date, nullable=True) 
@@ -147,6 +149,19 @@ class User(db.Model, UserMixin):
         """
         email_hash = sha256_hash(self.email.lower())
         return f"https://gravatar.com/avatar/{email_hash}?d=identicon&s={size}"
+    
+    def is_email_reminder_on(self):
+        """
+        Returns True if the user has email reminders enabled.
+        """
+        return self.email_reminder_hours > 0
+
+    def get_reminder_email(self):
+        """
+        Returns the email address to which reminders should be sent.
+        Defaults to the user's primary email if reminder_email is not set.
+        """
+        return self.reminder_email or self.email
     
     def get_upcoming_bookings(self):
         """
