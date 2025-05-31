@@ -5,7 +5,7 @@
 #
 import logging
 import calendar
-from datetime import date, timedelta
+from datetime import date
 
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy import extract
