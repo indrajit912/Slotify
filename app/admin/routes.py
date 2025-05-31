@@ -31,7 +31,7 @@ from app.services import (
     update_course, 
     create_new_course,
     update_building_by_uuid,
-    delete_all_enrolled_students,
+    delete_enrolled_students,
     update_washing_machine,
     create_new_enrolled_student,
     update_enrolled_student
@@ -459,15 +459,27 @@ def get_student_by_email():
 
 @admin_bp.route('/delete_enrolled_students', methods=['POST'])
 @admin_required
-def delete_enrolled_students():
-    success = delete_all_enrolled_students()
+def delete_enrolled_students_route():
+    student_uuid = request.form.get('student_uuid')
+
+    success = delete_enrolled_students(student_uuid)
     if success:
-        logger.info(f"Admin {current_user.first_name} (Username: {current_user.username}) deleted all enrolled students.")
-        flash("All enrolled students have been deleted successfully.", "success")
+        if student_uuid:
+            flash("Student has been deleted successfully.", "success")
+            logger.info(f"Admin {current_user.first_name} (Username: {current_user.username}) deleted student with UUID {student_uuid}.")
+        else:
+            flash("All enrolled students have been deleted successfully.", "success")
+            logger.info(f"Admin {current_user.first_name} (Username: {current_user.username}) deleted all enrolled students.")
     else:
-        logger.error(f"Admin {current_user.first_name} (Username: {current_user.username}) failed to delete enrolled students.")
-        flash("Failed to delete enrolled students. Please try again.", "danger")
+        if student_uuid:
+            flash("Failed to delete the student. Please try again.", "danger")
+            logger.error(f"Admin {current_user.first_name} (Username: {current_user.username}) failed to delete student with UUID {student_uuid}.")
+        else:
+            flash("Failed to delete enrolled students. Please try again.", "danger")
+            logger.error(f"Admin {current_user.first_name} (Username: {current_user.username}) failed to delete enrolled students.")
+
     return redirect(url_for('admin.current_enrolled_students'))
+
 
 @admin_bp.route('/users/search')
 def search_users_page():

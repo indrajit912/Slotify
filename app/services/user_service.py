@@ -471,13 +471,25 @@ def update_enrolled_student(
     return student
 
 
-def delete_all_enrolled_students():
+def delete_enrolled_students(student_uuid=None):
     try:
-        num_deleted = db.session.query(CurrentEnrolledStudent).delete()
-        db.session.commit()
-        logger.info(f"Deleted {num_deleted} enrolled students from the database.")
-        return True
+        if student_uuid:
+            student = db.session.query(CurrentEnrolledStudent).filter_by(uuid=student_uuid).first()
+            if student:
+                db.session.delete(student)
+                db.session.commit()
+                logger.info(f"Deleted student with UUID: {student_uuid}")
+                return True
+            else:
+                logger.warning(f"No enrolled student found with UUID: {student_uuid}")
+                return False
+        else:
+            num_deleted = db.session.query(CurrentEnrolledStudent).delete()
+            db.session.commit()
+            logger.info(f"Deleted {num_deleted} enrolled students from the database.")
+            return True
     except Exception as e:
         db.session.rollback()
         logger.error(f"Failed to delete enrolled students: {e}")
         return False
+

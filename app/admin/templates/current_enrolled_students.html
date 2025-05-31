@@ -32,7 +32,7 @@ If something is missing, use the 'Clear Database' button to reset and try again.
 
   <h3>Currently Enrolled Students <span class="badge bg-secondary">{{ students|length }}</span></h3>
 
-  <form method="POST" action="{{ url_for('admin.delete_enrolled_students') }}" onsubmit="return confirm('Are you sure you want to delete all enrolled students? This action cannot be undone.')">
+  <form method="POST" action="{{ url_for('admin.delete_enrolled_students_route') }}" onsubmit="return confirm('Are you sure you want to delete all enrolled students? This action cannot be undone.')">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" class="btn btn-danger mb-3">
       <i class="bi bi-trash-fill me-1"></i> Delete All Enrolled Students
@@ -43,32 +43,42 @@ If something is missing, use the 'Clear Database' button to reset and try again.
   <h5>Update Student</h5>
 
   <div class="mb-3">
-      <label for="loadEmailInput" class="form-label">Enter Student Email to Load</label>
-      <input type="email" id="loadEmailInput" class="form-control" placeholder="Student Email" />
-      <button id="loadStudentBtn" class="btn btn-primary mt-2">Load Student</button>
-    </div>
-
-    <form id="updateStudentForm" method="POST" action="{{ url_for('admin.update_student') }}" style="display:none;">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="uuid" id="updateStudentUuid" />
-
-      <div class="mb-3">
-        <label for="updateFullname" class="form-label">Full Name</label>
-        <input type="text" name="fullname" id="updateFullname" class="form-control" required />
-      </div>
-
-      <div class="mb-3">
-        <label for="updateEmail" class="form-label">Email</label>
-        <input type="email" name="email" id="updateEmail" class="form-control" required />
-      </div>
-
-      <button type="submit" class="btn btn-success">Save Changes</button>
-    </form>
+    <label for="loadEmailInput" class="form-label">Enter Student Email to Load</label>
+    <input type="email" id="loadEmailInput" class="form-control" placeholder="Student Email" />
+    <button id="loadStudentBtn" class="btn btn-primary mt-2">Load Student</button>
   </div>
-
+  
+  <!-- Update Form -->
+  <form id="updateStudentForm" method="POST" action="{{ url_for('admin.update_student') }}" style="display:none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="uuid" id="updateStudentUuid" />
+  
+    <div class="mb-3">
+      <label for="updateFullname" class="form-label">Full Name</label>
+      <input type="text" name="fullname" id="updateFullname" class="form-control" required />
+    </div>
+  
+    <div class="mb-3">
+      <label for="updateEmail" class="form-label">Email</label>
+      <input type="email" name="email" id="updateEmail" class="form-control" required />
+    </div>
+  
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-success">Save Changes</button>
+    </div>
+  </form>
+  
+  <!-- Delete Form (outside of update form) -->
+  <form id="deleteStudentForm" method="POST" action="{{ url_for('admin.delete_enrolled_students_route') }}" style="display:none;" onsubmit="return confirm('Are you sure you want to delete this student?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="student_uuid" id="deleteStudentUuid" />
+    <button type="submit" class="btn btn-danger mt-2">Delete</button>
+  </form>
+  
+  
   
 
-  <div class="table-responsive">
+  <div class="table-responsive mt-4">
     <table class="table table-striped table-hover align-middle mt-3">
       <thead class="table-dark">
         <tr>
@@ -97,40 +107,45 @@ If something is missing, use the 'Clear Database' button to reset and try again.
 
 
 <script>
-document.getElementById('loadStudentBtn').addEventListener('click', function(e) {
-  e.preventDefault();
-  const email = document.getElementById('loadEmailInput').value.trim();
-
-  if (!email) {
-    alert('Please enter an email to load the student.');
-    return;
-  }
-
-  fetch(`/admin/get-student-by-email?email=${encodeURIComponent(email)}`)
-    .then(response => {
-      if (!response.ok) throw response;
-      return response.json();
-    })
-    .then(data => {
-      // Fill form fields with student data
-      document.getElementById('updateStudentUuid').value = data.uuid;
-      document.getElementById('updateFullname').value = data.fullname;
-      document.getElementById('updateEmail').value = data.email;
-
-      // Show the update form
-      document.getElementById('updateStudentForm').style.display = 'block';
-    })
-    .catch(async err => {
-      let msg = 'Failed to load student.';
-      if (err.json) {
-        const errorData = await err.json();
-        if (errorData.error) msg = errorData.error;
-      }
-      alert(msg);
-      // Hide form if visible
-      document.getElementById('updateStudentForm').style.display = 'none';
-    });
-});
-</script>
+  document.getElementById('loadStudentBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    const email = document.getElementById('loadEmailInput').value.trim();
+  
+    if (!email) {
+      alert('Please enter an email to load the student.');
+      return;
+    }
+  
+    fetch(`/admin/get-student-by-email?email=${encodeURIComponent(email)}`)
+      .then(response => {
+        if (!response.ok) throw response;
+        return response.json();
+      })
+      .then(data => {
+        // Fill form fields with student data
+        document.getElementById('updateStudentUuid').value = data.uuid;
+        document.getElementById('updateFullname').value = data.fullname;
+        document.getElementById('updateEmail').value = data.email;
+  
+        // Sync the UUID for the delete form as well
+        document.getElementById('deleteStudentUuid').value = data.uuid;
+  
+        // Show the update form
+        document.getElementById('updateStudentForm').style.display = 'block';
+        document.getElementById('deleteStudentForm').style.display = 'block';
+      })
+      .catch(async err => {
+        let msg = 'Failed to load student.';
+        if (err.json) {
+          const errorData = await err.json();
+          if (errorData.error) msg = errorData.error;
+        }
+        alert(msg);
+        // Hide form if visible
+        document.getElementById('updateStudentForm').style.display = 'none';
+      });
+  });
+  </script>
+  
 
 {% endblock %}

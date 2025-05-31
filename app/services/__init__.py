@@ -51,5 +51,5 @@ __all__ = [
     "update_building_by_uuid",
     "create_new_enrolled_student",
     "update_enrolled_student",
-    "delete_all_enrolled_students"
+    "delete_enrolled_students"
 ]
