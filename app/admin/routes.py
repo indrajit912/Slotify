@@ -2,13 +2,13 @@
 # Author: Indrajit Ghosh
 # Created On: May 11, 2025
 #
-# TODO: Create one route for admins to view logs
 # Standard library imports
 import logging
 from datetime import datetime
+from pathlib import Path
 
 # Third-party imports
-from flask import flash, redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, url_for, current_app, Response, abort
 from flask_login import current_user
 from sqlalchemy import desc
 
@@ -493,3 +493,30 @@ def search_users_page():
         course_uuid=request.args.get('course_uuid')
     )
     return render_template('search_users.html', users=users)
+
+@admin_bp.route('/logs/view')
+@admin_required
+def view_logs():
+    log_path: Path = current_app.config['LOG_FILE']
+
+    try:
+        log_content = log_path.read_text()
+        return render_template('view_logs.html', log_content=log_content)
+    except Exception as e:
+        current_app.logger.error(f"Failed to read log file: {e}")
+        abort(500, description="Could not read the log file.")
+
+
+@admin_bp.route('/logs/clear', methods=['POST'])
+@admin_required
+def clear_logs():
+    log_path: Path = current_app.config['LOG_FILE']
+
+    try:
+        log_path.write_text("")  # Truncate log
+        flash("Logs have been cleared.", "success")
+    except Exception as e:
+        current_app.logger.error(f"Failed to clear log file: {e}")
+        flash("Failed to clear logs.", "danger")
+
+    return redirect(url_for('admin.view_logs'))
