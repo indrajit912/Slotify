@@ -80,7 +80,11 @@
                 <tbody>
                     {% for date, slots in calendar_data.items() %}
                         <tr>
-                            <td class="date-cell fw-bold">{{ moment(date).format('ddd, LL') }}</td>
+                            <td class="date-cell fw-bold">
+                              <span class="d-inline d-md-none">{{ moment(date).format('dd, MMM D, YY') }}</span>
+                              <span class="d-none d-md-inline">{{ moment(date).format('ddd, LL') }}</span>
+                            </td>
+
                             {% for slot in slots %}
                                 {% if slot.is_booked %}
                                     {% if slot.booked_by['user_uuid'] == current_user.uuid %}
