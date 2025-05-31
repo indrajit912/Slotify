@@ -108,6 +108,12 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 4. Open a pull request
 ---
 
+## Development Notes
+
+- [TODO List](docs/TODO.md)
+- [Known Bugs](docs/BUGS.md)
+
+
 ## 📄 License
 
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
