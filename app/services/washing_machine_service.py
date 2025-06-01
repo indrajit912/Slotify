@@ -274,7 +274,7 @@ def get_machine_monthly_slots(uuid_str: str, year: int, month: int, exclude_past
                     "user_uuid": booking.user.uuid,
                     "fullname": booking.user.fullname,
                     "first_tname": booking.user.first_name,
-                    "username": booking.user.username,
+                    "username": booking.user.username[:15],
                     "email": booking.user.email,
                     "room_no": booking.user.room_no,
                     "contact_no": booking.user.contact_no,
