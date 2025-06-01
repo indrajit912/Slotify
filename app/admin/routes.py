@@ -4,11 +4,11 @@
 #
 # Standard library imports
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 # Third-party imports
-from flask import flash, redirect, render_template, request, url_for, current_app, Response, abort
+from flask import flash, redirect, render_template, request, url_for, current_app, jsonify, abort
 from flask_login import current_user
 from sqlalchemy import desc
 
@@ -21,6 +21,8 @@ from app.models.course import Course
 from app.utils.decorators import admin_required
 from app.utils.student_parser import parse_enrolled_students
 from app.utils.image_utils import save_machine_image
+from app.utils.token import generate_api_token
+from scripts.utils import utcnow
 from app.services import (
     create_washing_machine, 
     create_building,
@@ -43,7 +45,7 @@ logger = logging.getLogger(__name__)
 @admin_required
 def home():
     logger.info(f"Admin dashboard visited by the admin '{current_user.first_name} <{current_user.username}>'.")
-    return render_template('admin.html')
+    return render_template('admin.html', admin=current_user)
 
 
 @admin_bp.route('/admins')
@@ -520,3 +522,40 @@ def clear_logs():
         flash("Failed to clear logs.", "danger")
 
     return redirect(url_for('admin.view_logs'))
+
+@admin_bp.route('/tokens/<user_uuid>', methods=['GET'])
+@admin_required
+def token_page(user_uuid):
+    logger.info(f"[Admin] Token page accessed for user_uuid={user_uuid}")
+    user = User.query.filter_by(uuid=user_uuid).first_or_404()
+    default_days = 15
+    return render_template('token_page.html', user=user, default_days=default_days)
+
+
+@admin_bp.route('/tokens/<user_uuid>/generate', methods=['POST'])
+@admin_required
+def generate_token(user_uuid):
+    logger.info(f"[Admin] Token generation requested for user_uuid={user_uuid}")
+    user = User.query.filter_by(uuid=user_uuid).first_or_404()
+
+    days = request.json.get('days', 15)
+    try:
+        days = int(days)
+        if days <= 0:
+            raise ValueError("Days must be positive")
+    except Exception as e:
+        logger.warning(f"[Admin] Invalid days parameter for user_uuid={user_uuid}: {days} - {e}")
+        return jsonify({'error': 'Invalid days parameter'}), 400
+
+    try:
+        token = generate_api_token(user_uuid, expires_in_days=days)
+        expiry_date = (utcnow() + timedelta(days=days)).strftime('%Y-%m-%d %H:%M UTC')
+        logger.info(f"[Admin] Token generated for user_uuid={user_uuid}, expires_on={expiry_date}")
+        return jsonify({
+            'token': token,
+            'expires_on': expiry_date,
+            'message': f"Token expires on {expiry_date}. Please copy and keep it in a secure place. This token will not be shown again."
+        })
+    except Exception as e:
+        logger.exception(f"[Admin] Failed to generate token for user_uuid={user_uuid}: {e}")
+        return jsonify({'error': 'Failed to generate token'}), 500

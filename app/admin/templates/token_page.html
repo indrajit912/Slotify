@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block head %}
+  {{ super() }}
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
+{% block title %}Generate API Token for {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4">Generate API Token</h1>
+  <h5 class="text-muted">For user: <strong>{{ user.username }}</strong></h5>
+
+  <div class="row mb-3 mt-4">
+    <label for="days" class="col-sm-3 col-form-label fw-semibold">Token expiry (in days):</label>
+    <div class="col-sm-2">
+      <input type="number" id="days" class="form-control" value="{{ default_days }}" min="1" />
+    </div>
+  </div>
+
+  <button id="generate-btn" class="btn btn-primary">
+    <i class="bi bi-key-fill me-1"></i> Generate Token
+  </button>
+
+  <div id="token-display" class="alert alert-light border mt-4" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Your API Token</h5>
+      <button id="copy-btn" class="btn btn-sm btn-outline-secondary" title="Copy to clipboard">
+        <i class="bi bi-clipboard"></i>
+      </button>
+    </div>
+    <textarea id="token-text" class="form-control mt-2 mb-3" rows="3" readonly></textarea>
+    <p id="expiry-info" class="mb-2 text-muted"></p>
+    <p class="text-danger fw-semibold mb-0">
+      Please copy the token now. It will <strong>not</strong> be shown again. Store it securely.
+    </p>
+  </div>
+</div>
+
+<script>
+  const btn = document.getElementById('generate-btn');
+  const tokenDisplay = document.getElementById('token-display');
+  const tokenText = document.getElementById('token-text');
+  const expiryInfo = document.getElementById('expiry-info');
+  const daysInput = document.getElementById('days');
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  const copyBtn = document.getElementById('copy-btn');
+
+  btn.addEventListener('click', () => {
+    const days = parseInt(daysInput.value) || {{ default_days }};
+    btn.disabled = true;
+
+    fetch('{{ url_for("admin.generate_token", user_uuid=user.uuid) }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify({ days: days })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.token) {
+        tokenText.value = data.token;
+        expiryInfo.textContent = data.message;
+        tokenDisplay.style.display = 'block';
+      } else if (data.error) {
+        alert('Error: ' + data.error);
+      }
+    })
+    .catch(err => {
+      alert('Request failed: ' + err);
+    })
+    .finally(() => {
+      btn.disabled = false;
+    });
+  });
+
+  copyBtn.addEventListener('click', () => {
+    tokenText.select();
+    tokenText.setSelectionRange(0, 99999); // For mobile
+    document.execCommand('copy');
+    copyBtn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
+    copyBtn.classList.remove('btn-outline-secondary');
+    copyBtn.classList.add('btn-success');
+    setTimeout(() => {
+      copyBtn.innerHTML = '<i class="bi bi-clipboard"></i>';
+      copyBtn.classList.remove('btn-success');
+      copyBtn.classList.add('btn-outline-secondary');
+    }, 2000);
+  });
+</script>
+{% endblock %}

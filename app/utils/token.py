@@ -6,10 +6,13 @@ Tokens for the Slotify application.
 Author: Indrajit Ghosh
 Created on: May 18, 2025
 """
-
 import logging
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from datetime import datetime
+
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired, URLSafeSerializer
 from flask import current_app
+
+from scripts.utils import utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -53,4 +56,25 @@ def confirm_registration_token(token, expiration=86400): # 24 Hrs
         return None
     except Exception as e:
         logger.error(f"Unexpected error during token verification: {e}")
+        return None
+
+def generate_api_token(user_uuid, expires_in_days=1):
+    s = URLSafeSerializer(current_app.config['SECRET_KEY'])
+    payload = {
+        'user_uuid': str(user_uuid),
+        'iat': utcnow().timestamp(),      # issued at
+        'exp': (utcnow().timestamp() + expires_in_days * 86400)  # expiration time
+    }
+    return s.dumps(payload, salt='api-auth')
+
+def verify_api_token(token):
+    s = URLSafeSerializer(current_app.config['SECRET_KEY'])
+    try:
+        data = s.loads(token, salt='api-auth')
+        exp = data.get('exp')
+        if exp and utcnow().timestamp() > exp:
+            return None  # expired
+
+        return data.get('user_uuid')
+    except Exception:
         return None

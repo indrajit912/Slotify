@@ -56,6 +56,10 @@ def create_app(config_class=get_config()):
     from app.admin import admin_bp
     app.register_blueprint(admin_bp)
 
+    from app.api import api_bp
+    csrf.exempt(api_bp)
+    app.register_blueprint(api_bp)
+
     # Define the user loader function
     @login_manager.user_loader
     def load_user(user_id):

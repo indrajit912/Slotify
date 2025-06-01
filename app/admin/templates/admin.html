@@ -101,6 +101,20 @@
   </div>
 </div>
 
+<!-- New: Manage API Tokens -->
+<div class="col">
+  <div class="card h-100 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title"><i class="bi bi-key-fill me-2 text-primary"></i>Manage API Tokens</h5>
+      <p class="card-text">Generate and manage API tokens for users.</p>
+      <a href="{{ url_for('admin.token_page', user_uuid=admin.uuid) }}" class="btn btn-primary">
+        <i class="bi bi-key me-1"></i> Go to Token Page
+      </a>
+    </div>
+  </div>
+</div>
+
+
 <!-- Logs Viewer Card -->
 <div class="col">
   <div class="card h-100 shadow-sm">

@@ -4,7 +4,6 @@
 #
 # Standard library imports
 import sys
-import argparse
 import getpass
 import os
 import logging
