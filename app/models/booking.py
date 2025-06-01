@@ -23,6 +23,17 @@ class TimeSlot(db.Model):
     machine = db.relationship("WashingMachine", back_populates="time_slots")
     bookings = db.relationship("Booking", back_populates="time_slot", cascade="all, delete-orphan")
 
+    def update_hours_from_range(self):
+        """
+        Parses the time_range string (e.g. "09:00-11:00") and sets start_hour and end_hour.
+        """
+        try:
+            start_str, end_str = self.time_range.split('-')
+            self.start_hour = datetime.strptime(start_str.strip(), "%H:%M").time()
+            self.end_hour = datetime.strptime(end_str.strip(), "%H:%M").time()
+        except ValueError as e:
+            raise ValueError(f"Invalid time_range format '{self.time_range}': {e}")
+
     def to_json(self):
         return {
             "uuid": self.uuid,
@@ -49,14 +60,6 @@ class TimeSlot(db.Model):
             start_hour=start_hour,
             end_hour=end_hour
         )
-    
-    @property
-    def start_time(self):
-        return self.start_hour
-
-    @property
-    def end_time(self):
-        return self.end_hour
 
 
 class Booking(db.Model):

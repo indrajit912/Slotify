@@ -68,6 +68,7 @@ def create_washing_machine(
             slot_number=slot["slot_number"],
             time_range=slot["time_range"]
         )
+        ts.update_hours_from_range()
         db.session.add(ts)
 
     # Handle image upload

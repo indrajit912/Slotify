@@ -4,11 +4,12 @@
 #
 # Standard library imports
 import logging
-from datetime import date
+from datetime import date, datetime
 
 # Third-party imports
 from flask import flash, redirect, render_template, url_for, current_app, request
 from flask_login import current_user, login_required, login_user, logout_user
+from sqlalchemy import or_, and_
 
 # Relative imports
 from . import auth_bp
@@ -146,21 +147,30 @@ def dashboard():
     machines = building.machines if building else []
     today = date.today()
 
+    now = datetime.now()
+    today = date.today()
+    current_time = now.time()
+
     # Get all buildings and courses for dropdowns
     all_buildings = Building.query.order_by(Building.name).all()
     all_courses = Course.query.order_by(Course.name).all()
 
     bookings = (
-        Booking.query
-        .filter(
-            Booking.user_id == current_user.id,
-            Booking.date >= today  # only today and future dates
+    Booking.query
+    .join(Booking.time_slot)
+    .filter(
+        Booking.user_id == current_user.id,
+        or_(
+            Booking.date > today,
+            and_(
+                Booking.date == today,
+                TimeSlot.end_hour >= current_time
+            )
         )
-        .join(Booking.time_slot)
-        .order_by(Booking.date.asc(), TimeSlot.slot_number.asc())
-        # .limit(5)
-        .all()
     )
+    .order_by(Booking.date.asc(), TimeSlot.slot_number.asc())
+    .all()
+)
     return render_template(
         'dashboard.html',
         user=current_user,

@@ -165,12 +165,21 @@ class User(db.Model, UserMixin):
     
     def get_upcoming_bookings(self):
         """
-        Returns a list of future bookings (today and later), sorted by date and time.
+        Returns a list of future bookings: either on a future date,
+        or today with time_slot.start_hour > current time.
         """
         today = date.today()
+        now = datetime.now().time()
+    
         return sorted(
-            [b for b in self.bookings if b.date >= today],
-            key=lambda b: (b.date, b.time_slot.start_time)
+            [
+                b for b in self.bookings
+                if (
+                    (b.date > today) or
+                    (b.date == today and b.time_slot and b.time_slot.start_hour > now)
+                )
+            ],
+            key=lambda b: (b.date, b.time_slot.start_hour)
         )
 
     def get_next_booking(self):
