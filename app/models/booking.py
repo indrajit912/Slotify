@@ -17,6 +17,9 @@ class TimeSlot(db.Model):
     slot_number = db.Column(db.Integer, nullable=False)  # 1, 2, 3, 4
     time_range = db.Column(db.String(20), nullable=False, default="00:00-00:00")
 
+    start_hour = db.Column(db.Time, nullable=False)
+    end_hour = db.Column(db.Time, nullable=False)
+
     machine = db.relationship("WashingMachine", back_populates="time_slots")
     bookings = db.relationship("Booking", back_populates="time_slot", cascade="all, delete-orphan")
 
@@ -33,29 +36,27 @@ class TimeSlot(db.Model):
         machine = machine_lookup.get(data["machine_uuid"])
         if not machine:
             raise ValueError(f"Machine with UUID {data['machine_uuid']} not found for TimeSlot import")
+
+        start_str, end_str = data["time_range"].split('-')
+        start_hour = datetime.strptime(start_str, "%H:%M").time()
+        end_hour = datetime.strptime(end_str, "%H:%M").time()
+
         return cls(
             uuid=data["uuid"],
             machine=machine,
             slot_number=data["slot_number"],
-            time_range=data["time_range"]
+            time_range=data["time_range"],
+            start_hour=start_hour,
+            end_hour=end_hour
         )
     
     @property
     def start_time(self):
-        """
-        Returns the starting time as a `datetime.time` object.
-        Assumes `time_range` is of format "HH:MM-HH:MM"
-        """
-        start_str = self.time_range.split('-')[0]
-        return datetime.strptime(start_str, "%H:%M").time()
+        return self.start_hour
 
     @property
     def end_time(self):
-        """
-        Returns the ending time as a `datetime.time` object.
-        """
-        end_str = self.time_range.split('-')[1]
-        return datetime.strptime(end_str, "%H:%M").time()
+        return self.end_hour
 
 
 class Booking(db.Model):
