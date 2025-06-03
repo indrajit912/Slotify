@@ -159,22 +159,31 @@ def get_all_admins():
     return User.query.filter(User.role.in_(['admin', 'superadmin'])).all()
 
 
-def get_user_by_uuid(uuid_str: str):
+def get_user_by_uuid(uuid_str: str | None = None):
     """
-    Retrieves a user from the database by their UUID.
+    Retrieves a user from the database by their UUID, or all users if UUID is None.
 
     Args:
-        uuid_str (str): UUID string of the user.
+        uuid_str (str | None): UUID string of the user. If None, fetches all users.
 
     Returns:
-        User | None: The User object if found, else None.
+        User | list[User] | None: A User object if UUID is given and found,
+                                  a list of all users if UUID is None,
+                                  or None if UUID is invalid or not found.
     """
+    if uuid_str is None:
+        users = User.query.order_by(User.date_joined.desc()).all()
+        logger.debug(f"Fetched all users: {len(users)} user(s) found.")
+        return users
+
     user = User.query.filter_by(uuid=uuid_str).first()
     if user:
         logger.debug(f"User found with UUID {uuid_str}: {user.username}")
     else:
         logger.warning(f"No user found with UUID {uuid_str}")
+
     return user
+
 
 def get_user_by_email(email):
     """

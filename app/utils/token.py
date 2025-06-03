@@ -11,6 +11,7 @@ from datetime import datetime
 
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired, URLSafeSerializer
 from flask import current_app
+from app.services import get_user_by_uuid
 
 from scripts.utils import utcnow
 
@@ -59,11 +60,19 @@ def confirm_registration_token(token, expiration=86400): # 24 Hrs
         return None
 
 def generate_api_token(user_uuid, expires_in_days=1):
+    user = get_user_by_uuid(uuid_str=user_uuid)
+    if not user:
+        raise ValueError("User not found")
+    
     s = URLSafeSerializer(current_app.config['SECRET_KEY'])
     payload = {
-        'user_uuid': str(user_uuid),
-        'iat': utcnow().timestamp(),      # issued at
-        'exp': (utcnow().timestamp() + expires_in_days * 86400)  # expiration time
+        'user_uuid': str(user.uuid),
+        'role': user.role,
+        'is_admin': user.is_admin(),
+        'is_superadmin': user.is_superadmin(),
+        'is_guest': user.is_guest(),
+        'iat': utcnow().timestamp(),
+        'exp': utcnow().timestamp() + expires_in_days * 86400
     }
     return s.dumps(payload, salt='api-auth')
 
@@ -73,8 +82,8 @@ def verify_api_token(token):
         data = s.loads(token, salt='api-auth')
         exp = data.get('exp')
         if exp and utcnow().timestamp() > exp:
-            return None  # expired
-
-        return data.get('user_uuid')
+            return None
+        return data
     except Exception:
         return None
+

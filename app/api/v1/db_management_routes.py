@@ -10,22 +10,22 @@ from flask import jsonify, send_file, after_this_request, request
 from sqlalchemy import inspect
 
 # Relative imports
-from . import api_bp
+from . import api_v1
 from app.extensions import db
 from app.models.user import CurrentEnrolledStudent, User
 from app.models.booking import TimeSlot, Booking
 from app.models.building import Building
 from app.models.washingmachine import WashingMachine
 from app.models.course import Course
-from app.utils.decorators import token_required
+from app.utils.decorators import admin_only
 from scripts.export_import import export_all_json, import_all_json
 from app.utils.data_io import IMPORT_DIR
 
 logger = logging.getLogger(__name__)
 
-@api_bp.route('/export', methods=['GET'])
-@token_required
-def export_data(user_uuid):
+@api_v1.route('/export', methods=['GET'])
+@admin_only
+def export_data(user_data):
     """
     Export all database contents as either a downloadable JSON file or inline JSON response.
 
@@ -78,6 +78,7 @@ def export_data(user_uuid):
         - The exported file is deleted from the server immediately after the response is sent.
         - Only authenticated users with valid tokens can access this endpoint.
     """
+    user_uuid = user_data['user_uuid']
     try:
         logger.info(f"[API] Export initiated by user_uuid={user_uuid}")
 
@@ -112,14 +113,72 @@ def export_data(user_uuid):
         return jsonify({'error': str(e)}), 500
 
 
-@api_bp.route('/import', methods=['POST'])
-@token_required
-def import_data(user_uuid):
+@api_v1.route('/import', methods=['POST'])
+@admin_only
+def import_data(user_data):
     """
     Import database data from a provided JSON file.
-    ...
-    (Docstring remains unchanged)
+
+    This endpoint allows authorized users to import a full database export
+    (in JSON format) previously generated via the `/export` endpoint.
+
+    ⚠️ Requirements:
+        - The database schema must already be initialized using Flask-Migrate.
+        - The database must be empty (no existing rows in expected tables).
+          This ensures no conflict during import and preserves data integrity.
+
+    🛠️ Setup Instructions:
+        If you're running this for the first time or need to reset the database:
+        
+        1. Initialize the database (if not done yet):
+            flask db upgrade
+
+        2. If data already exists and you want a clean reset:
+            flask db downgrade base
+            flask db upgrade
+
+    🔐 Authentication:
+        Requires a valid Bearer token in the Authorization header.
+
+    📥 Request:
+        Method: POST
+        Headers:
+            Authorization: Bearer <token>
+        Form Data:
+            file: A `.json` file exported via `/export` endpoint
+
+    ✅ Response (200 OK):
+        {
+            "message": "Import successful"
+        }
+
+    ❌ Response (400 Bad Request):
+        {
+            "error": "No file part" | "No selected file" | "Invalid file type"
+        }
+
+    ❌ Response (500 Internal Server Error):
+        {
+            "error": "Database not initialized" |
+                     "Expected tables missing" |
+                     "Tables contain existing data" |
+                     "Exception traceback"
+        }
+
+    🧪 Example (cURL):
+        curl -X POST \\
+             -H "Authorization: Bearer <token>" \\
+             -F "file=@slotify_export.json" \\
+             https://slotify.pythonanywhere.com/api/import
+
+    🔁 Notes:
+        - The import will fail if any of the expected tables already contain data.
+        - The temporary file is deleted after the operation (success or failure).
+        - Only `.json` files are accepted.
+
     """
+    user_uuid = user_data['user_uuid']
+
     # Check if all tables are initialized
     inspector = inspect(db.engine)
     existing_tables = inspector.get_table_names()

@@ -4,12 +4,4 @@
 # Created On: Jun 01, 2025
 #
 
-from flask import Blueprint
-
-api_bp = Blueprint(
-    'api', 
-    __name__,
-    url_prefix='/api'
-)
-
-from app.api import routes
+from app.api.v1 import api_v1

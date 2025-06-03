@@ -57,9 +57,28 @@ def token_required(f):
         else:
             return jsonify({'error': 'Missing or invalid token'}), 401
 
-        user_uuid = verify_api_token(token)
-        if not user_uuid:
+        user_data = verify_api_token(token)
+        if not user_data:
             return jsonify({'error': 'Invalid or expired token'}), 403
 
-        return f(user_uuid=user_uuid, *args, **kwargs)
+        return f(user_data=user_data, *args, **kwargs)
+    return decorated
+
+def admin_only(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if token and token.startswith("Bearer "):
+            token = token.split(" ")[1]
+        else:
+            return jsonify({'error': 'Missing or invalid token'}), 401
+
+        user_data = verify_api_token(token)
+        if not user_data:
+            return jsonify({'error': 'Invalid or expired token'}), 403
+
+        if not user_data.get('is_admin'):
+            return jsonify({'error': 'Admin privileges required'}), 403
+
+        return f(user_data=user_data, *args, **kwargs)
     return decorated

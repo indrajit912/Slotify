@@ -54,14 +54,26 @@ def create_building(name: str, code: str):
     return building
 
 
-def get_building_by_uuid(uuid_str: str):
+def get_building_by_uuid(uuid_str: str | None):
+    """
+    Returns:
+        - A single Building object if uuid_str is provided and found.
+        - A list of all Building objects if uuid_str is None.
+        - None if a specific UUID is given but not found.
+    """
+    if uuid_str is None:
+        buildings = Building.query.all()
+        logger.debug(f"Retrieved all buildings: count={len(buildings)}")
+        return buildings
+
     building = Building.query.filter_by(uuid=uuid_str).first()
     if building:
         logger.debug(f"Building found with UUID {uuid_str}: {building.name}")
     else:
         logger.warning(f"No building found with UUID {uuid_str}")
-    
+
     return building
+
 
 def update_building_by_uuid(uuid: str, *, name: str = None, code: str = None):
     """
