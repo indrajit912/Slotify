@@ -31,56 +31,58 @@ IMPORT_DIR = APP_DATA_DIR / "import"
 EXPORT_DIR.mkdir(parents=True, exist_ok=True)
 IMPORT_DIR.mkdir(parents=True, exist_ok=True)
 
-def export_model_data(session: SQLAlchemy, model, filename: str):
+def export_model_data(session: SQLAlchemy, model, filename: str, save: bool = False):
     """
-    Export all instances of a given model to a JSON file.
+    Export all instances of a given model to a JSON file or return the data.
 
     Args:
         session (SQLAlchemy): The SQLAlchemy session.
         model: The SQLAlchemy model class to export.
         filename (str): Filename to write JSON data to (inside EXPORT_DIR).
+        save (bool): If True, save to file. If False, return the data.
 
     Returns:
-        str: Summary message indicating how many records were exported.
+        str | list: Summary message if saved, otherwise the list of data dicts.
     """
     data = [obj.to_json() for obj in session.query(model).all()]
-    filepath = EXPORT_DIR / filename
-    with filepath.open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
-    return f"{filename} exported with {len(data)} records."
+    
+    if save:
+        EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+        filepath = EXPORT_DIR / filename
+        with filepath.open("w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+        return f"{filename} exported with {len(data)} records."
+    
+    return data
 
 
-def import_model_data(session, filename, from_json_func, **kwargs):
+def import_model_data(session, data, from_json_func, key, **kwargs):
     """
-    Imports model data from a JSON file and adds it to the SQLAlchemy session.
+    Imports model data from a given dictionary and adds it to the SQLAlchemy session.
 
     Parameters:
         session (Session): The SQLAlchemy session to use for adding objects.
-        filename (str): The name of the JSON file to import (must be in the import directory).
+        data (dict): A dictionary containing JSON lists for various models (like from a full export).
         from_json_func (Callable): A function that converts a JSON dict into a model instance.
+        key (str): The key in the `data` dict corresponding to this model's records.
         **kwargs: Additional keyword arguments passed to `from_json_func`.
 
     Returns:
         str: A summary string indicating how many records were successfully imported.
 
     Raises:
-        FileNotFoundError: If the specified file is not found in the import directory.
+        KeyError: If the specified key is not found in the `data` dict.
 
     Example:
-        >>> from app.models.building import Building
-        >>> from app import db
-        >>> import_model_data(db.session, "buildings.json", Building.from_json)
-        'buildings.json imported with 12 records.'
+        >>> import_model_data(db.session, full_data, Building.from_json, key="buildings")
+        'buildings imported with 12 records.'
     """
-    path = IMPORT_DIR / filename
-    if not path.exists():
-        raise FileNotFoundError(f"{filename} not found in import dir.")
+    if key not in data:
+        raise KeyError(f"Key '{key}' not found in provided data.")
 
-    with path.open(encoding="utf-8") as f:
-        data = json.load(f)
-
+    model_data = data[key]
     added = 0
-    for item in data:
+    for item in model_data:
         try:
             obj = from_json_func(item, **kwargs)
             session.add(obj)
@@ -88,4 +90,4 @@ def import_model_data(session, filename, from_json_func, **kwargs):
         except Exception as e:
             print(f"Skipped due to error: {e}")
     session.commit()
-    return f"{filename.name} imported with {added} records."
+    return f"{key} imported with {added} records."
