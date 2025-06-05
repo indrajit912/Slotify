@@ -4,7 +4,7 @@
 # Created On: May 11, 2025
 #
 import logging
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 from app.models.booking import Booking, TimeSlot
 from app.extensions import db
@@ -115,37 +115,50 @@ def cancel_booking(user_uuid: str, slot_uuid: str, day: date):
     """
     Cancels an existing booking using user and slot UUIDs.
 
-    Args:
-        user_uuid (str): UUID of the user.
-        slot_uuid (str): UUID of the time slot.
-        day (date): Date for which the booking is to be cancelled.
+    Raises:
+        Exception with descriptive message on errors.
 
     Returns:
-        bool: True if a booking was cancelled, False otherwise.
+        bool: True if booking was cancelled.
     """
     logger.info(f"Attempting to cancel booking: user_uuid={user_uuid}, slot_uuid={slot_uuid}, date={day}")
 
     user = get_user_by_uuid(user_uuid)
-    slot = get_time_slot_by_uuid(slot_uuid)
-
     if not user:
-        logger.error(f"User not found for UUID: {user_uuid}")
-        return False
+        msg = f"User not found for UUID: {user_uuid}"
+        logger.error(msg)
+        raise Exception(msg)
+
+    slot = get_time_slot_by_uuid(slot_uuid)
     if not slot:
-        logger.error(f"TimeSlot not found for UUID: {slot_uuid}")
-        return False
+        msg = f"TimeSlot not found for UUID: {slot_uuid}"
+        logger.error(msg)
+        raise Exception(msg)
+
+    now = datetime.now()
+
+    if day < now.date():
+        msg = f"Cannot cancel booking for past date: {day}"
+        logger.warning(msg)
+        raise Exception(msg)
+
+    if day == now.date() and now.time() >= slot.start_hour:
+        msg = f"Cannot cancel booking after slot start time ({slot.start_hour})"
+        logger.warning(msg)
+        raise Exception(msg)
 
     booking = Booking.query.filter_by(user_id=user.id, time_slot_id=slot.id, date=day).first()
 
-    if booking:
-        logger.info(f"Booking found (id={booking.id}), proceeding with cancellation.")
-        db.session.delete(booking)
-        db.session.commit()
-        logger.info(f"Booking (id={booking.id}) successfully cancelled.")
-        return True
-    else:
-        logger.warning(f"No booking found for user_id={user.id}, slot_id={slot.id}, date={day}. Nothing to cancel.")
-        return False
+    if not booking:
+        msg = f"No booking found to cancel for user_uuid={user_uuid}, slot_uuid={slot_uuid}, date={day}"
+        logger.warning(msg)
+        raise Exception(msg)
+
+    logger.info(f"Booking found (id={booking.id}), cancelling now.")
+    db.session.delete(booking)
+    db.session.commit()
+    logger.info(f"Booking (id={booking.id}) cancelled successfully.")
+    return True
 
 
 def get_user_bookings(user_uuid: str):

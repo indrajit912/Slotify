@@ -138,11 +138,11 @@ def cancel_slot_route():
     except ValueError:
         return jsonify({'success': False, 'message': 'Invalid date format.'}), 400
 
-    success = cancel_booking(user_uuid=current_user.uuid, slot_uuid=slot_uuid, day=date_obj)
-    if success:
+    try:
+        success = cancel_booking(user_uuid=current_user.uuid, slot_uuid=slot_uuid, day=date_obj)
         return jsonify({'success': True, 'message': 'Slot cancelled successfully.'})
-    else:
-        return jsonify({'success': False, 'message': 'You cannot cancel this slot.'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 
 @main_bp.route('/machine/calendar/qrcode', methods=['POST'])
