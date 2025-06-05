@@ -16,15 +16,17 @@ from app.utils.decorators import admin_only
 logger = logging.getLogger(__name__)
 
 @api_v1.route('/buildings/', methods=['GET'])
+@api_v1.route('/buildings/<building_uuid>', methods=['GET'])
 @admin_only
-def list_buildings(user_data):
+def list_buildings(user_data, building_uuid=None):
     """
     GET /api/v1/buildings/
+    GET /api/v1/buildings/<building_uuid>
 
-    List all buildings or a specific building by UUID.
+    List all buildings or get a specific building by UUID.
     Requires admin token.
 
-    Query Parameters:
+    Path Parameters:
         - building_uuid (optional): UUID of the building to retrieve.
 
     Response: 200 OK
@@ -45,8 +47,6 @@ def list_buildings(user_data):
             "error": "Building not found"
         }
     """
-    building_uuid = request.args.get("building_uuid")
-
     logger.info(f"[API] Admin {user_data['user_uuid']} requested buildings. "
                 f"building_uuid={building_uuid}")
 

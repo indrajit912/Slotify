@@ -175,7 +175,6 @@ def import_data(user_data):
         - The import will fail if any of the expected tables already contain data.
         - The temporary file is deleted after the operation (success or failure).
         - Only `.json` files are accepted.
-
     """
     user_uuid = user_data['user_uuid']
 

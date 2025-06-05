@@ -129,8 +129,6 @@ def update_user(user_data, user_uuid):
         logger.error(f"Unexpected error updating user UUID {user_uuid}: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
-from flask import request
-from sqlalchemy import or_
 
 @api_v1.route('/users/search', methods=['GET'])
 @admin_only

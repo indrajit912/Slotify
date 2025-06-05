@@ -15,7 +15,7 @@ main_bp = Blueprint(
     static_url_path="/main/static"
 )
 
-from app.main import routes
+from app.main import routes, api_docs_route
 
 @main_bp.app_errorhandler(404)
 def not_found_error(error):

@@ -13,8 +13,8 @@ api_v1 = Blueprint(
 )
 
 from app.api.v1 import (
-    db_management_routes, 
-    auth_routes, 
+    auth_api,
+    db_management_api, 
     building_api,
     user_api
 )

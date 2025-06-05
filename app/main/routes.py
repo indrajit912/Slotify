@@ -206,3 +206,4 @@ def dev_error(code):
         raise Exception("Simulated server error for 500 page test.")
     else:
         return f"Unsupported error code {code}. Try 401, 403, 404, 422, or 500."
+    
