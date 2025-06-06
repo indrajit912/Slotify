@@ -35,6 +35,11 @@ def create_app(config_class=get_config()):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Add cli commands
+    from manage import setup_database, create_superadmin
+    app.cli.add_command(setup_database)
+    app.cli.add_command(create_superadmin)
+
     # Configure logging
     configure_logging(app)
 

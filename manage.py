@@ -3,7 +3,6 @@
 # Created On: May 11, 2025
 #
 # Standard library imports
-import sys
 import getpass
 import os
 import logging
@@ -17,8 +16,8 @@ from flask.cli import with_appcontext
 # Local application imports
 from app import create_app
 from scripts.utils import sha256_hash
-from scripts import export_import
 from app.extensions import db
+from app.models.user import User
 from app.models.building import Building
 from app.models.course import Course
 from app.models.washingmachine import WashingMachine
@@ -36,33 +35,6 @@ def is_db_initialized():
     """
     inspector = inspect(db.engine)
     return bool(inspector.get_table_names())
-
-@cli.command("export-db")
-def export_db():
-    """Export the database and zip the JSON files."""
-    logging.info("Zipping database export...")
-    try:
-        path = export_import.export_all_zipped(db.session)
-        logging.info(f"✅ Zipped export at {path}")
-    except Exception as e:
-        logging.exception("❌ Export and zip failed.")
-
-@cli.command("import-db")
-@click.argument("zip_path")
-def import_db(zip_path):
-    """Import the database from a zipped set of JSON files."""
-    logging.info(f"Preparing to import database from {zip_path}...")
-
-    if not is_db_initialized():
-        logging.error("❌ The database is not initialized.")
-        print("Please run `python manage.py setup-db` to initialize the database before importing.")
-        sys.exit(1)
-
-    try:
-        export_import.import_all_zipped(db.session, zip_path)
-        logging.info("✅ Database import from zip successful.")
-    except Exception as e:
-        logging.exception("❌ Import from zip failed.")
 
 
 @cli.command("create-superadmin")
@@ -287,20 +259,6 @@ def setup_database(isi):
         click.echo("[*] Creating ISI specific data...")
         create_isi_specific_data()
         click.echo("[+] ISI specific data created successfully.")
-
-
-def help_command():
-    """
-    Command-line utility to display help information about available commands.
-
-    Usage:
-        python manage.py help
-
-    Returns:
-        None
-    """
-    print("Available commands:")
-    print("1. setup-db: Set up the database.")
 
 
 if __name__ == '__main__':
