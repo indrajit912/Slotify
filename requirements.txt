@@ -13,3 +13,4 @@ qrcode
 Pillow
 pytest
 pytest-flask
+pytz
