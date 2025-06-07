@@ -33,8 +33,8 @@ IST = pytz.timezone("Asia/Kolkata")
 UTC = pytz.utc
 
 cli = FlaskGroup(create_app=create_app)
+
 logger = logging.getLogger(__name__)
-bullet_unicode = '\u2022'
 
 def is_db_initialized():
     """
@@ -144,54 +144,59 @@ def deploy():
     # migrate database to latest revision
     upgrade()
 
+
 @cli.command("send-reminder-emails")
-@with_appcontext
 def send_reminder_emails():
     """Send reminder emails for upcoming bookings, based on user preferences."""
     now_utc = utcnow()
     users = User.query.options(joinedload(User.bookings)).all()
     reminders_sent = 0
 
+    logger.info(f"📬 Running reminder email job at UTC {now_utc.isoformat()} for {len(users)} users.")
+
     for user in users:
         if not user.is_email_reminder_on():
             continue
-        
+
+        logger.info(f"🔍 Checking bookings for user {user.username} ({user.uuid}).")
+
         for booking in user.get_upcoming_bookings():
-            # 1. localize booking time in IST
             naive_booking_dt = datetime.combine(booking.date, booking.time_slot.start_hour)
             ist_booking_dt = IST.localize(naive_booking_dt)
-
-            # 2. subtract reminder offset
             ist_reminder_dt = ist_booking_dt - timedelta(hours=user.email_reminder_hours)
-
-            # 3. convert to UTC
             reminder_dt_utc = ist_reminder_dt.astimezone(UTC)
 
-            # 4. compare time window (1 hour tolerance)
             if reminder_dt_utc <= now_utc < reminder_dt_utc + timedelta(minutes=60):
                 already_sent = ReminderLog.query.filter_by(
                     user_uuid=user.uuid,
                     booking_uuid=booking.uuid
                 ).first()
+
                 if already_sent:
+                    logger.info(f"🛑 Reminder already sent for booking {booking.uuid} to {user.username}. Skipping.")
                     continue
 
-                send_reminder_email(user, booking)
-
-                db.session.add(ReminderLog(user_uuid=user.uuid, booking_uuid=booking.uuid))
-                reminders_sent += 1
+                try:
+                    send_reminder_email(user, booking)
+                    db.session.add(ReminderLog(user_uuid=user.uuid, booking_uuid=booking.uuid))
+                    logger.info(f"✅ Reminder email sent to {user.username} for booking {booking.uuid}.")
+                    reminders_sent += 1
+                except Exception as e:
+                    logger.exception(f"❌ Failed to send reminder to {user.username} for booking {booking.uuid}: {e}")
+            else:
+                logger.debug(f"⏳ Booking {booking.uuid} is outside the reminder window.")
 
     db.session.commit()
+    logger.info(f"✅ Reminder email job complete. {reminders_sent} email(s) sent.")
     click.echo(f"✅ {reminders_sent} reminder email(s) sent.")
 
 
 def send_reminder_email(user, booking):
-    # --- 1. Prepare booking datetime in IST ---
+
     naive_booking_dt = datetime.combine(booking.date, booking.time_slot.start_hour)
     ist_booking_dt = IST.localize(naive_booking_dt)
     formatted_time = ist_booking_dt.strftime("%A, %d %B %Y at %I:%M %p")
 
-    # --- 2. Prepare email content ---
     subject = f"⏰ Reminder: Your Washing Machine Booking on {booking.date.strftime('%d %b')}"
 
     html_body = f"""
@@ -209,7 +214,6 @@ def send_reminder_email(user, booking):
     </html>
     """
 
-    # --- 3. Create and send email ---
     email = EmailMessage(
         sender_email_id=EmailConfig.MAIL_USERNAME,
         to=user.reminder_email,
@@ -218,12 +222,12 @@ def send_reminder_email(user, booking):
         formataddr_text="Slotify Bot"
     )
 
+    logger.debug(f"📧 Sending reminder email to {user.reminder_email} for booking {booking.uuid}.")
     email.send(
         sender_email_password=EmailConfig.MAIL_PASSWORD,
         server_info=EmailConfig.GMAIL_SERVER,
-        print_success_status=False  # Set to True to debug
+        print_success_status=False
     )
-
 
 if __name__ == '__main__':
     cli()
