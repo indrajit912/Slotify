@@ -120,7 +120,7 @@
     
     <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" id="emailReminderToggle"
-            {% if user.is_email_reminder_on() %}checked{% endif %} disabled> <!--TODO: remove this disabled-->
+            {% if user.is_email_reminder_on() %}checked{% endif %} disabled> <!--TODO: Remove disabled-->
         <label class="form-check-label" for="emailReminderToggle">
             {% if user.is_email_reminder_on() %}
                 Reminders are ON
@@ -128,7 +128,7 @@
                 Reminders are OFF
             {% endif %}
         </label>
-    </div>
+    </div>    
 
     {% if not user.is_email_reminder_on() %}
         <div id="reminderHelp" class="form-text text-muted mt-2">
@@ -155,6 +155,7 @@
             </button>
         </div>
     </div>
+
 </div>
 
 
@@ -352,86 +353,69 @@
 </script>
 
 <script>
-    const toggle = document.getElementById('emailReminderToggle');
-    const reminderFields = document.getElementById('reminderFields');
-    const saveButton = document.getElementById('saveReminderBtn');
-    const reminderHoursInput = document.getElementById('reminderHours');
-    const reminderEmailInput = document.getElementById('reminderEmail');
-    const toggleLabel = document.querySelector('label[for="emailReminderToggle"]');
-
-    toggle.addEventListener('change', function () {
-        if (this.checked) {
-            // Update label and show fields
-            toggleLabel.textContent = "Reminders are ON";
-            reminderFields.classList.remove('d-none');
-            if (reminderHelp) reminderHelp.style.display = 'none';
-
-            // Set default hour if empty
-            if (!reminderHoursInput.value || parseInt(reminderHoursInput.value) < 1) {
-                reminderHoursInput.value = 1;
-            }
-
-            // POST to enable
-            fetch('{{ url_for("auth.update_profile") }}', {
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkbox = document.getElementById('emailReminderToggle');
+        const updateProfileUrl = "{{ url_for('auth.update_profile') }}";
+    
+        checkbox.addEventListener('change', function () {
+            const isChecked = checkbox.checked;
+            const formData = new FormData();
+            formData.append('email_reminder_hours', isChecked ? '1' : '0');
+    
+            fetch(updateProfileUrl, {
                 method: 'POST',
+                body: formData,
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                },
-                body: new URLSearchParams({
-                    'email_reminder_hours': reminderHoursInput.value
-                })
+                    'X-CSRFToken': '{{ csrf_token() }}'  // only if CSRF is used!
+                }
             })
-            .catch(err => alert("Failed to enable reminder: " + err.message));
-        } else {
-            // Update label and hide fields
-            toggleLabel.textContent = "Reminders are OFF";
-            reminderFields.classList.add('d-none');
-            if (reminderHelp) reminderHelp.style.display = 'block';
-
-            // POST to disable
-            fetch('{{ url_for("auth.update_profile") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                },
-                body: new URLSearchParams({
-                    'email_reminder_hours': 0
-                })
+            .then(response => {
+                if (response.ok) {
+                    alert('Request successful');
+                    window.location.reload();
+                    console.log('Profile updated');
+                } else {
+                    console.error('Failed to update profile');
+                }
             })
-            .catch(err => alert("Failed to disable reminder: " + err.message));
-        }
+            .catch(error => console.error('Error:', error));
+        });
     });
+</script>    
 
-    saveButton.addEventListener('click', function () {
-        const hours = reminderHoursInput.value;
-        const email = reminderEmailInput.value;
-
-        if (!hours || parseInt(hours) < 1) {
-            alert("Please enter a valid number of hours (1 or more).");
-            return;
-        }
-
-        fetch('{{ url_for("auth.update_profile") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': '{{ csrf_token() }}'
-            },
-            body: new URLSearchParams({
-                'email_reminder_hours': hours,
-                'reminder_email': email
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const saveReminderBtn = document.getElementById('saveReminderBtn');
+    
+        saveReminderBtn.addEventListener('click', function (e) {
+            e.preventDefault();  // Prevent any default form submission
+    
+            const hours = document.getElementById('reminderHours').value;
+            const email = document.getElementById('reminderEmail').value;
+    
+            const formData = new FormData();
+            formData.append('email_reminder_hours', hours);
+            formData.append('reminder_email', email);
+    
+            fetch("{{ url_for('auth.update_profile') }}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'  // only if CSRF protection is enabled
+                }
             })
-        })
-        .then(res => {
-            if (!res.ok) throw new Error("Network error");
-            alert("Reminder settings saved.");
-        })
-        .catch(err => alert("Failed to save reminder settings: " + err.message));
+            .then(response => {
+                if (response.ok) {
+                    alert('Reminder settings saved successfully.');
+                    window.location.reload();
+                } else {
+                    console.error('Failed to update reminder settings');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
     });
 </script>
-
 
 
 {% endblock %}
