@@ -36,9 +36,10 @@ def create_app(config_class=get_config()):
     app.config.from_object(config_class)
 
     # Add cli commands
-    from manage import create_superadmin, deploy
+    from manage import create_superadmin, deploy, send_reminder_emails
     app.cli.add_command(deploy)
     app.cli.add_command(create_superadmin)
+    app.cli.add_command(send_reminder_emails)
 
     # Configure logging
     configure_logging(app)

@@ -45,6 +45,18 @@ class CurrentEnrolledStudent(db.Model):
             added_at=datetime.fromisoformat(data["added_at"]) if data.get("added_at") else utcnow()
         )
 
+class ReminderLog(db.Model):
+    __tablename__ = 'reminder_log'
+
+    id = db.Column(db.Integer, primary_key=True)
+    
+    user_uuid = db.Column(db.String(36), db.ForeignKey('user.uuid'), nullable=False)
+    booking_uuid = db.Column(db.String(36), db.ForeignKey('booking.uuid'), nullable=False)
+
+    sent_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+
+    __table_args__ = (db.UniqueConstraint('user_uuid', 'booking_uuid', name='uq_reminder_once'),)
+
 
 class User(db.Model, UserMixin):
     """
