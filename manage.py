@@ -12,22 +12,20 @@ import click
 from sqlalchemy import inspect
 from flask.cli import FlaskGroup
 from flask.cli import with_appcontext
+from flask_migrate import upgrade
 
 # Local application imports
 from app import create_app
 from scripts.utils import sha256_hash
 from app.extensions import db
-from app.models.user import User
 from app.models.building import Building
 from app.models.course import Course
-from app.models.washingmachine import WashingMachine
-from app.services import create_user, create_building, create_washing_machine, create_new_course
+from app.services import create_user, create_building
 from config import get_config
 
 cli = FlaskGroup(create_app=create_app)
 logger = logging.getLogger(__name__)
 bullet_unicode = '\u2022'
-app_config = get_config()
 
 def is_db_initialized():
     """
@@ -49,11 +47,11 @@ def create_superadmin():
     """
     if not is_db_initialized():
         click.echo("❌ Database is not initialized.")
-        click.echo("➡️  Please run 'python manage.py setup-db' first to initialize the database.")
+        click.echo("➡️  Please run 'flask deploy' first to initialize the database.")
         return
 
     secret_password = getpass.getpass(prompt="Enter the secret password (Indrajit's password): ")
-    stored_hash = os.getenv("SUPERADMIN_PASSWORD_HASH")
+    stored_hash = os.getenv("SUPERADMIN_CREATION_PASSWORD_HASH")
 
     if sha256_hash(secret_password) != stored_hash:
         click.echo("❌ Incorrect password. You are not authorized to create a superadmin.")
@@ -131,134 +129,11 @@ def create_superadmin():
         click.echo(f"❌ Error: {e}")
 
 
-def create_isi_specific_data():
-    """
-    Creates ISI-specific initial data:
-    - Buildings
-    - Washing Machines with default time slots for RSH
-    - Academic courses
-    """
-    logger.info("Creating ISI-specific initial data...")
-
-    # Create buildings
-    building_codes = {
-        "Research Scholars Hostel": "RSH",
-        "Hostel 1": "HOS-1",
-        "Hostel 2": "HOS-2",
-        "Quarter B": "QTR-B",
-        "Quarter C": "QTR-C",
-        "Quarter D": "QTR-D",
-    }
-
-    buildings = {}
-    for name, code in building_codes.items():
-        try:
-            b = create_building(name=name, code=code)
-            logger.info(f"Created building: {name} ({code})")
-        except ValueError:
-            b = Building.query.filter_by(code=code).first()
-            logger.warning(f"Building with code {code} already exists.")
-        buildings[code] = b
-
-    building = buildings["RSH"]
-
-    # Default time slots for RSH washing machines
-    default_time_slots = [
-        {"slot_number": 1, "time_range": "07:00-10:30"},
-        {"slot_number": 2, "time_range": "11:30-15:00"},
-        {"slot_number": 3, "time_range": "16:00-19:30"},
-        {"slot_number": 4, "time_range": "20:30-00:00"}
-    ]
-
-    def create_machine_if_not_exists(name, code):
-        if not WashingMachine.query.filter_by(code=code).first():
-            new_machine = create_washing_machine(
-                name=name,
-                code=code,
-                building_uuid=building.uuid,
-                time_slots=default_time_slots
-            )
-            logger.info(f"Washing machine '{name}' created at RSH.")
-            print(f"Washing machine '{name}' created at RSH.")
-        else:
-            logger.warning(f"Washing machine '{code}' already exists.")
-            print(f"Washing machine '{code}' already exists.")
-
-    # Create three washing machines in RSH
-    create_machine_if_not_exists("BOSCH Front Loaded Machine", "RSH-BOSCH-1")
-    create_machine_if_not_exists("Samsung Top Loaded Machine Black", "RSH-SAM-1")
-    create_machine_if_not_exists("Whirlpool Top Loaded Machine", "RSH-WHRPL-1")
-
-    # Create courses
-    course_data = [
-        ("PHD-MATH", "Doctor of Philosophy in Mathematics", "PhD", "Stat-Math Unit", "PhD Math", 5, "Doctoral programme in pure mathematics"),
-        ("PHD-LIS", "Doctor of Philosophy in Library Science", "PhD", "Documentation Research And Training Centre", "PhD Library Sc.", 5, "Doctoral programme in Library Science"),
-        ("PHD-AS", "Doctor of Philosophy in Applied Statistics", "PhD", "Applied Statistics Unit", "PhD Applied Stat", 5, "Doctoral programme in Applied Statistics"),
-        ("PHD-CS", "Doctor of Philosophy in Computer Science", "PhD", "System Science and Informatics Unit", "PhD Computer Sc", 5, "Doctoral programme in Computer Science"),
-        ("PHD-PHYS", "Doctor of Philosophy in Physics", "PhD", "System Science and Informatics Unit", "PhD Physics", 5, "Doctoral programme in Physics"),
-        ("PHD-ECA", "Doctor of Philosophy in Economics", "PhD", "Economic Analysis Unit", "PhD Economics", 5, "Doctoral programme in Economics"),
-        ("MS-QMS", "Master of Science in Quality Management Science", "PG", "Statistical Quality Control & Operations Research Unit", "MSc Quality Management Sc", 1, ""),
-        ("MS-LIS", "Master of Science in Library & Information Science", "PG", "Documentation Research And Training Centre", "MSc Library Sc", 2, ""),
-        ("BMATH", "Bachelor of Mathematics (Hons.)", "UG", "Stat-Math Unit", "B-Math", 3, ""),
-        ("MMATH", "Master of Mathematics", "PG", "Stat-Math Unit", "M-Math", 2, ""),
-        ("BSDS", "Bachelor of Statistical Data Science (Hons.)", "UG", "Stat-Math Unit", "B-SDS", 4, "")
-    ]
-
-    for code, name, level, dept, short_name, duration, desc in course_data:
-        try:
-            create_new_course(code=code, name=name, level=level, department=dept,
-                              short_name=short_name, duration_years=duration, description=desc)
-            logger.info(f"Course created: {code} - {name}")
-            print(f"Course created: {code} - {name}")
-        except ValueError:
-            logger.warning(f"Course with code {code} already exists.")
-            print(f"Course with code {code} already exists.")
-
-    logger.info("ISI-specific data initialization complete.")
-    print("ISI-specific data initialization complete.")
-
-
-@cli.command("setup-db")
-@click.option('--isi', is_flag=True, default=False, help="Create ISI specific data after setup")
-@with_appcontext
-def setup_database(isi):
-    """
-    Command-line utility to set up the database.
-
-    This command checks whether the database has already been initialized
-    using is_db_initialized(). If it has, the user is prompted whether to
-    delete and recreate it from scratch.
-
-    Usage:
-        python manage.py setup-db [--isi]
-
-    Args:
-        isi (bool): If True, create ISI specific data after database setup.
-
-    Returns:
-        None
-    """
-    db_path = app_config.SQLALCHEMY_DATABASE_URI.replace("sqlite:///", "")
-
-    if is_db_initialized():
-        click.echo("[!] Database appears to already be initialized.")
-        if not click.confirm("Do you want to delete the existing database and start fresh?"):
-            click.echo("Aborted. Database remains unchanged.")
-            return
-        os.remove(db_path)
-        click.echo("[-] Existing database deleted.")
-
-    db.create_all()
-    click.echo("[-] Database tables created successfully.")
-
-    if not app_config.APP_DATA_DIR.exists():
-        app_config.APP_DATA_DIR.mkdir(parents=True, exist_ok=True)
-        click.echo("[-] '/app_data' directory created successfully.")
-
-    if isi:
-        click.echo("[*] Creating ISI specific data...")
-        create_isi_specific_data()
-        click.echo("[+] ISI specific data created successfully.")
+@cli.command("deploy")
+def deploy():
+    """Run deployment tasks."""  
+    # migrate database to latest revision
+    upgrade()
 
 
 if __name__ == '__main__':

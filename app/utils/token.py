@@ -67,10 +67,6 @@ def generate_api_token(user_uuid, expires_in_days=1):
     s = URLSafeSerializer(current_app.config['SECRET_KEY'])
     payload = {
         'user_uuid': str(user.uuid),
-        'role': user.role,
-        'is_admin': user.is_admin(),
-        'is_superadmin': user.is_superadmin(),
-        'is_guest': user.is_guest(),
         'iat': utcnow().timestamp(),
         'exp': utcnow().timestamp() + expires_in_days * 86400
     }
@@ -83,6 +79,15 @@ def verify_api_token(token):
         exp = data.get('exp')
         if exp and utcnow().timestamp() > exp:
             return None
+        # Get the user_uuid from the data
+        user_uuid = data.get('user_uuid')
+
+        # Get the user
+        user = get_user_by_uuid(uuid_str=user_uuid)
+        data['is_admin'] = user.is_admin()
+        data['is_superadmin'] = user.is_superadmin()
+        data['is_guest'] = user.is_guest()
+        data['role'] = user.role
         return data
     except Exception:
         return None

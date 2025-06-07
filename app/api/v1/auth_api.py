@@ -32,20 +32,18 @@ def register(user_data):
             Authorization: Bearer <admin_token>
         JSON Body:
             {
-                "username": "johndoe",
-                "first_name": "John",
-                "middle_name": "K",             # Optional
-                "last_name": "Doe",             # Optional
-                "email": "john@example.com",
-                "password": "secure_password",
-                "building_uuid": "<uuid>",
-                "role": "user",              # Optional (e.g., "user", "guest", "admin")
-                "contact_no": "9876543210",     # Optional
-                "room_no": "B102",              # Optional
-                "course_uuid": "<uuid>",        # Optional
-                "email_verified": false,        # Optional (default false)
-                "departure_date": "2025-07-31", # Optional (for guests)
-                "host_name": "Prof. Smith"      # Optional (for guests)
+                "building_uuid": "9311cd692a3b4525be87252144cea33d",
+                "contact_no": "",
+                "course_uuid": "",
+                "email": "hello@isibang.ac.in",
+                "email_verified": true,
+                "first_name": "Rockstar",
+                "last_name": "",
+                "middle_name": "",
+                "password": "test@123",
+                "room_no": "RG 6",
+                "username": "rocking",
+                "role": "guest"
             }
 
     Response (Success - 201 Created):
@@ -81,13 +79,18 @@ def register(user_data):
 
     admin = get_user_by_uuid(user_data['user_uuid'])
     if not admin:
-        logger.warning("[API] Admin user not found")
-        return jsonify({'error': 'Admin not found'}), 403
+        logger.warning("[API] Admin user not found or unauthorized access attempt")
+        return jsonify({'error': 'Only admins are authorized to perform this action'}), 403
 
     data = request.get_json()
     if not data:
         logger.warning("[API] Invalid JSON in request")
         return jsonify({'error': 'Invalid JSON'}), 400
+    
+    # 🛡️ Check for superadmin role in request
+    if data.get('role') == 'superadmin' and not admin.is_superadmin():
+        logger.warning("[API] Non-superadmin attempted to create a superadmin user")
+        return jsonify({'error': 'Only superadmins can create another superadmin'}), 403
 
     try:
         new_user = create_user(**data)

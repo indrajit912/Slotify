@@ -112,6 +112,14 @@ def update_user(user_data, user_uuid):
     if not data:
         logger.warning(f"Empty JSON payload in update request for user UUID: {user_uuid}")
         return jsonify({"error": "Invalid JSON payload"}), 400
+    
+    # Identify the user making this API call
+    caller = get_user_by_uuid(user_data['user_uuid'])
+
+    # Check for superadmin role in request
+    if data.get('role') == 'superadmin' and not caller.is_superadmin():
+        logger.warning("[API] Non-superadmin attempted to create a superadmin user")
+        return jsonify({'error': 'Only superadmins can make another superadmin'}), 403
 
     try:
         user = update_user_by_uuid(user_uuid, **data)
