@@ -55,6 +55,7 @@ def create_app(config_class=get_config()):
     # Configure logging
     configure_logging(app)
 
+    # TODO: This feature is not working in pythonanywhere free of cost.
     # Initialize scheduler
     # from app.scheduler import init_scheduler
     # init_scheduler(app)
