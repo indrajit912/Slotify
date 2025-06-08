@@ -9,7 +9,6 @@ from datetime import datetime
 import pytz
 
 from app.extensions import db
-from scripts.utils import utcnow
 
 IST = pytz.timezone("Asia/Kolkata")
 UTC = pytz.utc

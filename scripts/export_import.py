@@ -8,10 +8,10 @@ from datetime import datetime
 
 from app.models.building import Building
 from app.models.course import Course
-from app.models.user import User, CurrentEnrolledStudent
+from app.models.user import User, CurrentEnrolledStudent, ReminderLog
 from app.models.washingmachine import WashingMachine
 from app.models.booking import Booking, TimeSlot
-from app.utils.data_io import export_model_data, import_model_data, EXPORT_DIR, IMPORT_DIR
+from app.utils.data_io import export_model_data, import_model_data, EXPORT_DIR
 
 def export_all_json(session, save: bool = False):
     """
@@ -27,6 +27,7 @@ def export_all_json(session, save: bool = False):
     data = {
         "buildings": export_model_data(session, Building, "buildings.json", save=False),
         "courses": export_model_data(session, Course, "courses.json", save=False),
+        "reminder_logs": export_model_data(session, ReminderLog, "reminder_logs.json", save=False),
         "current_enrolled_students": export_model_data(session, CurrentEnrolledStudent, "current_enrolled_students.json", save=False),
         "users": export_model_data(session, User, "users.json", save=False),
         "machines": export_model_data(session, WashingMachine, "machines.json", save=False),
@@ -67,6 +68,8 @@ def import_all_json(session, json_file_path):
         data = json.load(f)
 
     print(import_model_data(session, data, CurrentEnrolledStudent.from_json, key="current_enrolled_students"))
+
+    print(import_model_data(session, data, ReminderLog.from_json, key="reminder_logs"))
 
     print(import_model_data(session, data, Building.from_json, key="buildings"))
     building_lookup = {b.uuid: b for b in Building.query.all()}
