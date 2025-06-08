@@ -13,4 +13,4 @@ admin_bp = Blueprint(
     url_prefix='/admin'
 )
 
-from app.admin import routes
+from app.admin import routes, scheduler_routes

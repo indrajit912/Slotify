@@ -15,12 +15,8 @@ def init_scheduler(app):
     def scheduled_reminder_job():
         with app.app_context():
             send_reminder_emails()
-
     scheduler.start()
 
 def shutdown_scheduler():
     """Shut down the scheduler cleanly."""
-    try:
-        scheduler.shutdown()
-    except:
-        pass
+    scheduler.shutdown()

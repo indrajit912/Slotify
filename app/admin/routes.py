@@ -5,7 +5,6 @@
 # Standard library imports
 import logging
 from datetime import datetime, timedelta
-from pathlib import Path
 
 # Third-party imports
 from flask import flash, redirect, render_template, request, url_for, current_app, jsonify, abort
@@ -18,6 +17,7 @@ from app.models.user import User, CurrentEnrolledStudent
 from app.models.washingmachine import WashingMachine
 from app.models.building import Building
 from app.models.course import Course
+from app.scheduler import scheduler
 from app.utils.decorators import admin_required
 from app.utils.student_parser import parse_enrolled_students
 from app.utils.image_utils import save_machine_image
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 @admin_required
 def home():
     logger.info(f"Admin dashboard visited by the admin '{current_user.first_name} <{current_user.username}>'.")
-    return render_template('admin.html', admin=current_user)
+    return render_template('admin.html', admin=current_user, scheduler_running=scheduler.running)
 
 
 @admin_bp.route('/admins')
