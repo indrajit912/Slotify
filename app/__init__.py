@@ -5,11 +5,11 @@
 
 # Standard library imports
 import logging
-from logging.handlers import RotatingFileHandler
 
 # Third-party imports
 from flask import Flask, render_template
 from flask_wtf.csrf import generate_csrf
+from logging.handlers import RotatingFileHandler
 
 # Local application imports
 from config import get_config, LOG_FILE, SCHEDULER_LOG_FILE
@@ -55,16 +55,10 @@ def create_app(config_class=get_config()):
     # Configure logging
     configure_logging(app)
 
-    # TODO: This feature is not working in pythonanywhere free of cost.
-    # Initialize scheduler
-    # from app.scheduler import init_scheduler
-    # init_scheduler(app)
-
     # Add cli commands
     from manage import create_superadmin, deploy
     app.cli.add_command(deploy)
     app.cli.add_command(create_superadmin)
-
 
     # Initialize extensions
     db.init_app(app)
