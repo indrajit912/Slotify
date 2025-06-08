@@ -49,6 +49,7 @@ class ReminderLog(db.Model):
     __tablename__ = 'reminder_log'
 
     id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String(36), unique=True, nullable=False, default=lambda: uuid.uuid4().hex)
     
     user_uuid = db.Column(db.String(36), db.ForeignKey('user.uuid'), nullable=False)
     booking_uuid = db.Column(db.String(36), db.ForeignKey('booking.uuid'), nullable=False)
@@ -56,6 +57,24 @@ class ReminderLog(db.Model):
     sent_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
     __table_args__ = (db.UniqueConstraint('user_uuid', 'booking_uuid', name='uq_reminder_once'),)
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'uuid': self.uuid,
+            'user_uuid': self.user_uuid,
+            'booking_uuid': self.booking_uuid,
+            'sent_at': self.sent_at.isoformat() if self.sent_at else None
+        }
+
+    @classmethod
+    def from_json(cls, data):
+        return cls(
+            uuid=data.get('uuid', str(uuid.uuid4())),
+            user_uuid=data['user_uuid'],
+            booking_uuid=data['booking_uuid'],
+            sent_at=datetime.fromisoformat(data['sent_at']) if data.get('sent_at') else utcnow()
+        )
 
 
 class User(db.Model, UserMixin):
