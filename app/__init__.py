@@ -56,8 +56,8 @@ def create_app(config_class=get_config()):
     configure_logging(app)
 
     # Initialize scheduler
-    from app.scheduler import init_scheduler
-    init_scheduler(app)
+    # from app.scheduler import init_scheduler
+    # init_scheduler(app)
 
     # Add cli commands
     from manage import create_superadmin, deploy
