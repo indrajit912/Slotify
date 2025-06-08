@@ -496,32 +496,52 @@ def search_users_page():
     )
     return render_template('search_users.html', users=users)
 
-@admin_bp.route('/logs/view')
+@admin_bp.route('/logs/view/<log_type>')
 @admin_required
-def view_logs():
-    log_path: Path = current_app.config['LOG_FILE']
+def view_logs(log_type):
+    log_path = _get_log_path(log_type)
 
     try:
         log_content = log_path.read_text()
-        return render_template('view_logs.html', log_content=log_content)
+        file_size = log_path.stat().st_size  # Size in bytes
+        last_modified = datetime.fromtimestamp(log_path.stat().st_mtime)
+        num_lines = log_content.count('\n')
+
+        return render_template(
+            'view_logs.html',
+            log_content=log_content,
+            log_type=log_type,
+            file_size=file_size,
+            last_modified=last_modified,
+            num_lines=num_lines
+        )
     except Exception as e:
-        current_app.logger.error(f"Failed to read log file: {e}")
-        abort(500, description="Could not read the log file.")
+        current_app.logger.error(f"Failed to read {log_type} log file: {e}")
+        abort(500, description=f"Could not read the {log_type} log file.")
 
 
-@admin_bp.route('/logs/clear', methods=['POST'])
+@admin_bp.route('/logs/clear/<log_type>', methods=['POST'])
 @admin_required
-def clear_logs():
-    log_path: Path = current_app.config['LOG_FILE']
+def clear_logs(log_type):
+    log_path = _get_log_path(log_type)
 
     try:
-        log_path.write_text("")  # Truncate log
-        flash("Logs have been cleared.", "success")
+        log_path.write_text("")
+        flash(f"{log_type.capitalize()} logs have been cleared.", "success")
     except Exception as e:
-        current_app.logger.error(f"Failed to clear log file: {e}")
-        flash("Failed to clear logs.", "danger")
+        current_app.logger.error(f"Failed to clear {log_type} log file: {e}")
+        flash(f"Failed to clear {log_type} logs.", "danger")
 
-    return redirect(url_for('admin.view_logs'))
+    return redirect(url_for('admin.view_logs', log_type=log_type))
+
+
+def _get_log_path(log_type: str):
+    if log_type == 'app':
+        return current_app.config['LOG_FILE']
+    elif log_type == 'scheduler':
+        return current_app.config['SCHEDULER_LOG_FILE']
+    else:
+        abort(400, description="Invalid log type requested.")
 
 @admin_bp.route('/tokens/<user_uuid>', methods=['GET'])
 @admin_required

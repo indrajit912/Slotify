@@ -5,21 +5,38 @@
 
 # Standard library imports
 import logging
+from logging.handlers import RotatingFileHandler
 
 # Third-party imports
 from flask import Flask, render_template
 from flask_wtf.csrf import generate_csrf
 
 # Local application imports
-from config import get_config, LOG_FILE
+from config import get_config, LOG_FILE, SCHEDULER_LOG_FILE
 from .extensions import db, migrate, moment, login_manager, csrf
 
 def configure_logging(app:Flask):
+    # --- Main application logger ---
     logging.basicConfig(
         format='[%(asctime)s] %(levelname)s %(name)s: %(message)s',
         filename=str(LOG_FILE),
         datefmt='%d-%b-%Y %I:%M:%S %p'
     )
+
+    # --- APScheduler logger ---
+    aplogger = logging.getLogger('apscheduler')
+    aplogger.propagate = False
+    aphandler = logging.FileHandler(str(SCHEDULER_LOG_FILE))
+    aphandler = RotatingFileHandler(
+        filename=str(SCHEDULER_LOG_FILE),
+        maxBytes=1_000_000,  # 1 MB
+        backupCount=5        # Keep last 5 log files
+    )
+    aphandler.setFormatter(logging.Formatter(
+        fmt='[%(asctime)s] %(levelname)s %(name)s: %(message)s',
+        datefmt='%d-%b-%Y %I:%M:%S %p'
+    ))
+    aplogger.addHandler(aphandler)
 
     if app.debug:
         logging.getLogger().setLevel(logging.DEBUG)
@@ -48,7 +65,7 @@ def create_app(config_class=get_config()):
     app.cli.add_command(create_superadmin)
 
 
-     # Initialize extensions
+    # Initialize extensions
     db.init_app(app)
     csrf.init_app(app)
     migrate.init_app(app, db)

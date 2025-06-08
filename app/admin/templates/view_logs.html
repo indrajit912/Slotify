@@ -6,16 +6,25 @@
 
 <div class="container mt-5">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">
-      <i class="bi bi-terminal me-2 text-primary"></i>Application Logs
-    </h2>
+    <div>
+      <h2 class="mb-0">
+        <i class="bi bi-terminal me-2 text-primary"></i>Application Logs: 
+        <code>{{ log_type }}</code>
+      </h2>
+      <small class="text-muted">
+        Last Modified: {{ last_modified.strftime('%d-%b-%Y %I:%M:%S %p') }} · 
+        Size: {{ (file_size / 1024)|round(2) }} KB · 
+        Lines: {{ num_lines }}
+      </small>
+    </div>
     <a href="{{ url_for('admin.home') }}" class="btn btn-outline-secondary">
       <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
     </a>
   </div>
-
+  
+  
   <div class="mb-3">
-    <form method="POST" action="{{ url_for('admin.clear_logs') }}" class="d-inline">
+    <form method="POST" action="{{ url_for('admin.clear_logs', log_type=log_type) }}" class="d-inline">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to clear all logs?');">
         <i class="bi bi-trash-fill me-1"></i> Clear Logs

@@ -15,8 +15,7 @@ from scripts.email_message import EmailMessage
 from config import EmailConfig
 from scripts.utils import utcnow
 
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger('apscheduler')
 
 IST = pytz.timezone("Asia/Kolkata")
 UTC = pytz.utc

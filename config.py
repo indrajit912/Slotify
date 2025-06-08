@@ -30,7 +30,9 @@ class Config:
 
     BASE_DIR = Path(__name__).parent.absolute()
     APP_DATA_DIR = BASE_DIR / "app_data"
-    LOG_FILE = BASE_DIR / f'{FLASK_APP_NAME.lower()}.log'
+    LOG_DIR = BASE_DIR / "logs"
+    LOG_FILE = LOG_DIR / f'{FLASK_APP_NAME.lower()}.log'
+    SCHEDULER_LOG_FILE = LOG_DIR / "scheduler.log"
 
     UPLOAD_DIR = BASE_DIR / "app" / "main" / "static" / "uploads" / "machines"
     ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
@@ -68,5 +70,8 @@ def get_config():
     else:
         return DevelopmentConfig()
     
-
 LOG_FILE = Config.LOG_FILE
+SCHEDULER_LOG_FILE = Config.SCHEDULER_LOG_FILE
+
+LOG_DIR = Config.LOG_DIR
+LOG_DIR.mkdir(exist_ok=True) 
