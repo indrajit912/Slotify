@@ -22,6 +22,7 @@ from .booking_service import *
 from .washing_machine_service import *
 from .building_service import *
 from .course_service import *
+from .email_reminder_service import *
 
 __all__ = [
     "create_user",
@@ -51,5 +52,6 @@ __all__ = [
     "update_building_by_uuid",
     "create_new_enrolled_student",
     "update_enrolled_student",
-    "delete_enrolled_students"
+    "delete_enrolled_students",
+    "send_reminder_emails"
 ]

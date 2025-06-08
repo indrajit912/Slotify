@@ -35,14 +35,18 @@ def create_app(config_class=get_config()):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Add cli commands
-    from manage import create_superadmin, deploy, send_reminder_emails
-    app.cli.add_command(deploy)
-    app.cli.add_command(create_superadmin)
-    app.cli.add_command(send_reminder_emails)
-
     # Configure logging
     configure_logging(app)
+
+    # Initialize scheduler
+    from app.scheduler import init_scheduler
+    init_scheduler(app)
+
+    # Add cli commands
+    from manage import create_superadmin, deploy
+    app.cli.add_command(deploy)
+    app.cli.add_command(create_superadmin)
+
 
      # Initialize extensions
     db.init_app(app)
