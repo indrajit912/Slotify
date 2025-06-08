@@ -14,4 +14,3 @@ Pillow
 pytest
 pytest-flask
 pytz
-APScheduler
