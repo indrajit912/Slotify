@@ -221,14 +221,14 @@ def get_user_by_username(username):
     return user
 
 
-def update_user_by_uuid(user_uuid, **kwargs):
+def update_user_by_uuid(user_uuid, acting_user=None, **kwargs):
     """
     Updates fields of an existing user using UUID.
 
     Args:
         user_uuid (str): The UUID of the user to update.
         **kwargs: Fields to update (e.g., first_name, middle_name, last_name, email, password, role,
-                  username, course_uuid, building_uuid, contact_no, room_no, email_verified).
+                  username, course_uuid, building_uuid, contact_no, room_no, email_verified, is_blocked).
 
     Returns:
         User: The updated user object.
@@ -262,6 +262,18 @@ def update_user_by_uuid(user_uuid, **kwargs):
         new_val = kwargs['email_verified']
         user.email_verified = new_val
         logger.info(f"{user.username}'s email_verified updated to '{new_val}'.")
+
+    if 'is_blocked' in kwargs:
+        new_val = kwargs['is_blocked']
+    if user.is_superadmin():
+        if acting_user is None:
+            logger.warning(f"Attempted to block a superadmin {user.username} without acting_user context.")
+            raise ValueError("Cannot block a superadmin without acting_user context.")
+        if not acting_user.is_superadmin():
+            logger.warning(f"Unauthorized attempt by {acting_user.username} to block superadmin {user.username}.")
+            raise ValueError("Only a superadmin can block/unblock another superadmin.")
+    user.is_blocked = new_val
+    logger.info(f"{user.username}'s is_blocked updated to '{new_val}'.")
 
     if 'reminder_email' in kwargs:
         new_val = kwargs['reminder_email']

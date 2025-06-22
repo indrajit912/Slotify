@@ -51,7 +51,10 @@ def login():
 
         if user:
             if user.check_password(form.passwd.data):
-                if not user.email_verified:
+                if user.is_blocked:  # Blocked user check
+                    flash("Your account has been blocked. Please contact admins.", "error")
+                    logger.warning(f"Blocked user '{user.email}' attempted to log in.")
+                elif not user.email_verified:
                     flash("Please verify your email address first.", "warning")
                     show_verify_link = True
                     email_for_verification = user.email
@@ -75,6 +78,7 @@ def login():
         show_verify_link=show_verify_link,
         email_for_verification=email_for_verification
     )
+
 
 @auth_bp.route('/request-email-verification', methods=['POST'])
 def request_email_verification():

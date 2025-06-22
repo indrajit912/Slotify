@@ -122,6 +122,8 @@ class User(db.Model, UserMixin):
     course_id = db.Column(db.Integer, db.ForeignKey("course.id"))
     course = db.relationship('Course', back_populates='users', lazy=True)
 
+    is_blocked = db.Column(db.Boolean, default=False, nullable=False)
+
     def __repr__(self):
         """Representation of the User object."""
         return f"User(username={self.username}, email={self.email}, date_joined={self.date_joined})"
@@ -278,7 +280,8 @@ class User(db.Model, UserMixin):
             "departure_date": self.departure_date.isoformat() if self.departure_date else None,
             "host_name": self.host_name,
             "email_reminder_hours": self.email_reminder_hours,
-            "reminder_email": self.reminder_email
+            "reminder_email": self.reminder_email,
+            "is_blocked": self.is_blocked
         }
     
     @classmethod
@@ -341,7 +344,8 @@ class User(db.Model, UserMixin):
             departure_date=parse_dt("departure_date"),
             host_name=data.get("host_name"),
             email_reminder_hours=data.get("email_reminder_hours", 0),
-            reminder_email=data.get("reminder_email")
+            reminder_email=data.get("reminder_email"),
+            is_blocked=data.get("is_blocked", False)
         )
 
     

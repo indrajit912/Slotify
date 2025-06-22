@@ -122,7 +122,7 @@ def update_user(user_data, user_uuid):
         return jsonify({'error': 'Only superadmins can make another superadmin'}), 403
 
     try:
-        user = update_user_by_uuid(user_uuid, **data)
+        user = update_user_by_uuid(user_uuid, acting_user=caller, **data)
         logger.info(f"User UUID {user_uuid} updated by admin {user_data['user_uuid']}")
         return jsonify({
             "message": "User updated successfully",
