@@ -265,15 +265,15 @@ def update_user_by_uuid(user_uuid, acting_user=None, **kwargs):
 
     if 'is_blocked' in kwargs:
         new_val = kwargs['is_blocked']
-    if user.is_superadmin():
-        if acting_user is None:
-            logger.warning(f"Attempted to block a superadmin {user.username} without acting_user context.")
-            raise ValueError("Cannot block a superadmin without acting_user context.")
-        if not acting_user.is_superadmin():
-            logger.warning(f"Unauthorized attempt by {acting_user.username} to block superadmin {user.username}.")
-            raise ValueError("Only a superadmin can block/unblock another superadmin.")
-    user.is_blocked = new_val
-    logger.info(f"{user.username}'s is_blocked updated to '{new_val}'.")
+        if user.is_superadmin():
+            if acting_user is None:
+                logger.warning(f"Attempted to block a superadmin {user.username} without acting_user context.")
+                raise ValueError("Cannot block a superadmin without acting_user context.")
+            if not acting_user.is_superadmin():
+                logger.warning(f"Unauthorized attempt by {acting_user.username} to block superadmin {user.username}.")
+                raise ValueError("Only a superadmin can block/unblock another superadmin.")
+        user.is_blocked = new_val
+        logger.info(f"{user.username}'s is_blocked updated to '{new_val}'.")
 
     if 'reminder_email' in kwargs:
         new_val = kwargs['reminder_email']
@@ -303,7 +303,17 @@ def update_user_by_uuid(user_uuid, acting_user=None, **kwargs):
             user.last_name = kwargs['last_name']
 
     if 'role' in kwargs:
-        user.role = kwargs['role']
+        new_role = kwargs['role']
+        if user.is_superadmin():
+            if acting_user is None:
+                logger.warning(f"Attempted to change role of superadmin {user.username} without acting_user context.")
+                raise ValueError("Cannot change role of a superadmin without acting_user context.")
+            if not acting_user.is_superadmin():
+                logger.warning(f"Unauthorized attempt by {acting_user.username} to change role of superadmin {user.username}.")
+                raise ValueError("Only a superadmin can change the role of another superadmin.")
+        user.role = new_role
+        logger.info(f"{user.username}'s role updated to '{new_role}'.")
+
 
     if 'password' in kwargs:
         user.set_hashed_password(kwargs['password'])

@@ -239,7 +239,7 @@ def make_admin(user_uuid):
         flash(f'{user.username} is already an admin.', 'info')
         logger.info(f"[{current_admin.username}] attempted to make {user.username} an admin, but they already are.")
     else:
-        update_user_by_uuid(user_uuid, role='admin')
+        update_user_by_uuid(user_uuid, acting_user=current_admin, role='admin')
         flash(f'Admin privileges granted to {user.username}.', 'success')
         logger.info(f"[{current_admin.username}] granted admin privileges to {user.username}.")
 
@@ -262,7 +262,7 @@ def revoke_admin(user_uuid):
         flash(f'{user.username} is not an admin.', 'info')
         logger.info(f"[{current_admin.username}] attempted to revoke admin from {user.username}, who is not an admin.")
     else:
-        update_user_by_uuid(user_uuid, role='user')
+        update_user_by_uuid(user_uuid, acting_user=current_admin, role='user')
         flash(f'Admin privileges revoked from {user.username}.', 'success')
         logger.info(f"[{current_admin.username}] revoked admin privileges from {user.username}.")
 
@@ -286,7 +286,7 @@ def update_user(user_uuid):
     form_data = request.form.to_dict()
 
     try:
-        update_user_by_uuid(user_uuid, **form_data)
+        update_user_by_uuid(user_uuid, acting_user=current_user, **form_data)
         logger.info(f"User '{user.username}' (UUID: {user_uuid}) updated by '{current_user.username}'")
         flash(f"User '{user.username}' has been updated successfully.", "success")
     except ValueError as ve:
