@@ -117,7 +117,7 @@ class User(db.Model, UserMixin):
     building_id = db.Column(db.Integer, db.ForeignKey('building.id'), nullable=False)
     building = db.relationship("Building", back_populates="users")
 
-    bookings = db.relationship("Booking", back_populates="user")
+    bookings = db.relationship("Booking", back_populates="user", cascade="all, delete-orphan")
 
     course_id = db.Column(db.Integer, db.ForeignKey("course.id"))
     course = db.relationship('Course', back_populates='users', lazy=True)

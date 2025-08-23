@@ -72,7 +72,7 @@ class Booking(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(36), unique=True, nullable=False, default=lambda: uuid.uuid4().hex)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"), nullable=False)
     time_slot_id = db.Column(db.Integer, db.ForeignKey('timeslot.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
 
