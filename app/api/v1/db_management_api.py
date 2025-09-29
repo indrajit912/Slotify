@@ -113,9 +113,13 @@ def export_data(user_data):
         return jsonify({'error': str(e)}), 500
 
 
+# TODO: Implement a securitly mechanism to restrict access to this endpoint.
+# For example, give one password to the admin and save its hash in an env variable.
+# The admin can then provide this password in the request header to authenticate.
+# This is crucial since importing can overwrite existing data.
+# Without proper security, this endpoint could be exploited to corrupt or delete data.
 @api_v1.route('/import', methods=['POST'])
-@admin_only
-def import_data(user_data):
+def import_data():
     """
     Import database data from a provided JSON file.
 
@@ -136,9 +140,6 @@ def import_data(user_data):
         2. If data already exists and you want a clean reset:
             flask db downgrade base
             flask db upgrade
-
-    🔐 Authentication:
-        Requires a valid Bearer token in the Authorization header.
 
     📥 Request:
         Method: POST
@@ -167,7 +168,6 @@ def import_data(user_data):
 
     🧪 Example (cURL):
         curl -X POST \\
-             -H "Authorization: Bearer <token>" \\
              -F "file=@slotify_export.json" \\
              https://slotify.pythonanywhere.com/api/import
 
@@ -176,7 +176,6 @@ def import_data(user_data):
         - The temporary file is deleted after the operation (success or failure).
         - Only `.json` files are accepted.
     """
-    user_uuid = user_data['user_uuid']
 
     # Check if all tables are initialized
     inspector = inspect(db.engine)
@@ -206,21 +205,21 @@ def import_data(user_data):
 
     # Handle file input
     if 'file' not in request.files:
-        logger.warning(f"[API] Import failed (no file part) by user_uuid={user_uuid}")
+        logger.warning(f"[API] Import failed (no file part)")
         return jsonify({'error': 'No file part'}), 400
 
     file = request.files['file']
     if file.filename == '':
-        logger.warning(f"[API] Import failed (no selected file) by user_uuid={user_uuid}")
+        logger.warning(f"[API] Import failed (no selected file)")
         return jsonify({'error': 'No selected file'}), 400
 
     if not file.filename.lower().endswith('.json'):
-        logger.warning(f"[API] Import failed (invalid file type) by user_uuid={user_uuid}: {file.filename}")
+        logger.warning(f"[API] Import failed (invalid file type): {file.filename}")
         return jsonify({'error': 'Invalid file type. Please upload a JSON file.'}), 400
 
     temp_path = IMPORT_DIR / file.filename
     file.save(temp_path)
-    logger.info(f"[API] Import file received from user_uuid={user_uuid}: {file.filename}")
+    logger.info(f"[API] Import file received: {file.filename}")
 
     # ⛔️ Check for preexisting data before importing
     preexisting_data = {
@@ -249,10 +248,10 @@ def import_data(user_data):
 
     try:
         import_all_json(db.session, temp_path)
-        logger.info(f"[API] Import successful for user_uuid={user_uuid}: {file.filename}")
+        logger.info(f"[API] Import successful from the json file: {file.filename}")
         return jsonify({'message': 'Import successful'}), 200
     except Exception as e:
-        logger.exception(f"[API] Import failed for user_uuid={user_uuid}: {file.filename}")
+        logger.exception(f"[API] Import failed using the json file: {file.filename}")
         return jsonify({'error': str(e)}), 500
     finally:
         if temp_path.exists():
