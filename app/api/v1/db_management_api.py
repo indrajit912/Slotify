@@ -116,6 +116,64 @@ def export_data(user_data):
 
 @api_v1.route('/import', methods=['POST'])
 def import_data():
+    """
+    Import Slotify database data from a JSON file.
+
+    ---
+    **Authorization**
+    - Requires a bearer token in the `Authorization` header.
+    - The provided token is verified against the SHA-256 hash stored in the `.env` file
+      under `IMPORT_TOKEN_HASH`.
+    - Tokens can be generated using:
+        python manage.py generate-import-token
+
+    **Request**
+    - Method: POST
+    - URL: /api/v1/import
+    - Headers:
+        Authorization: Bearer <import_token>
+    - Form-data:
+        file: JSON file containing exported Slotify database data.
+
+    **Validation & Safety Checks**
+    1. **Token check**  
+       - Ensures the request is authorized using a valid import token.
+    2. **Schema check**  
+       - Verifies that all expected tables (`user`, `building`, `course`, 
+         `washingmachine`, `booking`, `timeslot`, `enrolled_student`) exist 
+         in the database.
+    3. **File check**  
+       - Only accepts non-empty `.json` files.
+    4. **Preexisting data check**  
+       - Import is only allowed into an empty database.  
+       - If tables already contain data, the request fails.
+
+    **Error Responses**
+    - 401 Unauthorized: Missing or invalid token.
+    - 400 Bad Request: File is missing, empty, or invalid type.
+    - 500 Internal Server Error:
+        - Database schema mismatch.
+        - Target tables are not empty.
+        - Import process failed due to unexpected errors.
+
+    **Success Response**
+    - 200 OK: Data import completed successfully.
+
+    **Usage Example**
+    ```bash
+    curl -X POST https://slotify.pythonanywhere.com/api/v1/import \
+         -H "Authorization: Bearer <import_token>" \
+         -F "file=@slotify_export.json"
+    ```
+
+    **Notes**
+    - Ensure the database is reset before importing:
+        - SQLite:
+            rm slotify.db && flask db upgrade
+        - PostgreSQL/MySQL:
+            flask db downgrade base && flask db upgrade
+    - Temporary uploaded files are cleaned up after import.
+    """
     # --- Security Check ---
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
