@@ -20,6 +20,7 @@ from app.models.course import Course
 from app.utils.decorators import admin_only
 from scripts.export_import import export_all_json, import_all_json
 from app.utils.data_io import IMPORT_DIR
+from app.utils.token import verify_import_token
 
 logger = logging.getLogger(__name__)
 
@@ -113,75 +114,44 @@ def export_data(user_data):
         return jsonify({'error': str(e)}), 500
 
 
-# TODO: Implement a securitly mechanism to restrict access to this endpoint.
-# For example, give one password to the admin and save its hash in an env variable.
-# The admin can then provide this password in the request header to authenticate.
-# This is crucial since importing can overwrite existing data.
-# Without proper security, this endpoint could be exploited to corrupt or delete data.
 @api_v1.route('/import', methods=['POST'])
 def import_data():
-    """
-    Import database data from a provided JSON file.
+    # --- Security Check ---
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return jsonify({
+            "error": (
+                "Unauthorized import attempt.\n"
+                "The import token is missing from the Authorization header.\n\n"
+                "➡ If you're an admin of Slotify, ensure that the server has the correct "
+                "hash of the import token stored in the `.env` file as:\n\n"
+                "    IMPORT_TOKEN_HASH=<your_token_hash>\n\n"
+                "Then restart the server and try again."
+            )
+        }), 401
 
-    This endpoint allows authorized users to import a full database export
-    (in JSON format) previously generated via the `/export` endpoint.
+    token = auth_header.split(" ", 1)[1].strip()
+    if not verify_import_token(token):
+        logger.warning("[API] Unauthorized import attempt")
+        return jsonify({
+            "error": (
+                "Unauthorized import attempt.\n"
+                "The provided import token is invalid or does not match the stored hash.\n\n"
+                "➡ If you're an admin of Slotify, generate a new token by running:\n\n"
+                "    python manage.py generate-import-token\n\n"
+                "This will output a plain token and its SHA-256 hash.\n"
+                "Copy the hash into your `.env` file as:\n\n"
+                "    IMPORT_TOKEN_HASH=<new_token_hash>\n\n"
+                "Restart the server and try importing again."
+            )
+        }), 401
 
-    🛠️ Setup Instructions:: 
-           1. Log into the server and run:
-                rm slotify.db
-                flask db upgrade
-           2. Use Postman or cURL to send a POST request to this endpoint with
-              a `.json` file obtained from the `/export` endpoint. 
-
-    ⚠️ Requirements:
-        - The database schema must already be initialized using Flask-Migrate.
-        - The database must be empty (no existing rows in expected tables).
-          This ensures no conflict during import and preserves data integrity.
-
-
-    📥 Request:
-        Method: POST
-        Headers:
-            Authorization: Bearer <token>
-        Form Data:
-            file: A `.json` file exported via `/export` endpoint
-
-    ✅ Response (200 OK):
-        {
-            "message": "Import successful"
-        }
-
-    ❌ Response (400 Bad Request):
-        {
-            "error": "No file part" | "No selected file" | "Invalid file type"
-        }
-
-    ❌ Response (500 Internal Server Error):
-        {
-            "error": "Database not initialized" |
-                     "Expected tables missing" |
-                     "Tables contain existing data" |
-                     "Exception traceback"
-        }
-
-    🧪 Example (cURL):
-        curl -X POST \\
-             -F "file=@slotify_export.json" \\
-             https://slotify.pythonanywhere.com/api/import
-
-    🔁 Notes:
-        - The import will fail if any of the expected tables already contain data.
-        - The temporary file is deleted after the operation (success or failure).
-        - Only `.json` files are accepted.
-    """
-
-    # Check if all tables are initialized
+    # --- Schema Checks ---
     inspector = inspect(db.engine)
     existing_tables = inspector.get_table_names()
-
     expected_tables = {
-        'user', 'building', 'course', 'washingmachine', 'booking',
-        'timeslot', 'enrolled_student'
+        'user', 'building', 'course', 'washingmachine',
+        'booking', 'timeslot', 'enrolled_student'
     }
 
     if not expected_tables.issubset(set(existing_tables)):
@@ -189,36 +159,28 @@ def import_data():
         return jsonify({
             "error": (
                 "Database tables are not initialized or need to be reset before import.\n\n"
-                "👉 If you are running with SQLite (file-based database), reset with:\n"
-                "    rm slotify.db\n"
-                "    flask db upgrade\n\n"
-                "👉 If you are running with PostgreSQL/MySQL (server-based database), reset with:\n"
-                "    flask db downgrade base\n"
-                "    flask db upgrade\n\n"
+                "👉 SQLite:\n"
+                "    rm slotify.db && flask db upgrade\n\n"
+                "👉 PostgreSQL/MySQL:\n"
+                "    flask db downgrade base && flask db upgrade\n\n"
                 "After resetting, try the import again."
             )
         }), 500
 
-
-    # Handle file input
+    # --- File Handling ---
     if 'file' not in request.files:
-        logger.warning(f"[API] Import failed (no file part)")
         return jsonify({'error': 'No file part'}), 400
-
     file = request.files['file']
     if file.filename == '':
-        logger.warning(f"[API] Import failed (no selected file)")
         return jsonify({'error': 'No selected file'}), 400
-
     if not file.filename.lower().endswith('.json'):
-        logger.warning(f"[API] Import failed (invalid file type): {file.filename}")
         return jsonify({'error': 'Invalid file type. Please upload a JSON file.'}), 400
 
     temp_path = IMPORT_DIR / file.filename
     file.save(temp_path)
     logger.info(f"[API] Import file received: {file.filename}")
 
-    # ⛔️ Check for preexisting data before importing
+    # --- Preexisting Data Check ---
     preexisting_data = {
         'User': db.session.query(User).first(),
         'Building': db.session.query(Building).first(),
@@ -228,33 +190,29 @@ def import_data():
         'Booking': db.session.query(Booking).first(),
         'CurrentEnrolledStudent': db.session.query(CurrentEnrolledStudent).first()
     }
-
     non_empty = [table for table, entry in preexisting_data.items() if entry]
     if non_empty:
         logger.warning(f"[API] Import aborted: Preexisting data found in {non_empty}")
         return jsonify({
             "error": (
-                f"Import failed: The following tables are not empty: {', '.join(non_empty)}.\n"
-                "This API expects a clean database (no existing data).\n\n"
-                "👉 If you are running with SQLite (file-based database), reset with:\n"
-                "    rm slotify.db\n"
-                "    flask db upgrade\n\n"
-                "👉 If you are running with PostgreSQL/MySQL (server-based database), reset with:\n"
-                "    flask db downgrade base\n"
-                "    flask db upgrade\n\n"
+                f"Import failed: The following tables are not empty: {', '.join(non_empty)}.\n\n"
+                "👉 SQLite:\n"
+                "    rm slotify.db && flask db upgrade\n\n"
+                "👉 PostgreSQL/MySQL:\n"
+                "    flask db downgrade base && flask db upgrade\n\n"
                 "After resetting, start the server again and retry the import."
             )
         }), 500
-    
 
+    # --- Import Logic ---
     try:
         import_all_json(db.session, temp_path)
-        logger.info(f"[API] Import successful from the json file: {file.filename}")
+        logger.info(f"[API] Import successful from {file.filename}")
         return jsonify({'message': 'Import successful'}), 200
     except Exception as e:
-        logger.exception(f"[API] Import failed using the json file: {file.filename}")
+        logger.exception(f"[API] Import failed using {file.filename}")
         return jsonify({'error': str(e)}), 500
     finally:
         if temp_path.exists():
             temp_path.unlink()
-            logger.debug(f"[API] Temp file deleted after import: {temp_path}")
+            logger.debug(f"[API] Temp file deleted: {temp_path}")

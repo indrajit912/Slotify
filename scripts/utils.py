@@ -4,7 +4,8 @@
 # Created On: May 10, 2025
 #
 import hashlib
-from datetime import datetime, timedelta, timezone
+import secrets
+from datetime import datetime, timezone
 
 def utcnow():
     """
@@ -31,3 +32,12 @@ def sha256_hash(raw_text:str):
     """
     hashed = hashlib.sha256(raw_text.encode()).hexdigest()
     return hashed
+
+def generate_token():
+    # Generate a secure random token (hex string)
+    token = secrets.token_hex(32)  # 64 chars long
+
+    # Hash the token for storage (never store plain tokens in code)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+    return token, token_hash

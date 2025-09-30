@@ -16,7 +16,7 @@ from flask_migrate import upgrade
 
 # Local application imports
 from app import create_app
-from scripts.utils import sha256_hash
+from scripts.utils import sha256_hash, generate_token
 from app.extensions import db
 from app.models.building import Building
 from app.models.course import Course
@@ -133,6 +133,21 @@ def deploy():
     """Run deployment tasks."""  
     # migrate database to latest revision
     upgrade()
+
+@cli.command("generate-import-token")
+def generate_import_token():
+    """
+    Generate a new import token and its SHA-256 hash for use in the /import API.
+    Prints both the raw token (keep it secret) and the hash (store in .env).
+    """
+    token, token_hash = generate_token()
+
+    click.echo("\n🔑 New import token generated!\n")
+    click.echo(f"   Token (keep this secret, use it when calling the API):\n   {token}\n")
+    click.echo(f"   Token Hash (store this in your .env as IMPORT_TOKEN_HASH):\n   {token_hash}\n")
+    click.echo("➡ Add the following line to your .env file:\n")
+    click.echo(f"   IMPORT_TOKEN_HASH={token_hash}\n")
+
 
 if __name__ == '__main__':
     cli()

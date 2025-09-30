@@ -7,15 +7,17 @@ Author: Indrajit Ghosh
 Created on: May 18, 2025
 """
 import logging
-from datetime import datetime
+import hmac
 
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired, URLSafeSerializer
 from flask import current_app
 from app.services import get_user_by_uuid
+from config import Config
 
-from scripts.utils import utcnow
+from scripts.utils import utcnow, sha256_hash
 
 logger = logging.getLogger(__name__)
+
 
 def generate_registration_token(data):
     """
@@ -92,3 +94,9 @@ def verify_api_token(token):
     except Exception:
         return None
 
+
+def verify_import_token(token: str) -> bool:
+    if not Config.IMPORT_TOKEN_HASH:
+        return False
+    token_hash = sha256_hash(token)
+    return hmac.compare_digest(token_hash, Config.IMPORT_TOKEN_HASH)

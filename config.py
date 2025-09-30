@@ -27,6 +27,7 @@ class Config:
     FLASK_APP = 'app'
     FLASK_APP_NAME = 'Slotify'
     SUPERADMIN_CREATION_PASSWD_HASH = os.environ.get("SUPERADMIN_CREATION_PASSWD_HASH")
+    IMPORT_TOKEN_HASH = os.environ.get("IMPORT_TOKEN_HASH")
 
     BASE_DIR = Path(__name__).parent.absolute()
     APP_DATA_DIR = BASE_DIR / "app_data"
