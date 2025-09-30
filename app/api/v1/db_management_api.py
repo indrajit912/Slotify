@@ -126,20 +126,18 @@ def import_data():
     This endpoint allows authorized users to import a full database export
     (in JSON format) previously generated via the `/export` endpoint.
 
+    🛠️ Setup Instructions:: 
+           1. Log into the server and run:
+                rm slotify.db
+                flask db upgrade
+           2. Use Postman or cURL to send a POST request to this endpoint with
+              a `.json` file obtained from the `/export` endpoint. 
+
     ⚠️ Requirements:
         - The database schema must already be initialized using Flask-Migrate.
         - The database must be empty (no existing rows in expected tables).
           This ensures no conflict during import and preserves data integrity.
 
-    🛠️ Setup Instructions:
-        If you're running this for the first time or need to reset the database:
-        
-        1. Initialize the database (if not done yet):
-            flask db upgrade
-
-        2. If data already exists and you want a clean reset:
-            flask db downgrade base
-            flask db upgrade
 
     📥 Request:
         Method: POST
@@ -189,19 +187,18 @@ def import_data():
     if not expected_tables.issubset(set(existing_tables)):
         logger.warning(f"[API] Import aborted: Missing tables in DB. Existing: {existing_tables}")
         return jsonify({
-            'error': (
-                "Database tables are not initialized or need to be reset before import. "
-                "If you are running this for the first time, please set up the database schema by logging into the server and running:\n\n"
+            "error": (
+                "Database tables are not initialized or need to be reset before import.\n\n"
+                "👉 If you are running with SQLite (file-based database), reset with:\n"
+                "    rm slotify.db\n"
                 "    flask db upgrade\n\n"
-                "If the database already contains previous data that you want to replace, "
-                "you should clear the existing data first to avoid conflicts. This can be done by:\n\n"
-                "1. Dropping all tables and recreating them:\n"
+                "👉 If you are running with PostgreSQL/MySQL (server-based database), reset with:\n"
                 "    flask db downgrade base\n"
                 "    flask db upgrade\n\n"
-                "2. Or manually truncating tables (if supported) before importing.\n\n"
-                "After the database is clean and schema is ready, try the import again."
+                "After resetting, try the import again."
             )
         }), 500
+
 
     # Handle file input
     if 'file' not in request.files:
@@ -236,15 +233,19 @@ def import_data():
     if non_empty:
         logger.warning(f"[API] Import aborted: Preexisting data found in {non_empty}")
         return jsonify({
-            'error': (
-                f"Import failed: The following tables are not empty: {', '.join(non_empty)}. "
-                "This API expects a clean database (no existing data). "
-                "To reset the database, log into the server and run:\n\n"
+            "error": (
+                f"Import failed: The following tables are not empty: {', '.join(non_empty)}.\n"
+                "This API expects a clean database (no existing data).\n\n"
+                "👉 If you are running with SQLite (file-based database), reset with:\n"
+                "    rm slotify.db\n"
+                "    flask db upgrade\n\n"
+                "👉 If you are running with PostgreSQL/MySQL (server-based database), reset with:\n"
                 "    flask db downgrade base\n"
                 "    flask db upgrade\n\n"
-                "Then try importing again."
+                "After resetting, start the server again and retry the import."
             )
         }), 500
+    
 
     try:
         import_all_json(db.session, temp_path)
