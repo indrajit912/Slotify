@@ -13,7 +13,7 @@ import calendar
 from datetime import datetime, date
 
 import qrcode
-from flask import render_template, request, redirect, url_for, flash, jsonify, abort
+from flask import render_template, request, redirect, url_for, flash, jsonify, abort, current_app
 from flask_login import login_required, current_user
 
 from . import main_bp
@@ -32,6 +32,10 @@ logger = logging.getLogger(__name__)
 @main_bp.route('/')
 def index():
     logger.info("Visited homepage.")
+
+    if current_app.config.get("MAINTENANCE_MODE", False):
+        return render_template("maintenance.html"), 503
+
     return render_template("index.html")
     
 
