@@ -110,6 +110,36 @@ def book_slot(user_uuid: str, slot_uuid: str, day: date):
     logger.info(f"Booking successful: booking_id={booking.id}, user_id={user.id}, slot_id={slot.id}, date={day}")
     return booking
 
+def cancel_booking_by_uuid(booking_uuid: str):
+    """
+    Cancel a booking by its UUID.
+
+    Args:
+        booking_uuid (str): UUID of the booking to cancel.
+
+    Returns:
+        dict: Information about the cancelled booking, including username and date.
+
+    Raises:
+        ValueError: If booking with given UUID does not exist.
+        Exception: For other database errors.
+    """
+    booking = Booking.query.filter_by(uuid=booking_uuid).first()
+    if not booking:
+        raise ValueError(f"Booking with UUID {booking_uuid} not found.")
+
+    # Capture details before deletion
+    username = booking.user.username if booking.user else "Unknown"
+    booking_date = booking.date
+
+    try:
+        db.session.delete(booking)
+        db.session.commit()
+        return {"username": username, "date": booking_date}
+    except Exception as e:
+        db.session.rollback()
+        raise Exception(f"Error cancelling booking: {e}")
+    
 
 def cancel_booking(user_uuid: str, slot_uuid: str, day: date):
     """

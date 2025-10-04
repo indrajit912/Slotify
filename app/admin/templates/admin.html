@@ -62,7 +62,7 @@
   </div>
 </div>
 
-  <!-- New: Manage Buildings -->
+  <!-- Manage Buildings -->
   <div class="col">
     <div class="card h-100 shadow-sm">
       <div class="card-body">
@@ -75,7 +75,7 @@
     </div>
   </div>
 
-  <!-- New: Manage Courses -->
+  <!-- Manage Courses -->
   <div class="col">
     <div class="card h-100 shadow-sm">
       <div class="card-body">
@@ -88,7 +88,21 @@
     </div>
   </div>
 
-  <!-- New: Manage CurrentEnrolled Students -->
+  <!-- Manage User Bookings -->
+  <div class="col">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-calendar-check me-2 text-success"></i>Manage User Bookings</h5>
+        <p class="card-text">View and cancel bookings for any user on selected dates.</p>
+        <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-primary">
+          <i class="bi bi-calendar2-week-fill me-1"></i> View Bookings
+        </a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Manage CurrentEnrolled Students -->
 <div class="col">
   <div class="card h-100 shadow-sm">
     <div class="card-body">

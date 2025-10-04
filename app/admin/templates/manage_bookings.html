@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Manage User Bookings{% endblock %}
+
+{% block content %}
+{% include 'flash_msgs.html' %}
+<div class="container mt-4">
+  <h2>Manage User Bookings</h2>
+
+  <form method="POST" class="mb-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label for="user_uuid" class="form-label">Select User</label>
+        <select name="user_uuid" id="user_uuid" class="form-select">
+          <option value="">-- Select User --</option>
+          {% for user in users %}
+            <option value="{{ user.uuid }}" {% if selected_user and selected_user.uuid == user.uuid %}selected{% endif %}>
+              {{ user.fullname }} ({{ user.username }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label for="date" class="form-label">Select Date</label>
+        <input type="date" id="date" name="date" class="form-control" value="{{ selected_date or '' }}">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary">View</button>
+      </div>
+    </div>
+  </form>
+
+  {% if bookings %}
+  <h4>Bookings for {{ selected_user.username }} on {{ selected_date }}</h4>
+  <table class="table table-bordered table-striped mt-3">
+    <thead>
+      <tr>
+        <th>Slot #</th>
+        <th>Time Range</th>
+        <th>Machine</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in bookings %}
+      <tr>
+        <td>{{ b.time_slot.slot_number }}</td>
+        <td>{{ b.time_slot.time_range }}</td>
+        <td>{{ b.time_slot.machine.name }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('admin.admin_cancel_booking', uuid=b.uuid) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-danger btn-sm" onclick="return confirm('Cancel this booking?')">Cancel</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% elif selected_user and selected_date %}
+  <p class="text-muted mt-3">No bookings found for {{ selected_user.username }} on {{ selected_date }}.</p>
+  {% endif %}
+</div>
+{% endblock %}

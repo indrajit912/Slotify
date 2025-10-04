@@ -17,6 +17,7 @@ from app.models.user import User, CurrentEnrolledStudent
 from app.models.washingmachine import WashingMachine
 from app.models.building import Building
 from app.models.course import Course
+from app.models.booking import Booking, TimeSlot
 from app.scheduler import scheduler
 from app.utils.decorators import admin_required
 from app.utils.student_parser import parse_enrolled_students
@@ -36,7 +37,8 @@ from app.services import (
     delete_enrolled_students,
     update_washing_machine,
     create_new_enrolled_student,
-    update_enrolled_student
+    update_enrolled_student,
+    cancel_booking_by_uuid
 )
 
 logger = logging.getLogger(__name__)
@@ -579,3 +581,49 @@ def generate_token(user_uuid):
     except Exception as e:
         logger.exception(f"[Admin] Failed to generate token for user_uuid={user_uuid}: {e}")
         return jsonify({'error': 'Failed to generate token'}), 500
+
+
+@admin_bp.route('/manage-bookings', methods=['GET', 'POST'])
+@admin_required
+def manage_bookings():
+    users = User.query.order_by(User.username).all()
+    selected_user = None
+    selected_date = None
+    bookings = []
+
+    if request.method == 'POST':
+        user_uuid = request.form.get('user_uuid')
+        selected_user = User.query.filter_by(uuid=user_uuid).first()
+        date_str = request.form.get('date')
+        if not (selected_user and date_str):
+            flash("Please select a user and date.", "warning")
+        else:
+            selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            bookings = (
+                Booking.query
+                .join(TimeSlot)
+                .filter(Booking.user_id == selected_user.id, Booking.date == selected_date)
+                .order_by(TimeSlot.slot_number)
+                .all()
+            )
+    return render_template(
+        'manage_bookings.html',
+        users=users,
+        selected_user=selected_user,
+        selected_date=selected_date,
+        bookings=bookings
+    )
+
+@admin_bp.route('/cancel_booking/<uuid>', methods=['POST'])
+@admin_required
+def admin_cancel_booking(uuid):
+    try:
+        info = cancel_booking_by_uuid(uuid)
+        flash(f"Booking for {info['username']} on {info['date']} cancelled.", "success")
+    except ValueError as ve:
+        flash(str(ve), "warning")
+    except Exception as e:
+        flash(str(e), "danger")
+
+    return redirect(url_for('admin.manage_bookings'))
+
