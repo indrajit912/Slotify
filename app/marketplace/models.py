@@ -48,6 +48,7 @@ class Product(db.Model):
     description = db.Column(db.Text)
     price_inr = db.Column(db.Float, nullable=False)
     is_sold = db.Column(db.Boolean, default=False)
+    image_url = db.Column(db.String(500), nullable=True)  # Optional image URL
 
     bookings = db.relationship('ProductBooking', backref='product', cascade='all, delete-orphan')
 

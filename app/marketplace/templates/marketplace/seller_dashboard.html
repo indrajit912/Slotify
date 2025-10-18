@@ -5,7 +5,9 @@
 {% block content %}
 <h2>Welcome, {{ seller.name }}</h2>
 
+{% if seller.ads %}
 <h4>Your Ads</h4>
+{% endif %}
 {% for ad in seller.ads %}
 <div class="card mb-2">
   <div class="card-body">

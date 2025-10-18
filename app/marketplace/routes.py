@@ -1,5 +1,8 @@
 # app/marketplace/routes.py
-from flask import render_template, request, redirect, url_for, flash, session
+# Author: Indrajit Ghosh
+# Created On: Oct 18, 2025
+# 
+from flask import render_template, request, redirect, url_for, flash, session, current_app
 from sqlalchemy.orm import joinedload
 from app.marketplace import marketplace_bp
 from app.extensions import db
@@ -7,7 +10,10 @@ from app.marketplace.models import Seller, Advertisement, Product, ProductBookin
 import random, string
 from scripts.send_email_client import send_email_via_hermes
 from config import EmailConfig
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
+def get_serializer():
+    return URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
 
 # ---------- Public routes ----------
 @marketplace_bp.route('/')
@@ -145,18 +151,94 @@ def seller_register():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
 
+        # Check if passwords match
+        if password != confirm_password:
+            flash('Passwords do not match. Please try again.', 'danger')
+            return redirect(url_for('marketplace.seller_register'))
+
+        # Check if email already registered
         if Seller.query.filter_by(email=email).first():
             flash('Email already registered.', 'warning')
             return redirect(url_for('marketplace.seller_register'))
 
+        # Create and save new seller
         seller = Seller(name=name, email=email)
         seller.set_password(password)
         db.session.add(seller)
         db.session.commit()
+
         flash('Seller registered successfully! You can now log in.', 'success')
         return redirect(url_for('marketplace.seller_login'))
+
     return render_template('marketplace/seller_register.html')
+
+
+@marketplace_bp.route('/sellers/forgot_password/', methods=['GET', 'POST'])
+def seller_forgot_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        seller = Seller.query.filter_by(email=email).first()
+
+        if not seller:
+            flash('No account found with that email.', 'warning')
+            return redirect(url_for('marketplace.seller_forgot_password'))
+
+        token = get_serializer().dumps(email, salt='password-reset-salt')
+        reset_url = url_for('marketplace.seller_reset_password', token=token, _external=True)
+
+        html_body = f"""
+        <p>Hi {seller.name},</p>
+        <p>You requested to reset your password. Click the link below:</p>
+        <p><a href="{reset_url}">{reset_url}</a></p>
+        <p>This link will expire in 1 hour.</p>
+        """
+
+        send_email_via_hermes(
+            to=email,
+            subject="Password Reset - Slotify Marketplace",
+            email_html_text=html_body,
+            api_key=EmailConfig.HERMES_API_KEY,
+            bot_id=EmailConfig.HERMES_EMAILBOT_ID,
+            api_url=EmailConfig.HERMES_BASE_URL + "/api/v1/send-email",
+            from_name="Slotify Marketplace"
+        )
+
+        flash('A password reset link has been sent to your email.', 'info')
+        return redirect(url_for('marketplace.seller_login'))
+
+    return render_template('marketplace/seller_forgot_password.html')
+
+
+@marketplace_bp.route('/sellers/reset_password/<token>/', methods=['GET', 'POST'])
+def seller_reset_password(token):
+    try:
+        email = get_serializer().loads(token, salt='password-reset-salt', max_age=3600)
+    except SignatureExpired:
+        flash('The password reset link has expired.', 'danger')
+        return redirect(url_for('marketplace.seller_forgot_password'))
+    except BadSignature:
+        flash('Invalid or tampered reset link.', 'danger')
+        return redirect(url_for('marketplace.seller_forgot_password'))
+
+    seller = Seller.query.filter_by(email=email).first_or_404()
+
+    if request.method == 'POST':
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+            return redirect(url_for('marketplace.seller_reset_password', token=token))
+
+        seller.set_password(password)
+        db.session.commit()
+
+        flash('Your password has been updated successfully.', 'success')
+        return redirect(url_for('marketplace.seller_login'))
+
+    return render_template('marketplace/seller_reset_password.html', email=email)
 
 
 @marketplace_bp.route('/sellers/login/', methods=['GET', 'POST'])
@@ -241,11 +323,13 @@ def add_product(uuid):
     name = request.form['name']
     price_inr = float(request.form['price_inr'])
     description = request.form.get('description', '')
+    image_url = request.form.get('image_url', '')
 
     product = Product(
         name=name,
         price_inr=price_inr,
         description=description,
+        image_url=image_url,
         ad_id=ad.id
     )
     db.session.add(product)
@@ -268,6 +352,7 @@ def edit_product(product_uuid):
         product.name = request.form['name']
         product.price_inr = float(request.form['price_inr'])
         product.description = request.form.get('description', '')
+        product.image_url = request.form.get('image_url', None)
 
         db.session.commit()
         flash('Product updated successfully!', 'success')

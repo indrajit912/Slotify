@@ -4,85 +4,170 @@
 {% block content %}
 <div class="container py-4">
   <!-- Back Button -->
-  <div class="mb-3">
+  <div class="mb-4">
     <a href="{{ url_for('marketplace.listings') }}" class="btn btn-outline-secondary btn-sm">
-      ← Back to Listings
+      <i class="bi bi-arrow-left me-1"></i> Back to Listings
     </a>
   </div>
 
-  <h2 class="fw-bold mb-3">{{ ad.title }}</h2>
-  <p class="text-secondary mb-4">{{ ad.description }}</p>
+  <!-- Ad Header -->
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-body">
+    <h2 class="fw-bold text-primary mb-2">
+      <i class="bi bi-basket2-fill me-2"></i>{{ ad.title }}
+    </h2>
 
-  <h4 class="fw-semibold mb-3">Products</h4>
-  <ul class="list-group mb-4">
+    <!-- Seller and Date -->
+    <p class="text-secondary small mb-3">
+      <i class="bi bi-person-circle me-1"></i>
+      {{ ad.seller.name if ad.seller else "Unknown Seller" }}
+      &nbsp;•&nbsp;
+      <i class="bi bi-calendar3 me-1"></i>
+      Posted on {{ ad.created_at.strftime('%b %d, %Y') if ad.created_at else 'N/A' }}
+    </p>
+
+    <p class="text-muted mb-0">{{ ad.description }}</p>
+  </div>
+</div>
+
+
+  <!-- Product Section -->
+<div class="d-flex align-items-center mb-3">
+  <h4 class="fw-semibold mb-0">
+    <i class="bi bi-box-seam me-2 text-primary"></i>Products
+  </h4>
+  <div class="flex-grow-1 border-bottom ms-3"></div>
+</div>
+{% if ad.products %}
+  <div class="list-group shadow-sm">
     {% for p in ad.products %}
-      <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-        <div class="me-3">
-          <strong>{{ p.name }}</strong> – ₹{{ "%.2f"|format(p.price_inr) }}
-          <p class="text-muted small mb-0">{{ p.description }}</p>
-
-          {% if seller and ad.seller_id == seller.id and not p.is_sold %}
-            <a href="{{ url_for('marketplace.edit_product', product_uuid=p.uuid) }}" 
-               class="btn btn-sm btn-outline-warning me-2">
-               Edit
-            </a>
-          {% endif %}
-
-          {% if seller and ad.seller_id == seller.id and p.is_sold %}
-            <form method="POST" action="{{ url_for('marketplace.remove_buyer', product_uuid=p.uuid) }}"
-                  class="d-inline ms-2"
-                  onsubmit="return confirm('Are you sure you want to remove the buyer?');">
-              <button type="submit" class="btn btn-sm btn-danger">Remove Buyer</button>
-            </form>
+      <div class="list-group-item py-3 d-flex justify-content-between align-items-start flex-wrap">
+        <div class="me-3 flex-fill d-flex gap-3 align-items-center">
+          <!-- Product Info -->
+          <div class="flex-fill">
+            <h5 class="mb-1">
+              <i class="bi bi-bag-check-fill text-success me-2"></i>{{ p.name }}
+              <small class="text-muted ms-2">₹{{ "%.2f"|format(p.price_inr) }}</small>
+            
+              {% if p.image_url %}
+                <a href="{{ p.image_url }}" target="_blank" class="badge bg-warning ms-2 text-decoration-none">
+                  img
+                </a>
+              {% endif %}
+            </h5>
+          
+            {% if p.description %}
+              <p class="text-muted small mb-2">{{ p.description }}</p>
             {% endif %}
+          
+            <!-- Seller Controls -->
+            {% if seller and ad.seller_id == seller.id and not p.is_sold %}
+              <a href="{{ url_for('marketplace.edit_product', product_uuid=p.uuid) }}" 
+                 class="btn btn-sm btn-outline-warning me-2">
+                <i class="bi bi-pencil-square me-1"></i>Edit
+              </a>
+            {% endif %}
+            
+            {% if seller and ad.seller_id == seller.id and p.is_sold %}
+              <form method="POST" action="{{ url_for('marketplace.remove_buyer', product_uuid=p.uuid) }}"
+                    class="d-inline"
+                    onsubmit="return confirm('Are you sure you want to remove the buyer?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-person-x-fill me-1"></i>Remove Buyer
+                </button>
+              </form>
+            {% endif %}
+          </div>
         </div>
 
-        {% if p.is_sold %}
-          {% set verified_booking = (p.bookings | selectattr('is_verified', 'equalto', True) | list) %}
-          {% if verified_booking %}
-            {% set buyer = verified_booking[0].buyer_email %}
-            <span class="badge bg-secondary">
-              Sold ({{ buyer }})
-            </span>
 
+
+        <!-- Booking or Sold Badge -->
+        <div class="text-end mt-2 mt-md-0">
+          {% if p.is_sold %}
+            {% set verified_booking = (p.bookings | selectattr('is_verified', 'equalto', True) | list) %}
+            {% if verified_booking %}
+              <span class="badge bg-secondary">
+                <i class="bi bi-check-circle me-1"></i>Sold ({{ verified_booking[0].buyer_email }})
+              </span>
+            {% else %}
+              <span class="badge bg-secondary">
+                <i class="bi bi-check2-circle me-1"></i>Sold
+              </span>
+            {% endif %}
           {% else %}
-            <span class="badge bg-secondary">Sold</span>
-          {% endif %}
-        {% else %}
-          <form method="POST" action="{{ url_for('marketplace.book_product', product_uuid=p.uuid) }}" class="d-flex" onsubmit="showSpinner(this)">
-              <input type="email" name="email" placeholder="Enter your email" class="form-control form-control-sm me-2" required>
+            <form method="POST" 
+                  action="{{ url_for('marketplace.book_product', product_uuid=p.uuid) }}" 
+                  class="d-flex align-items-center" 
+                  onsubmit="showSpinner(this)">
+              <input type="email" name="email" 
+                     placeholder="Enter your email" 
+                     class="form-control form-control-sm me-2" required>
               <button type="submit" class="btn btn-success btn-sm">
-                  <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-                  <span class="btn-text">Book</span>
+                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                <i class="bi bi-envelope-paper-fill me-1"></i>
+                <span class="btn-text">Book</span>
               </button>
-          </form>
-        {% endif %}
-      </li>
+            </form>
+          {% endif %}
+        </div>
+      </div>
     {% endfor %}
-  </ul>
+  </div>
+{% else %}
+  <p class="text-muted fst-italic">No products added yet.</p>
+{% endif %}
 
-  {% if seller and ad.seller_id == seller.id %}
-    <hr class="my-4">
-    <h4 class="fw-semibold mb-3">Add Product</h4>
-    <form method="POST" action="{{ url_for('marketplace.add_product', uuid=ad.uuid) }}">
-      <input type="text" name="name" placeholder="Product name" required class="form-control mb-2">
-      <input type="number" step="0.01" name="price_inr" placeholder="Price (INR)" required class="form-control mb-2">
-      <textarea name="description" placeholder="Description" class="form-control mb-3" rows="3"></textarea>
-      <button class="btn btn-primary">Add Product</button>
-    </form>
-  {% endif %}
-</div>
+
+<!-- Add Product (Seller only) -->
+{% if seller and ad.seller_id == seller.id %}
+  <div class="card border-0 shadow-sm mt-5">
+    <div class="card-body">
+      <h5 class="fw-semibold mb-3">
+        <i class="bi bi-plus-circle-fill text-primary me-2"></i>Add a New Product
+      </h5>
+
+      <!-- Note for the seller -->
+      <p class="text-muted small mb-3">
+        Note: Providing an Image URL is optional but recommended. You can use any sharable cloud link (Google Drive, Dropbox, OneDrive, Mega, etc.).
+      </p>
+
+      <form method="POST" action="{{ url_for('marketplace.add_product', uuid=ad.uuid) }}">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <input type="text" name="name" placeholder="Product name" required class="form-control">
+          </div>
+          <div class="col-md-4">
+            <input type="number" step="0.01" name="price_inr" placeholder="Price (INR)" required class="form-control">
+          </div>
+          <div class="col-md-4">
+            <input type="url" name="image_url" placeholder="Image URL (optional)" class="form-control">
+          </div>
+          <div class="col-12">
+            <textarea name="description" placeholder="Description" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="text-end mt-3">
+          <button class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Add Product
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endif %}
+
+
 
 <script>
 function showSpinner(form) {
-    const btn = form.querySelector('button[type="submit"]');
-    const spinner = btn.querySelector('.spinner-border');
-    const btnText = btn.querySelector('.btn-text');
+  const btn = form.querySelector('button[type="submit"]');
+  const spinner = btn.querySelector('.spinner-border');
+  const btnText = btn.querySelector('.btn-text');
 
-    // Show spinner and disable button
-    spinner.classList.remove('d-none');
-    btnText.textContent = 'Sending...';
-    btn.disabled = true;
+  spinner.classList.remove('d-none');
+  btnText.textContent = 'Sending...';
+  btn.disabled = true;
 }
 </script>
 {% endblock %}

@@ -3,11 +3,30 @@
 {% block title %}Marketplace | Seller Login{% endblock %}
 
 {% block content %}
-<h2>Seller Login</h2>
-<form method="POST">
-  <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
-  <input type="password" name="password" class="form-control mb-2" placeholder="Password" required>
-  <button class="btn btn-primary">Login</button>
-</form>
-<p class="mt-2">New Seller? <a href="{{ url_for('marketplace.seller_register') }}">Register here</a></p>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5 col-lg-4">
+      <h2 class="text-center mb-4 fw-bold">Seller Login</h2>
+
+      <form method="POST" class="card p-4 shadow-sm rounded-3">
+        <div class="mb-3">
+          <input type="email" name="email" class="form-control" placeholder="Email" required>
+        </div>
+        <div class="mb-3">
+          <input type="password" name="password" class="form-control" placeholder="Password" required>
+        </div>
+        <button class="btn btn-primary w-100">Login</button>
+      </form>
+
+      <div class="text-center mt-3">
+        <a href="{{ url_for('marketplace.seller_forgot_password') }}" class="text-decoration-none small d-block mb-1">
+          Forgot Password?
+        </a>
+        <p class="small mb-0">
+          New Seller? <a href="{{ url_for('marketplace.seller_register') }}">Register here</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

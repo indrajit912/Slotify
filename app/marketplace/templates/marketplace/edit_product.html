@@ -20,6 +20,11 @@
       <textarea name="description" rows="3" class="form-control">{{ product.description }}</textarea>
     </div>
 
+    <div class="mb-3">
+      <label class="form-label">Image URL (Optional)</label>
+      <input type="url" name="image_url" value="{{ product.image_url or '' }}" class="form-control" placeholder="https://example.com/image.jpg">
+    </div>
+
     <div class="d-flex justify-content-between">
       <a href="{{ url_for('marketplace.view_ad', uuid=product.advertisement.uuid) }}" class="btn btn-secondary">Back</a>
       <button type="submit" class="btn btn-primary">Save Changes</button>
