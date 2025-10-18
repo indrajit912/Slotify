@@ -1,0 +1,88 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}Marketplace | {{ ad.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Back Button -->
+  <div class="mb-3">
+    <a href="{{ url_for('marketplace.listings') }}" class="btn btn-outline-secondary btn-sm">
+      ← Back to Listings
+    </a>
+  </div>
+
+  <h2 class="fw-bold mb-3">{{ ad.title }}</h2>
+  <p class="text-secondary mb-4">{{ ad.description }}</p>
+
+  <h4 class="fw-semibold mb-3">Products</h4>
+  <ul class="list-group mb-4">
+    {% for p in ad.products %}
+      <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+        <div class="me-3">
+          <strong>{{ p.name }}</strong> – ₹{{ "%.2f"|format(p.price_inr) }}
+          <p class="text-muted small mb-0">{{ p.description }}</p>
+
+          {% if seller and ad.seller_id == seller.id and not p.is_sold %}
+            <a href="{{ url_for('marketplace.edit_product', product_uuid=p.uuid) }}" 
+               class="btn btn-sm btn-outline-warning me-2">
+               Edit
+            </a>
+          {% endif %}
+
+          {% if seller and ad.seller_id == seller.id and p.is_sold %}
+            <form method="POST" action="{{ url_for('marketplace.remove_buyer', product_uuid=p.uuid) }}"
+                  class="d-inline ms-2"
+                  onsubmit="return confirm('Are you sure you want to remove the buyer?');">
+              <button type="submit" class="btn btn-sm btn-danger">Remove Buyer</button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if p.is_sold %}
+          {% set verified_booking = (p.bookings | selectattr('is_verified', 'equalto', True) | list) %}
+          {% if verified_booking %}
+            {% set buyer = verified_booking[0].buyer_email %}
+            <span class="badge bg-secondary">
+              Sold ({{ buyer }})
+            </span>
+
+          {% else %}
+            <span class="badge bg-secondary">Sold</span>
+          {% endif %}
+        {% else %}
+          <form method="POST" action="{{ url_for('marketplace.book_product', product_uuid=p.uuid) }}" class="d-flex" onsubmit="showSpinner(this)">
+              <input type="email" name="email" placeholder="Enter your email" class="form-control form-control-sm me-2" required>
+              <button type="submit" class="btn btn-success btn-sm">
+                  <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                  <span class="btn-text">Book</span>
+              </button>
+          </form>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+
+  {% if seller and ad.seller_id == seller.id %}
+    <hr class="my-4">
+    <h4 class="fw-semibold mb-3">Add Product</h4>
+    <form method="POST" action="{{ url_for('marketplace.add_product', uuid=ad.uuid) }}">
+      <input type="text" name="name" placeholder="Product name" required class="form-control mb-2">
+      <input type="number" step="0.01" name="price_inr" placeholder="Price (INR)" required class="form-control mb-2">
+      <textarea name="description" placeholder="Description" class="form-control mb-3" rows="3"></textarea>
+      <button class="btn btn-primary">Add Product</button>
+    </form>
+  {% endif %}
+</div>
+
+<script>
+function showSpinner(form) {
+    const btn = form.querySelector('button[type="submit"]');
+    const spinner = btn.querySelector('.spinner-border');
+    const btnText = btn.querySelector('.btn-text');
+
+    // Show spinner and disable button
+    spinner.classList.remove('d-none');
+    btnText.textContent = 'Sending...';
+    btn.disabled = true;
+}
+</script>
+{% endblock %}

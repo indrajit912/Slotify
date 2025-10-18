@@ -1,0 +1,38 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}Marketplace | Listings{% endblock %}
+
+{% block content %}
+  <div class="text-center mb-4">
+    <h4 class="fw-bold text-secondary mb-3">Recent Ad Listings</h4>
+  </div>
+
+  <div class="row justify-content-center">
+    {% if ads %}
+      {% for ad in ads %}
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card shadow-sm border-0 h-100 rounded-4">
+            <div class="card-body">
+              <h5 class="card-title">{{ ad.title }}</h5>
+              <p class="card-text text-muted small" style="min-height: 60px;">
+                {{ ad.description[:120] }}{% if ad.description|length > 120 %}...{% endif %}
+              </p>
+              <a href="{{ url_for('marketplace.view_ad', uuid=ad.uuid) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">View Details</a>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-end small text-muted">
+              Posted by <strong>{{ ad.seller.name }}</strong> on {{ ad.created_at.strftime('%b %d, %Y') }}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-md-8 text-center">
+        <div class="alert alert-light border rounded-4 shadow-sm">
+          <p class="mb-1 fs-5 text-secondary">No ads yet!</p>
+          <p class="text-muted small">Be the first to list an item on the Marketplace.</p>
+          <a href="{{ url_for('marketplace.seller_register') }}" class="btn btn-sm btn-success rounded-pill px-3">Register & Add Ad</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

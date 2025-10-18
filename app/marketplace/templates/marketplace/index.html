@@ -1,0 +1,81 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}Marketplace | Slotify{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="text-center mb-5">
+    <h1 class="display-5 fw-bold text-primary">Welcome to the Marketplace</h1>
+    <p class="lead text-muted">A simple and open trading space for students and research scholars.</p>
+  </div>
+
+  <div class="row justify-content-center mb-5">
+    <div class="col-md-10 col-lg-8">
+      <div class="card shadow-sm border-0 rounded-4 p-4">
+        <div class="card-body">
+
+          <p class="fs-6 text-secondary" style="text-align: justify;">
+            Hello everyone! 👋 I’m Indrajit, a Senior Research Fellow (SRF) at the Stat-Math Unit, Indian Statistical Institute, Bangalore.
+            I recently completed my PhD, and soon after my defense, I began thinking about giving away some of my books to students and
+            fellow researchers who might find them useful.
+          </p>
+
+          <p class="fs-6 text-secondary" style="text-align: justify;">
+            Initially, I thought of simply sending out a list of books over WhatsApp or email. But then I realized that it could quickly
+            become unmanageable — multiple people might request the same book, messages could overlap, and it would take a lot of time to
+            coordinate everything manually. That’s when I thought of creating a small web application to make things simpler.
+          </p>
+
+          <p class="fs-6 text-secondary" style="text-align: justify;">
+            The idea was straightforward: I would list my books on a simple web page, and anyone interested could click to book one for themselves.
+            That way, I’d only need to contact the students who had actually booked specific items. It was meant to be a small, one-purpose tool —
+            just for my own use — but it turned out to be something that others might find useful too.
+          </p>
+
+          <p class="fs-6 text-secondary" style="text-align: justify;">
+            Around the same time, I had already developed 
+            <a href="https://slotify.pythonanywhere.com/" target="_blank" class="text-decoration-none fw-semibold">Slotify</a>,
+            a platform used by research scholars and hostel residents to manage washing machine slot bookings. Since the infrastructure for
+            hosting and user interaction was already in place, I decided not to create a completely separate domain for this new project.
+            Instead, I integrated this new idea — the <strong>Marketplace</strong> — as a subdomain under Slotify.
+          </p>
+
+          <p class="fs-6 text-secondary" style="text-align: justify;">
+            The goal of the Marketplace is simple: to create a convenient space where students can list books or items they wish to give away
+            or sell, and others can book them through a quick, secure email-based OTP verification. It’s minimal, clean, and community-driven —
+            built by a researcher, for researchers and students.
+          </p>
+
+          <p class="text-end mb-0">
+            — <strong>Indrajit Ghosh</strong><br>
+            <span class="text-muted small">Senior Research Fellow, Stat-Math Unit, ISI Bangalore</span><br>
+            <a href="https://indrajitghosh.onrender.com" target="_blank" class="text-decoration-none text-muted">
+              indrajitghosh.onrender.com
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center mb-5">
+  <h3 class="fw-bold">Get Started</h3>
+  <p class="text-muted mb-4">
+    Join the <strong>Marketplace</strong> community — list your items, explore available ads, or check out what others are offering.
+  </p>
+
+  <div class="d-flex justify-content-center flex-wrap gap-2">
+    <a href="{{ url_for('marketplace.seller_register') }}" class="btn btn-primary btn-lg rounded-pill px-4">
+      Register as Seller
+    </a>
+    <a href="{{ url_for('marketplace.seller_login') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
+      Seller Login
+    </a>
+    <a href="{{ url_for('marketplace.listings') }}" class="btn btn-outline-success btn-lg rounded-pill px-4">
+      Recent Listings
+    </a>
+  </div>
+</div>
+
+
+{% endblock %}

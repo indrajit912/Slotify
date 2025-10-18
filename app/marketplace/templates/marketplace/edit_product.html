@@ -1,0 +1,29 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}Edit Product | Marketplace{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h3 class="fw-bold mb-3">Edit Product</h3>
+  <form method="POST" action="{{ url_for('marketplace.edit_product', product_uuid=product.uuid) }}">
+    <div class="mb-3">
+      <label class="form-label">Product Name</label>
+      <input type="text" name="name" value="{{ product.name }}" required class="form-control">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Price (INR)</label>
+      <input type="number" step="0.01" name="price_inr" value="{{ product.price_inr }}" required class="form-control">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Description</label>
+      <textarea name="description" rows="3" class="form-control">{{ product.description }}</textarea>
+    </div>
+
+    <div class="d-flex justify-content-between">
+      <a href="{{ url_for('marketplace.view_ad', uuid=product.advertisement.uuid) }}" class="btn btn-secondary">Back</a>
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

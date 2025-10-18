@@ -1,0 +1,61 @@
+{% extends 'marketplace/base.html' %}
+
+{% block title %}Marketplace | Seller Dashboard{% endblock %}
+
+{% block content %}
+<h2>Welcome, {{ seller.name }}</h2>
+
+<h4>Your Ads</h4>
+{% for ad in seller.ads %}
+<div class="card mb-2">
+  <div class="card-body">
+    <h5>{{ ad.title }}</h5>
+    <p>{{ ad.description }}</p>
+    <a href="{{ url_for('marketplace.view_ad', uuid=ad.uuid) }}" class="btn btn-sm btn-outline-primary">View</a>
+    <a href="{{ url_for('marketplace.edit_ad', ad_uuid=ad.uuid) }}" 
+   class="btn btn-sm btn-outline-warning me-2">Edit</a>
+    <form method="POST" action="{{ url_for('marketplace.delete_ad', uuid=ad.uuid) }}" style="display:inline;">
+      <button type="submit" class="btn btn-sm btn-outline-danger"
+              onclick="return confirm('Are you sure you want to delete this ad?');">
+        Delete
+      </button>
+    </form>
+    
+  </div>
+</div>
+{% endfor %}
+
+<hr>
+<h4 class="mt-4 mb-3 text-primary fw-semibold">Add a New Advertisement</h4>
+
+<div class="alert alert-info" role="alert" style="text-align: justify;">
+  <p class="mb-2">
+    Each <strong>advertisement</strong> represents a small collection of items that you wish to list together — for example,
+    you might create one ad titled <em>"Books on Functional Analysis"</em> or <em>"Electronics and Accessories"</em>.
+  </p>
+  <p class="mb-2">
+    Once you create an advertisement, you’ll be redirected to its detail page, where you can
+    <strong>add multiple products</strong> (like individual books, electric kettle, study lamp, etc.)
+    under the same advertisement.
+  </p>
+  <p class="mb-0">
+    This makes it easier for buyers to browse all related items in one place.
+    You can later <strong>edit or delete</strong> the products or the entire advertisement at any time.
+  </p>
+</div>
+
+<form method="POST" action="{{ url_for('marketplace.add_ad', seller_uuid=seller.uuid) }}" class="border rounded p-3 bg-light shadow-sm">
+  <div class="mb-3">
+    <label for="title" class="form-label fw-semibold">Advertisement Title</label>
+    <input type="text" id="title" name="title" placeholder="e.g. Books on Operator Algebras or Kitchen Essentials" class="form-control" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="description" class="form-label fw-semibold">Description (optional)</label>
+    <textarea id="description" name="description" rows="3" placeholder="Write a short note about your collection or any relevant details..." class="form-control"></textarea>
+  </div>
+
+  <button class="btn btn-primary w-100">Create Advertisement</button>
+</form>
+
+{% endblock %}

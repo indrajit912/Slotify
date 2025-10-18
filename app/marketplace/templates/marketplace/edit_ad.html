@@ -1,0 +1,23 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}Edit Advertisement | Marketplace{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="fw-bold mb-3">Edit Advertisement</h2>
+  <form method="POST" action="{{ url_for('marketplace.edit_ad', ad_uuid=ad.uuid) }}">
+    <div class="mb-3">
+      <label class="form-label">Title</label>
+      <input type="text" name="title" class="form-control" value="{{ ad.title }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Description</label>
+      <textarea name="description" class="form-control" rows="4">{{ ad.description }}</textarea>
+    </div>
+
+    <button class="btn btn-primary">Save Changes</button>
+    <a href="{{ url_for('marketplace.seller_dashboard', seller_uuid=ad.seller.uuid) }}" 
+       class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %}

@@ -23,6 +23,10 @@ class EmailConfig:
     MAIL_PASSWORD = os.environ.get("BOT_APP_PASSWORD")
     GMAIL_SERVER = ['smtp.gmail.com', 587]
 
+    HERMES_API_KEY = os.environ.get("HERMES_API_KEY")
+    HERMES_EMAILBOT_ID = os.environ.get("HERMES_EMAILBOT_ID")
+    HERMES_BASE_URL = "https://hermesbot.pythonanywhere.com"
+
 class Config:
     FLASK_APP = 'app'
     FLASK_APP_NAME = 'Slotify'
