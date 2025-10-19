@@ -89,26 +89,53 @@
         </div>
 
 
-
         <!-- Booking or Sold Badge -->
         <div class="text-end mt-2 mt-md-0">
           {% if p.is_sold %}
             {% set verified_booking = (p.bookings | selectattr('is_verified', 'equalto', True) | list) %}
             {% if verified_booking %}
               {% if seller and ad.seller_id == seller.id and p.is_sold %}
-                <span class="badge bg-secondary">
+                <span class="badge bg-secondary me-2">
                   <i class="bi bi-check-circle me-1"></i>Sold ({{ verified_booking[0].buyer_email }})
                 </span>
               {% else %}
-                <span class="badge bg-secondary">
+                <span class="badge bg-secondary me-2">
                   <i class="bi bi-check-circle me-1"></i>Sold
                 </span>
               {% endif %}
             {% else %}
-              <span class="badge bg-secondary">
+              <span class="badge bg-secondary me-2">
                 <i class="bi bi-check2-circle me-1"></i>Sold
               </span>
             {% endif %}
+            
+            <!-- Delivered Badge -->
+            {% if seller and ad.seller_id == seller.id %}
+              <form method="POST" 
+                    action="{{ url_for('marketplace.toggle_delivery_status', product_uuid=p.uuid) }}" 
+                    class="d-inline">
+                {% if p.is_delivered %}
+                  <button type="submit" class="badge bg-success border-0" title="Click to mark as not delivered">
+                    <i class="bi bi-truck me-1"></i>Delivered
+                  </button>
+                {% else %}
+                  <button type="submit" class="badge bg-warning text-dark border-0" title="Click to mark as delivered">
+                    <i class="bi bi-truck me-1"></i>Not Delivered
+                  </button>
+                {% endif %}
+              </form>
+            {% else %}
+              {% if p.is_delivered %}
+                <span class="badge bg-success">
+                  <i class="bi bi-truck me-1"></i>Delivered
+                </span>
+              {% else %}
+                <span class="badge bg-warning text-dark">
+                  <i class="bi bi-truck me-1"></i>Not Delivered
+                </span>
+              {% endif %}
+            {% endif %}
+              
           {% else %}
             <form method="POST" 
                   action="{{ url_for('marketplace.book_product', product_uuid=p.uuid) }}" 
@@ -125,6 +152,8 @@
             </form>
           {% endif %}
         </div>
+
+        
       </div>
     {% endfor %}
   </div>

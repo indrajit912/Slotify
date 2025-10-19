@@ -392,3 +392,19 @@ def delete_ad(uuid):
 
     flash('Advertisement deleted successfully.', 'success')
     return redirect(url_for('marketplace.seller_dashboard', seller_uuid=seller_uuid))
+
+@marketplace_bp.route("/product/<product_uuid>/toggle-delivery", methods=["POST"])
+def toggle_delivery_status(product_uuid):
+    product = Product.query.filter_by(uuid=product_uuid).first_or_404()
+
+    # Only the seller of this product can change delivery status
+    if product.advertisement.seller_id != session.get('seller_id'):
+        abort(403)
+
+    product.is_delivered = not product.is_delivered
+    db.session.commit()
+    flash(
+        f"Delivery status changed to {'Delivered' if product.is_delivered else 'Not Delivered'}.",
+        "info"
+    )
+    return redirect(request.referrer or url_for("marketplace.listings"))
