@@ -361,6 +361,26 @@ def edit_product(product_uuid):
     # For GET: render the edit form prefilled
     return render_template('marketplace/edit_product.html', product=product)
 
+@marketplace_bp.route('/delete_product/<product_uuid>', methods=['POST'])
+def delete_product(product_uuid):
+    product = Product.query.options(joinedload(Product.advertisement)).filter_by(uuid=product_uuid).first_or_404()
+    seller_id = session.get('seller_id')
+
+    # Ensure the logged-in seller owns this product
+    if not seller_id or product.advertisement.seller_id != seller_id:
+        flash('Unauthorized action.', 'danger')
+        return redirect(url_for('marketplace.view_ad', uuid=product.advertisement.uuid))
+
+    ad_uuid = product.advertisement.uuid
+
+    # Delete the product
+    db.session.delete(product)
+    db.session.commit()
+
+    flash('Product deleted successfully.', 'success')
+    return redirect(url_for('marketplace.view_ad', uuid=ad_uuid))
+
+
 
 @marketplace_bp.route('/ads/delete/<uuid>', methods=['POST'])
 def delete_ad(uuid):
