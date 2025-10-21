@@ -5,8 +5,27 @@
 {% block content %}
 <h3>Verify Booking</h3>
 <p>An OTP was sent to {{ booking.buyer_email }}</p>
-<form method="POST">
+
+<form method="POST" id="verifyForm">
   <input type="text" name="otp" placeholder="Enter OTP" required class="form-control mb-3">
-  <button class="btn btn-success">Verify</button>
+
+  <button class="btn btn-success" type="submit" id="verifyBtn">
+    <span id="btnText">Verify</span>
+    <span id="btnSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+  </button>
 </form>
+
+<script>
+  const form = document.getElementById('verifyForm');
+  const btn = document.getElementById('verifyBtn');
+  const spinner = document.getElementById('btnSpinner');
+  const btnText = document.getElementById('btnText');
+
+  form.addEventListener('submit', function() {
+    // Show spinner and disable button
+    spinner.classList.remove('d-none');
+    btnText.textContent = 'Verifying...';
+    btn.disabled = true;
+  });
+</script>
 {% endblock %}

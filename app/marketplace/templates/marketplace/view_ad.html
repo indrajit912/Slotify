@@ -10,21 +10,41 @@
     </a>
   </div>
 
-  <!-- Ad Header -->
+<!-- Ad Header -->
 <div class="card shadow-sm border-0 mb-4">
   <div class="card-body">
-    <h2 class="fw-bold text-primary mb-2">
-      <i class="bi bi-basket2-fill me-2"></i>{{ ad.title }}
-    </h2>
+    <div class="d-flex justify-content-between align-items-start">
+      <h2 class="fw-bold text-primary mb-2">
+        <i class="bi bi-basket2-fill me-2"></i>{{ ad.title }}
+      </h2>
+
+      <!-- Icon-only Share Button -->
+      <button 
+        class="btn btn-outline-secondary btn-sm rounded-circle" 
+        onclick="shareAd('{{ ad.title }}', '{{ url_for('marketplace.view_ad', uuid=ad.uuid, _external=True) }}')" 
+        title="Share this ad"
+      >
+        <i class="bi bi-share-fill"></i>
+      </button>
+    </div>
 
     <!-- Seller and Date -->
-    <p class="text-secondary small mb-3">
+    <p class="text-secondary small mb-1">
       <i class="bi bi-person-circle me-1"></i>
       {{ ad.seller.name if ad.seller else "Unknown Seller" }}
       &nbsp;•&nbsp;
       <i class="bi bi-calendar3 me-1"></i>
       Posted on {{ ad.created_at.strftime('%b %d, %Y') if ad.created_at else 'N/A' }}
     </p>
+
+    {% if ad.seller and ad.seller.email %}
+    <p class="text-secondary small mb-3">
+      <i class="bi bi-envelope-at-fill me-1"></i>
+      <a href="mailto:{{ ad.seller.email }}" class="text-decoration-none text-secondary">
+        {{ ad.seller.email }}
+      </a>
+    </p>
+    {% endif %}
 
     <p class="text-muted mb-0">{{ ad.description }}</p>
   </div>
@@ -50,8 +70,8 @@
               <small class="text-muted ms-2">₹{{ "%.2f"|format(p.price_inr) }}</small>
             
               {% if p.image_url %}
-                <a href="{{ p.image_url }}" target="_blank" class="badge bg-warning ms-2 text-decoration-none">
-                  <i class="bi bi-card-image text-secondary"></i>img
+                <a href="{{ p.image_url }}" target="_blank" class="">
+                  <i class="bi bi-card-image text-secondary"></i>
                 </a>
               {% endif %}
             </h5>
@@ -206,5 +226,22 @@ function showSpinner(form) {
   btnText.textContent = 'Sending...';
   btn.disabled = true;
 }
+</script>
+
+<!-- JS for Share -->
+<script>
+  function shareAd(title, url) {
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        text: "Check out this advertisement!",
+        url: url
+      }).catch((error) => console.log('Sharing failed:', error));
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        alert("Link copied to clipboard!");
+      });
+    }
+  }
 </script>
 {% endblock %}

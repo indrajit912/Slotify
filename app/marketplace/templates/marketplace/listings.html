@@ -1,5 +1,6 @@
 {% extends 'marketplace/base.html' %}
 {% block title %}Marketplace | Listings{% endblock %}
+:e app
 
 {% block content %}
   <div class="text-center mb-4">
@@ -12,14 +13,35 @@
         <div class="col-md-6 col-lg-4 mb-4">
           <div class="card shadow-sm border-0 h-100 rounded-4">
             <div class="card-body">
-              <h5 class="card-title">{{ ad.title }}</h5>
+              <h5 class="card-title fw-semibold text-primary">{{ ad.title }}</h5>
               <p class="card-text text-muted small" style="min-height: 60px;">
                 {{ ad.description[:120] }}{% if ad.description|length > 120 %}...{% endif %}
               </p>
-              <a href="{{ url_for('marketplace.view_ad', uuid=ad.uuid) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">View Details</a>
             </div>
-            <div class="card-footer bg-transparent border-0 text-end small text-muted">
-              Posted by <strong>{{ ad.seller.name }}</strong> on {{ ad.created_at.strftime('%b %d, %Y') }}
+
+            <!-- Footer with icons -->
+            <div class="card-footer bg-transparent border-0 d-flex justify-content-between align-items-center">
+              <small class="text-muted">
+                Posted by <strong>{{ ad.seller.name }}</strong> on {{ ad.created_at.strftime('%b %d, %Y') }}
+              </small>
+
+              <div class="d-flex gap-2">
+
+                <!-- Details Button -->
+                <a href="{{ url_for('marketplace.view_ad', uuid=ad.uuid) }}" 
+                   class="btn btn-outline-primary btn-sm rounded-circle" 
+                   title="View details">
+                  <i class="bi bi-info-circle-fill"></i>
+                </a>
+
+                <!-- Share Button -->
+                <button class="btn btn-outline-secondary btn-sm rounded-circle" 
+                        title="Share this ad"
+                        onclick="shareAd('{{ ad.title }}', '{{ url_for('marketplace.view_ad', uuid=ad.uuid, _external=True) }}')">
+                  <i class="bi bi-share-fill"></i>
+                </button>
+                
+              </div>
             </div>
           </div>
         </div>
@@ -29,10 +51,28 @@
         <div class="alert alert-light border rounded-4 shadow-sm">
           <p class="mb-1 fs-5 text-secondary">No ads yet!</p>
           <p class="text-muted small">Be the first to list an item on the Marketplace.</p>
-          <a href="{{ url_for('marketplace.seller_register') }}" class="btn btn-sm btn-success rounded-pill px-3">Register & Add Ad</a>
+          <a href="{{ url_for('marketplace.seller_register') }}" class="btn btn-sm btn-success rounded-pill px-3">
+            Register & Add Ad
+          </a>
         </div>
       </div>
     {% endif %}
   </div>
-</div>
+
+  <!-- JS for Share -->
+  <script>
+    function shareAd(title, url) {
+      if (navigator.share) {
+        navigator.share({
+          title: title,
+          text: "Check out this advertisement!",
+          url: url
+        }).catch((error) => console.log('Sharing failed:', error));
+      } else {
+        navigator.clipboard.writeText(url).then(() => {
+          alert("Link copied to clipboard!");
+        });
+      }
+    }
+  </script>
 {% endblock %}

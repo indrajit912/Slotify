@@ -37,7 +37,6 @@ def view_ad(uuid):
     return render_template('marketplace/view_ad.html', ad=ad, seller=seller)
 
 
-# ---------- Buyer Booking ----------
 @marketplace_bp.route('/book/<product_uuid>', methods=['POST'])
 def book_product(product_uuid):
     product = Product.query.filter_by(uuid=product_uuid).first_or_404()
@@ -63,25 +62,45 @@ def book_product(product_uuid):
     db.session.add(booking)
     db.session.commit()
 
-    # Email content
+    # --- Email content ---
     subject = f"Verify your booking for '{product.name}'"
     html_body = f"""
-    <div style="font-family:Arial, sans-serif; color:#333;">
-      <h2 style="color:#2a7ae2;">Slotify Marketplace</h2>
+    <div style="font-family:Arial, sans-serif; color:#333; line-height:1.6;">
+      <h2 style="color:#0d6efd;">Slotify Marketplace</h2>
+
       <p>Hello,</p>
-      <p>You have requested to book <strong>{product.name}</strong> (₹{product.price_inr:.2f}).</p>
+      <p>
+        You have requested to book <strong>{product.name}</strong> 
+        for ₹{product.price_inr:.2f}.
+      </p>
+
       <p>Your One-Time Password (OTP) for verification is:</p>
-      <h3 style="background:#f0f0f0; padding:10px; display:inline-block; border-radius:6px;">{otp}</h3>
-      <p>Please enter this OTP on the verification page to confirm your booking.</p>
-      <br>
-      <p style="font-size:0.9em; color:#777;">If you did not request this, you can safely ignore this email.</p>
-      <hr>
-      <p><strong>Slotify Marketplace</strong><br>
-      <a href="https://slotify.pythonanywhere.com/marketplace" target="_blank">Visit Marketplace</a></p>
-    </div>
+      <h2 style="background:#f8f9fa; padding:12px 20px; display:inline-block; border-radius:8px; color:#000; letter-spacing:3px; border:1px solid #ddd;">
+        {otp}
+      </h2>
+
+      <p style="margin-top:12px;">
+        Please enter this OTP on the verification page to confirm your booking.
+      </p>
+
+      <p style="font-size:0.9em; color:#777;">
+        If you did not request this booking, you can safely ignore this email.
+      </p>
+
+      <hr style="margin-top:20px; margin-bottom:10px;">
+
+      <p style="font-size:0.9em; color:#555;">
+    Kind regards,<br>
+    <strong>Indrajit</strong><br>
+    Owner, <a href="https://slotify.pythonanywhere.com/marketplace" target="_blank" style="color:#0d6efd;">Slotify Marketplace</a><br>
+    My personal webpage is 
+    <a href="https://indrajitghosh.onrender.com" target="_blank" style="color:#0d6efd; text-decoration:none;">here</a>.<br>
+    Bangalore, India
+  </p>
+  </div>
     """
 
-    # Send email using Hermes
+    # --- Send email via Hermes ---
     try:
         response = send_email_via_hermes(
             to=email,
@@ -114,10 +133,80 @@ def verify_booking(booking_id):
             booking.is_verified = True
             booking.product.is_sold = True
             db.session.commit()
-            flash('Booking verified successfully! Seller will contact you soon.', 'success')
+
+            # --- Send email to the seller ---
+            product = booking.product
+            ad = product.advertisement
+            seller = ad.seller
+
+            ad_link = url_for('marketplace.view_ad', uuid=ad.uuid, _external=True)
+
+            subject = f"Order Notification: {product.name} has been booked"
+            html_body = f"""
+            <div style="font-family:Arial, sans-serif; color:#333; line-height:1.6;">
+              <h2 style="color:#0d6efd;">Slotify Marketplace</h2>
+
+              <p>Dear {seller.name},</p>
+
+              <p>
+                A buyer has successfully verified their booking for your product 
+                <strong>{product.name}</strong> (₹{product.price_inr:.2f}).
+              </p>
+
+              <h4 style="margin-top:12px;">Buyer Details:</h4>
+              <ul style="margin:0; padding-left:20px;">
+                <li><strong>Email:</strong> {booking.buyer_email}</li>
+              </ul>
+
+              <p style="margin-top:12px;">
+                You can review the advertisement and booking details here:
+                <br>
+                <a href="{ad_link}" target="_blank" style="color:#0d6efd; text-decoration:none;">
+                  🔗 View Advertisement
+                </a>
+              </p>
+
+              <p style="font-size:0.95em; color:#555;">
+                Please contact the buyer directly to coordinate delivery and payment, if applicable.
+              </p>
+
+              <hr style="margin-top:20px; margin-bottom:10px;">
+
+<p style="font-size:0.9em; color:#555;">
+    Kind regards,<br>
+    <strong>Indrajit</strong><br>
+    Owner, <a href="https://slotify.pythonanywhere.com/marketplace" target="_blank" style="color:#0d6efd;">Slotify Marketplace</a><br>
+    My personal webpage is 
+    <a href="https://indrajitghosh.onrender.com" target="_blank" style="color:#0d6efd; text-decoration:none;">here</a>.<br>
+    Bangalore, India
+  </p>
+            </div>
+            """
+
+            try:
+                response = send_email_via_hermes(
+                    to=seller.email,
+                    subject=subject,
+                    email_html_text=html_body,
+                    api_key=EmailConfig.HERMES_API_KEY,
+                    bot_id=EmailConfig.HERMES_EMAILBOT_ID,
+                    api_url=f"{EmailConfig.HERMES_BASE_URL}/api/v1/send-email",
+                    from_name="Slotify Marketplace"
+                )
+
+                if response.get("success"):
+                    flash('Booking verified successfully! Seller has been notified.', 'success')
+                else:
+                    flash('Booking verified, but failed to notify seller.', 'warning')
+
+            except Exception as e:
+                print(f"Error sending seller email: {e}")
+                flash('Booking verified, but could not send seller notification.', 'danger')
+
             return redirect(url_for('marketplace.listings'))
         else:
             flash('Invalid OTP. Please try again.', 'danger')
+
     return render_template('marketplace/verify_booking.html', booking=booking)
 
 @marketplace_bp.route('/remove_buyer/<product_uuid>', methods=['POST'])
@@ -403,6 +492,59 @@ def toggle_delivery_status(product_uuid):
 
     product.is_delivered = not product.is_delivered
     db.session.commit()
+
+    # Send email to buyer if delivered
+    if product.is_delivered:
+        # Get all verified bookings for this product
+        bookings = ProductBooking.query.filter_by(product_id=product.id, is_verified=True).all()
+        for booking in bookings:
+            buyer_email = booking.buyer_email
+            ad_link = url_for('marketplace.view_ad', uuid=product.advertisement.uuid, _external=True)
+
+            subject = f"Your order '{product.name}' has been delivered!"
+            html_body = f"""
+            <div style="font-family:Arial, sans-serif; color:#333; line-height:1.6;">
+              <h2 style="color:#0d6efd;">Slotify Marketplace</h2>
+
+              <p>Hello,</p>
+
+              <p>
+                Good news! Your order for <strong>{product.name}</strong> (₹{product.price_inr:.2f}) has been marked as <strong>Delivered</strong> by the seller.
+              </p>
+
+              <p>You can view your order details here: 
+                <a href="{ad_link}" target="_blank" style="color:#0d6efd; text-decoration:none;">
+                  🔗 View Advertisement
+                </a>
+              </p>
+
+              <hr style="margin-top:20px; margin-bottom:10px;">
+
+              <p style="font-size:0.9em; color:#555;">
+                Kind regards,<br>
+                <strong>Indrajit</strong><br>
+                Owner, <a href="https://slotify.pythonanywhere.com/marketplace" target="_blank" style="color:#0d6efd;">Slotify Marketplace</a><br>
+                My personal webpage is <a href="https://indrajitghosh.onrender.com" target="_blank" style="color:#0d6efd; text-decoration:none;">here</a>.<br>
+                Bangalore, India
+              </p>
+            </div>
+            """
+
+            try:
+                response = send_email_via_hermes(
+                    to=buyer_email,
+                    subject=subject,
+                    email_html_text=html_body,
+                    api_key=EmailConfig.HERMES_API_KEY,
+                    bot_id=EmailConfig.HERMES_EMAILBOT_ID,
+                    api_url=f"{EmailConfig.HERMES_BASE_URL}/api/v1/send-email",
+                    from_name="Slotify Marketplace"
+                )
+                if not response.get("success"):
+                    print(f"Failed to send delivery email to {buyer_email}")
+            except Exception as e:
+                print(f"Error sending delivery email to {buyer_email}: {e}")
+
     flash(
         f"Delivery status changed to {'Delivered' if product.is_delivered else 'Not Delivered'}.",
         "info"
