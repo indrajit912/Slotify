@@ -20,9 +20,24 @@ def get_serializer():
 def index():
     return render_template('marketplace/index.html')
 
+@marketplace_bp.route('/sellers/')
+def sellers():
+    # Fetch sellers with ads
+    sellers = Seller.query.options(db.joinedload(Seller.ads)).order_by(Seller.created_at.desc()).all()
+    return render_template('marketplace/sellers.html', sellers=sellers)
+
+
 @marketplace_bp.route('/listings/')
 def listings():
-    ads = Advertisement.query.order_by(Advertisement.created_at.desc()).all()
+    seller_uuid = request.args.get('seller_uuid')  # optional query param
+
+    query = Advertisement.query.order_by(Advertisement.created_at.desc())
+
+    if seller_uuid:
+        # Join with Seller to filter by UUID
+        query = query.join(Advertisement.seller).filter(Seller.uuid == seller_uuid)
+
+    ads = query.all()
     return render_template('marketplace/listings.html', ads=ads)
 
 @marketplace_bp.route('/ads/<uuid>')

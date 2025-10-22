@@ -1,0 +1,57 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}Marketplace | Sellers{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <h3 class="fw-bold text-secondary">Marketplace Sellers</h3>
+        <a href="{{ url_for('marketplace.seller_register') }}" class="btn btn-success rounded-pill px-4">
+            + Register New Seller
+        </a>
+    </div>
+
+    {% if sellers %}
+    <div class="table-responsive shadow-sm rounded-4">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Seller Name</th>
+                    <th class="d-none d-sm-table-cell">Email</th>
+                    <th class="d-none d-md-table-cell">Joined Date</th>
+                    <th>Ads Posted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for seller in sellers %}
+                <tr>
+                    <th scope="row">{{ loop.index }}</th>
+                    <td class="fw-semibold text-primary">{{ seller.name }}</td>
+                    <td class="d-none d-sm-table-cell">
+                        <a href="mailto:{{ seller.email }}" class="text-decoration-none">{{ seller.email }}</a>
+                    </td>
+                    <td class="d-none d-md-table-cell">{{ seller.created_at.strftime('%b %d, %Y') }}</td>
+                    <td>{{ seller.ads|length }}</td>
+                    <td>
+                        <a href="{{ url_for('marketplace.listings', seller_uuid=seller.uuid) }}" 
+                           class="btn btn-outline-primary btn-sm rounded-pill">
+                           View Ads
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-light border rounded-4 shadow-sm text-center py-4">
+        <p class="mb-2 fs-5 text-secondary">No sellers yet!</p>
+        <p class="text-muted small">Be the first to register and start selling on the Marketplace.</p>
+        <a href="{{ url_for('marketplace.seller_register') }}" class="btn btn-success rounded-pill px-4">
+            Register as Seller
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
