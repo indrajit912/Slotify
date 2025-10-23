@@ -309,7 +309,14 @@ def register():
                 flash("Failed to send verification email. Please try again later.", "danger")
                 return redirect(url_for('auth.register'))
 
-            flash("A confirmation email has been sent. Please verify to complete registration. If you don't see it, please check your spam folder.", "info")
+            flash(
+                "A confirmation email has been sent. Please verify to complete registration. "
+                "If you don't see it, please check your spam folder. "
+                "If you still don’t receive it (even in spam), try using a personal email address "
+                "(e.g., Gmail) instead of your ISI Bangalore email, and register again.",
+                "info"
+            )
+            
             return redirect(url_for('auth.login'))
 
     if form.errors:
