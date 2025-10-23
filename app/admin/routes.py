@@ -38,7 +38,8 @@ from app.services import (
     update_washing_machine,
     create_new_enrolled_student,
     update_enrolled_student,
-    cancel_booking_by_uuid
+    cancel_booking_by_uuid,
+    delete_washing_machine_by_uuid
 )
 
 logger = logging.getLogger(__name__)
@@ -190,7 +191,28 @@ def create_machine():
         logger.error(f"Error creating washing machine: {str(e)}")
         flash("An error occurred while creating the washing machine. Please try again.", "danger")
         return redirect(url_for('admin.home'))
-    
+
+@admin_bp.route('/delete_machine/<string:machine_uuid>', methods=['POST'])
+@admin_required
+def delete_machine(machine_uuid):
+    """
+    Deletes a washing machine (and its related data) by UUID.
+    Accessible only to admins.
+    """
+    try:
+        success = delete_washing_machine_by_uuid(machine_uuid)
+        if success:
+            flash("Washing machine deleted successfully.", "success")
+        else:
+            flash("Failed to delete washing machine. Please try again.", "danger")
+    except ValueError as ve:
+        flash(str(ve), "warning")
+    except Exception as e:
+        flash(f"An error occurred while deleting the machine: {str(e)}", "danger")
+
+    # Redirect back to the referring page or machine list
+    return redirect(request.referrer or url_for('admin.machines_list'))
+
 
 @admin_bp.route('/edit_machine/<string:machine_uuid>', methods=['POST'])
 @admin_required

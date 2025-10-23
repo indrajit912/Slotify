@@ -53,5 +53,6 @@ __all__ = [
     "create_new_enrolled_student",
     "update_enrolled_student",
     "delete_enrolled_students",
-    "send_reminder_emails"
+    "send_reminder_emails",
+    "delete_washing_machine_by_uuid"
 ]
