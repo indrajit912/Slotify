@@ -92,9 +92,12 @@ if __name__ == "__main__":
 
     result = send_email_via_hermes(
         api_url=f"{HOST}/api/v1/send-email",
-        api_key="YOUR_API_KEY",
-        to=["recipient@example.com"],
+        api_key="e95ee42ceeb845adb82bc7e84aad650b",
+        bot_id="8551cc17b81c4669a04b59bb4aed3b5c",
+        to=["someone@gmail.com"],
         subject="Hello from Hermes",
+        cc=["someone@gmail.com"],
+        bcc=["someone@gmail.com"],
         email_html_text="""
             <html>
               <body>
