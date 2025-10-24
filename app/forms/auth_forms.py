@@ -4,7 +4,7 @@
 #
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, EmailField, SelectField, DateField
+from wtforms import StringField, SubmitField, PasswordField, BooleanField, SelectField, DateField
 from wtforms.validators import DataRequired, EqualTo, ValidationError, Length, Email, Optional
 from app.models.user import CurrentEnrolledStudent
 from app.models.building import Building
@@ -72,6 +72,23 @@ class RegisterForm(FlaskForm):
         validators=[Optional(), Length(max=100)],
         render_kw={"placeholder": "Whom you're visiting?"}
     )  
+
+    # Fields for Admin Verification Code
+    has_avc = BooleanField(
+        "I have an Admin Verification Code",
+        default=False,
+        description=(
+            "If your verification email failed, you can request a code from an admin instead. "
+            "If you don’t have one, just leave this unchecked and proceed to the next step."
+        )
+    )
+    
+    admin_verification_code = StringField(
+        "Admin Verification Code",
+        validators=[Optional(), Length(max=512)],
+        description="Paste the code provided by the admin."
+    )
+
     submit = SubmitField("Register")
 
     def validate(self, extra_validators=None):

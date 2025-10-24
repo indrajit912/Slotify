@@ -21,7 +21,7 @@ from app.models.course import Course
 from app.services import update_user_last_seen, create_user, get_user_by_email, update_user_by_uuid
 from app.utils.decorators import logout_required, email_verification_required
 from scripts.email_message import EmailMessage
-from app.utils.token import generate_registration_token, confirm_registration_token
+from app.utils.token import generate_registration_token, confirm_registration_token, verify_admin_verification_code
 from config import EmailConfig
 from app.extensions import db
 
@@ -283,6 +283,58 @@ def register():
 
         else:
             # Regular user: Send email verification to user
+            # Check for Admin Verification Code (AVC)
+            avc_code = request.form.get("admin_verification_code", "").strip()
+
+            if avc_code:
+                avc_data = verify_admin_verification_code(avc_code)
+                if not avc_data:
+                    flash("Invalid Admin Verification Code.", "danger")
+                    return redirect(url_for('auth.register'))
+
+                # 1️⃣ Check that the admin email belongs to a real admin
+                admin = User.query.filter(
+                    User.email == avc_data["admin_email"],
+                    User.role.in_(["admin", "superadmin"])
+                ).first()
+                if not admin:
+                    flash("The Admin Verification Code was not issued by a valid admin.", "danger")
+                    return redirect(url_for('auth.register'))
+
+                # 2️⃣ Check that user email matches
+                if avc_data["user_email"].lower() != form.email.data.lower():
+                    flash("The Admin Verification Code does not match the entered email address.", "danger")
+                    return redirect(url_for('auth.register'))
+                
+                # Create user directly as email is verified by admin
+                try:
+                    user = create_user(
+                        username=form_data["username"],
+                        first_name=form_data["first_name"],
+                        middle_name=form_data["middle_name"],
+                        last_name=form_data["last_name"],
+                        email=form_data["email"],
+                        password=form_data["password"],
+                        contact_no=form_data["contact_no"],
+                        room_no=form_data["room_no"],
+                        building_uuid=form_data["building_uuid"],
+                        role=form_data["role"],
+                        course_uuid=form_data["course_uuid"],
+                        email_verified=True,  # <-- key part
+                        departure_date=form_data["departure_date"],
+                        host_name=form_data["host_name"],
+                    )
+                    logger.info(f"User created directly via Admin Verification Code: {user.email}")
+                    flash("Registration successful! Your email was verified by an admin. You can now log in.", "success")
+                    return redirect(url_for('auth.login'))
+
+                except ValueError as e:
+                    logger.error(f"Failed to create user via AVC: {e}")
+                    flash(str(e), "danger")
+                    return redirect(url_for('auth.register'))
+
+
+            # Regular user: Send email verification to user
             html = render_template(
                 'email/verify_email.html',
                 verification_link=verification_link,
@@ -316,7 +368,7 @@ def register():
                 "from your ISI Bangalore email address.",
                 "info"
             )
-            
+
 
             return redirect(url_for('auth.login'))
 

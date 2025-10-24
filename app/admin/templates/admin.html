@@ -115,6 +115,24 @@
   </div>
 </div>
 
+  <!-- Admin Verification Code -->
+  <div class="col">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-shield-check me-2 text-success"></i>Admin Verification Code</h5>
+        <p class="card-text">
+          Generate a one-time Admin Verification Code (AVC) for users whose email verification failed.
+          This code securely links your admin email and the user’s email.
+        </p>
+        <a href="{{ url_for('admin.generate_avc_page') }}" class="btn btn-primary">
+          <i class="bi bi-link-45deg me-1"></i> Generate Code
+        </a>
+        
+      </div>
+    </div>
+  </div>
+
+
 <!-- New: Manage API Tokens -->
 <div class="col">
   <div class="card h-100 shadow-sm">

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Generate Admin Verification Code{% endblock %}
+
+{% block content %}
+{% include "flash_msgs.html" %}
+
+<a href="{{ url_for('admin.home') }}" class="btn btn-outline-secondary mb-3">
+    <i class="bi bi-arrow-left"></i> Back to Dashboard
+</a>
+
+<h1 class="heading mb-4">
+  <i class="bi bi-shield-check me-2 text-success"></i>
+  Generate Admin Verification Code
+</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <p class="mb-4">
+      Sometimes, a user’s verification email may not reach their inbox due to server or spam issues. 
+      In such cases, an admin can manually verify the user’s ownership of the email by generating a one-time 
+      <strong>Admin Verification Code (AVC)</strong>. 
+
+      This code is specifically useful when a user with an ISIBang email is unable to complete their registration to Slotify 
+      because the confirmation email is not delivered. This is a known issue with the ISIBang mailbox. 
+
+      If a user contacts you regarding this problem, ask them to provide their ISIBang email address. 
+      Use that email address below to generate a code. Once the code is generated, you can copy a ready-to-send 
+      email containing the necessary steps and the code for the user to follow. 
+    </p>
+
+    <div class="alert alert-warning mt-3" role="alert">
+      <strong>⚠️ Warning:</strong> Do NOT send this code to any other email address other than the one for which it was generated.
+    </div>
+
+
+
+    <form method="POST" action="{{ url_for('admin.generate_avc_page') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="mb-3">
+        <label for="user_email" class="form-label">User Email Address</label>
+        <input type="email" class="form-control" id="user_email" name="user_email"
+               placeholder="Enter the user's email" required>
+        <div class="form-text">Enter the email address of the user who needs manual verification.</div>
+      </div>
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-shield-check me-1"></i> Generate Code
+      </button>
+    </form>
+  </div>
+</div>
+
+{% if avc_code %}
+  <div class="card shadow-sm mt-4 border-success">
+    <div class="card-body">
+      <h5 class="card-title text-success">
+        <i class="bi bi-check-circle-fill me-2"></i>Admin Verification Code Generated
+      </h5>
+      <p><strong>Admin:</strong> {{ admin_email }}</p>
+      <p><strong>User:</strong> {{ user_email }}</p>
+
+      <div class="alert alert-warning mt-3">
+        <strong>Admin Note:</strong> Send the following email which contains the code ONLY to the above email address. Do not share it with anyone else.
+      </div>
+
+      <div class="mt-3">
+        <button class="btn btn-outline-primary" onclick="generateUserEmail()">
+          <i class="bi bi-envelope-fill me-1"></i> Generate Email for User
+        </button>
+      </div>
+
+      <div class="mt-3" id="user_email_text_container" style="display:none;">
+        <label for="user_email_text" class="form-label"><strong>Copy this email to send to the user:</strong></label>
+        <textarea class="form-control" id="user_email_text" rows="10" readonly></textarea>
+        <div class="mt-2 d-flex gap-2">
+          <button class="btn btn-success" onclick="copyEmailText()">
+            <i class="bi bi-clipboard-fill me-1"></i> Copy Email
+          </button>
+          <small class="text-muted align-self-center">
+            Click to copy the email text to your clipboard and send it to the user's email.
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function generateUserEmail() {
+      const avc = "{{ avc_code }}";
+      const userEmail = "{{ user_email }}";
+      const registrationLink = "https://slotify.pythonanywhere.com/register";
+      const emailText = `Hello,
+
+It seems you were unable to receive your verification email at your ISI Bangalore address. An admin from our team has generated a one-time Admin Verification Code (AVC) for you. Please follow the steps below to complete your registration:
+
+1. Go to the registration page: ${registrationLink}
+2. Fill in your details:
+   - Email: ${userEmail}
+   - Password: Choose a secure password
+   - Other required fields
+3. Check the box "I have an Admin Verification Code"
+4. Paste the following code carefully (note it may start with a '.'):
+
+   ${avc}
+
+5. Click the 'Register' button.
+
+After completing these steps, your account will be automatically verified, and you can log in immediately.
+
+Thank you,
+Slotify Admin Team`;
+
+      const container = document.getElementById("user_email_text_container");
+      const textarea = document.getElementById("user_email_text");
+      textarea.value = emailText;
+      container.style.display = "block";
+    }
+
+    function copyEmailText() {
+      const textarea = document.getElementById("user_email_text");
+      textarea.select();
+      textarea.setSelectionRange(0, 99999); // For mobile devices
+      navigator.clipboard.writeText(textarea.value)
+        .then(() => {
+          alert("Email copied to clipboard!");
+        })
+        .catch(err => {
+          alert("Failed to copy email. Please copy manually.");
+        });
+    }
+  </script>
+{% endif %}
+
+
+
+
+{% endblock %}

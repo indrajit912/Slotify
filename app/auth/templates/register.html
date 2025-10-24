@@ -191,6 +191,32 @@
                     {% endif %}
                 </div>
 
+                <!-- Admin Verification Code Option -->
+                <div class="form-check mb-3">
+                    {{ form.has_avc(class="form-check-input", id="has_avc") }}
+                    <label class="form-check-label" for="has_avc">
+                        {{ form.has_avc.label.text }}
+                    </label>
+                    {% if form.has_avc.description %}
+                        <div class="form-text">{{ form.has_avc.description }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Admin Verification Code Field -->
+                <div class="form-floating mb-3" id="avc_field" style="display: none;">
+                    {{ form.admin_verification_code(class="form-control", placeholder="Paste your admin verification code here", id="admin_verification_code") }}
+                    <label for="admin_verification_code">
+                        <i class="bi bi-key"></i> {{ form.admin_verification_code.label.text }}
+                    </label>
+                    {% if form.admin_verification_code.errors %}
+                        <div class="text-danger small">{{ form.admin_verification_code.errors[0] }}</div>
+                    {% endif %}
+                    {% if form.admin_verification_code.description %}
+                        <div class="form-text">{{ form.admin_verification_code.description }}</div>
+                    {% endif %}
+                </div>
+
+
                 <div class="d-grid">
                     <button id="submit-btn" type="submit" class="btn btn-primary btn-lg">
                         <span id="spinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
@@ -252,6 +278,25 @@
         roleSelect.addEventListener("change", toggleFields);
         toggleFields();  // Initial call
     });
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const avcCheckbox = document.getElementById("has_avc");
+    const avcField = document.getElementById("avc_field");
+
+    function toggleAVCField() {
+        if (avcCheckbox.checked) {
+            avcField.style.display = "block";
+        } else {
+            avcField.style.display = "none";
+            document.getElementById("admin_verification_code").value = "";
+        }
+    }
+
+    avcCheckbox.addEventListener("change", toggleAVCField);
+    toggleAVCField(); // Initial state on page load
+});
 </script>
 
 

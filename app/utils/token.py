@@ -100,3 +100,30 @@ def verify_import_token(token: str) -> bool:
         return False
     token_hash = sha256_hash(token)
     return hmac.compare_digest(token_hash, Config.IMPORT_TOKEN_HASH)
+
+def generate_admin_verification_code(admin_email: str, user_email: str) -> str:
+    """
+    Generate a signed Admin Verification Code (AVC).
+    This code can be used by any users to verify their email id with admin approval.
+    It will bypass the usual email verification process if the user provides a valid AVC.
+    This is typically used when an admin manually approves a user registration.
+    This is a confirmation that the admin has verified the user's email.
+    """
+    serializer = URLSafeSerializer(current_app.config["SECRET_KEY"], salt="admin-verification-code")
+    payload = {
+        "admin_email": admin_email,
+        "user_email": user_email,
+        "issued_at": utcnow().isoformat()
+    }
+    return serializer.dumps(payload)
+
+def verify_admin_verification_code(code: str):
+    """Return decoded data if valid, otherwise None."""
+    serializer = URLSafeSerializer(current_app.config["SECRET_KEY"], salt="admin-verification-code")
+    try:
+        data = serializer.loads(code)
+        return data  # contains 'admin_email', 'user_email', 'issued_at'
+    except BadSignature:
+        return None
+    
+
