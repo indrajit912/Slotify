@@ -312,11 +312,12 @@ def register():
             flash(
                 "A confirmation email has been sent. Please verify to complete registration. "
                 "If you don't see it, please check your spam folder. "
-                "If you still don’t receive it (even in spam), try using a personal email address "
-                "(e.g., Gmail) instead of your ISI Bangalore email, and register again.",
+                "If you still don’t receive it (even in spam), please contact one of the admins "
+                "from your ISI Bangalore email address.",
                 "info"
             )
             
+
             return redirect(url_for('auth.login'))
 
     if form.errors:

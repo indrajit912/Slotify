@@ -33,11 +33,11 @@ class RegisterForm(FlaskForm):
     first_name = StringField("First Name", validators=[DataRequired(), Length(max=50)])
     middle_name = StringField("Middle Name", validators=[Length(max=50)])
     last_name = StringField("Last Name", validators=[Length(max=50)])
-    # If you are an ISI student or employee, please use your ISI email ID. If you stay outside campus (e.g., BSDS students), contact an admin for registration.
+    
     email = StringField(
         "Email", 
         validators=[DataRequired(), Email(), Length(max=120)],
-        description="Please enter a valid email address. Note that ISI Bangalore (isibang) email accounts sometimes fail to receive messages — yes, it’s a bit strange! If possible, consider using your personal email (e.g., Gmail) instead."
+        description="If you are an ISI student or employee, please use your ISI email ID. If you stay outside campus (e.g., BSDS students), contact an admin for registration."
     )
     password = PasswordField(
         "Password",
@@ -85,10 +85,10 @@ class RegisterForm(FlaskForm):
 
             # ✅ Enrolled student email check: TODO: Currently disabled.
             email = self.email.data.lower()
-            # enrolled = CurrentEnrolledStudent.query.filter_by(email=email).first()
-            # if not enrolled:
-            #     self.email.errors.append("This email is not listed in the ISI website. Please contact the admins.")
-            #     return False
+            enrolled = CurrentEnrolledStudent.query.filter_by(email=email).first()
+            if not enrolled:
+                self.email.errors.append("This email is not listed in the ISI website. Please contact the admins.")
+                return False
             
             # ✅ Check for RSH restriction
             if self.building_uuid.data:
