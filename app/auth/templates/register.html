@@ -244,40 +244,76 @@
         btnText.textContent = 'Registering...';
     });
 </script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const roleSelect = document.getElementById("role_choice");
-        
-        const courseField = document.getElementById("course_uuid").closest(".form-floating");
-        const departureField = document.getElementById("departure_date").closest(".form-floating");
-        
-        const contactNoInput = document.getElementById("contact_no");
-        const contactAsterisk = document.getElementById("contact-required-asterisk");
-        
-        const hostNameField = document.getElementById("host_name_field");
-        const hostNameInput = document.getElementById("host_name");
 
-        function toggleFields() {
-            if (roleSelect.value === "user") {
-                courseField.style.display = "block";
-                departureField.style.display = "none";
-                contactNoInput.removeAttribute("required");
-                contactAsterisk.style.display = "none";
-                hostNameField.style.display = "none";
-                hostNameInput.removeAttribute("required");
-            } else if (roleSelect.value === "guest") {
-                courseField.style.display = "none";
-                departureField.style.display = "block";
-                contactNoInput.setAttribute("required", "required");
-                contactAsterisk.style.display = "inline";
-                hostNameField.style.display = "block";
-                hostNameInput.setAttribute("required", "required");
-            }
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector('form');
+    const submitBtn = document.getElementById('submit-btn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btn-text');
+
+    form.addEventListener('submit', function () {
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
+        btnText.textContent = 'Registering...';
+    });
+
+    const roleSelect = document.getElementById("role_choice");
+    const courseField = document.getElementById("course_uuid").closest(".form-floating");
+    const departureField = document.getElementById("departure_date").closest(".form-floating");
+    const contactNoInput = document.getElementById("contact_no");
+    const contactAsterisk = document.getElementById("contact-required-asterisk");
+    const hostNameField = document.getElementById("host_name_field");
+    const hostNameInput = document.getElementById("host_name");
+
+    const avcCheckbox = document.getElementById("has_avc");
+    const avcField = document.getElementById("avc_field");
+    const avcOption = avcCheckbox.closest(".form-check");
+
+    function toggleFields() {
+        const role = roleSelect.value;  // ✅ FIXED missing variable
+
+        // Toggle guest vs user fields
+        if (role === "user") {
+            courseField.style.display = "block";
+            departureField.style.display = "none";
+            contactNoInput.removeAttribute("required");
+            contactAsterisk.style.display = "none";
+            hostNameField.style.display = "none";
+            hostNameInput.removeAttribute("required");
+        } else if (role === "guest") {
+            courseField.style.display = "none";
+            departureField.style.display = "block";
+            contactNoInput.setAttribute("required", "required");
+            contactAsterisk.style.display = "inline";
+            hostNameField.style.display = "block";
+            hostNameInput.setAttribute("required", "required");
         }
 
-        roleSelect.addEventListener("change", toggleFields);
-        toggleFields();  // Initial call
-    });
+        // ✅ Admin Verification Code visibility logic
+        if (role === "guest") {
+            avcCheckbox.checked = false;
+            avcOption.style.display = "none";
+            avcField.style.display = "none";
+            document.getElementById("admin_verification_code").value = "";
+        } else {
+            avcOption.style.display = "block";
+            if (avcCheckbox.checked) {
+                avcField.style.display = "block";
+            } else {
+                avcField.style.display = "none";
+                document.getElementById("admin_verification_code").value = "";
+            }
+        }
+    }
+
+    // Event listeners
+    roleSelect.addEventListener("change", toggleFields);
+    avcCheckbox.addEventListener("change", toggleFields);
+
+    // Initial setup
+    toggleFields();
+});
 </script>
 
 <script>
