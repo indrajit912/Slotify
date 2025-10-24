@@ -3,15 +3,10 @@
 # Author: Indrajit Ghosh
 # Created On: May 11, 2025
 # 
-# Third-party imports
-from flask import current_app
-from flask_login import UserMixin
-from itsdangerous import URLSafeTimedSerializer
 import uuid
 
 # Local application imports
 from app.extensions import db
-from scripts.utils import utcnow
 
 class Building(db.Model):
     __tablename__ = 'building'

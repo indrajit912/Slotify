@@ -5,27 +5,83 @@
 {% block content %}
 {% include 'flash_msgs.html' %}
 
-<div class="d-flex justify-content-center align-items-center min-vh-75">
-  <div class="card shadow-lg p-5 text-center" style="max-width: 480px; width: 100%; border-radius: 1rem;">
-    
-    <!-- ISI Logo -->
-    <img src="{{ url_for('main.static', filename='img/isi_logo.png') }}" alt="ISI Bangalore Logo" 
-         class="mb-4 mx-auto d-block" style="max-width: 180px; height: auto;">
-    
-    <h1 class="mb-3 fw-bold">Welcome to Slotify <span class="fs-2">👕</span></h1>
-    
-    <p class="lead text-muted mb-4">Easily book your hostel washing machine slots online.</p>
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <img src="{{ url_for('main.static', filename='img/isi_logo.png') }}" alt="ISI Bangalore Logo"
+         class="mb-4 mx-auto d-block" style="max-width: 160px; height: auto;">
+    <h1 class="fw-bold mb-3">Welcome to <span class="text-primary">Slotify</span> 👕</h1>
+    <p class="lead text-muted">Smart washing machine slot booking system for our campus.</p>
+  </div>
 
+  <!-- Summary Stats Section -->
+  <div class="row justify-content-center g-4 mb-4">
+    <!-- Users -->
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-0 rounded-4 text-center py-4">
+        <div class="card-body">
+          <i class="bi bi-people-fill text-primary fs-1 mb-3"></i>
+          <h4 class="fw-bold mb-0">{{ total_users }}</h4>
+          <p class="text-muted mb-0">Users</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buildings -->
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-0 rounded-4 text-center py-4">
+        <div class="card-body">
+          <i class="bi bi-building-fill text-info fs-1 mb-3"></i>
+          <h4 class="fw-bold mb-0">{{ total_buildings }}</h4>
+          <p class="text-muted mb-0">Buildings</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Machines -->
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-0 rounded-4 text-center py-4">
+        <div class="card-body">
+          <i class="bi bi-gear-fill text-success fs-1 mb-3"></i>
+          <h4 class="fw-bold mb-0">{{ total_machines }}</h4>
+          <p class="text-muted mb-0">Machines</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bookings -->
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-0 rounded-4 text-center py-4">
+        <div class="card-body">
+          <i class="bi bi-calendar-check-fill text-warning fs-1 mb-3"></i>
+          <h4 class="fw-bold mb-0">{{ total_bookings }}</h4>
+          <p class="text-muted mb-0">Bookings</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Button -->
+  <div class="text-center mt-4">
     {% if not current_user.is_authenticated %}
-      <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-5 shadow-sm">
+      <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-5 shadow-sm rounded-pill">
         Get Started
       </a>
     {% else %}
-      <a href="{{ url_for('auth.dashboard') }}" class="btn btn-success btn-lg px-5 shadow-sm">
-        Dashboard
+      <a href="{{ url_for('auth.dashboard') }}" class="btn btn-success btn-lg px-5 shadow-sm rounded-pill">
+        Go to Dashboard
       </a>
     {% endif %}
-
   </div>
 </div>
+
+<!-- Subtle Hover Animations -->
+<style>
+  .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.08);
+  }
+</style>
 {% endblock %}

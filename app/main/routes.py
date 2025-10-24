@@ -36,8 +36,25 @@ def index():
     if current_app.config.get("MAINTENANCE_MODE", False):
         return render_template("maintenance.html"), 503
 
-    return render_template("index.html")
-    
+    from app.models.user import User
+    from app.models.washingmachine import WashingMachine
+    from app.models.booking import Booking
+    from app.models.building import Building
+
+    total_users = User.query.count()
+    total_buildings = Building.query.count()
+    total_machines = WashingMachine.query.count()
+    total_bookings = Booking.query.count()
+
+    return render_template(
+        "index.html",
+        total_users=total_users,
+        total_buildings=total_buildings,
+        total_machines=total_machines,
+        total_bookings=total_bookings,
+    )
+
+
 
 @main_bp.route('/view-all-admins')
 def view_all_admins():
