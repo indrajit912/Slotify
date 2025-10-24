@@ -20,8 +20,8 @@ from app.models.building import Building
 from app.models.course import Course
 from app.services import update_user_last_seen, create_user, get_user_by_email, update_user_by_uuid
 from app.utils.decorators import logout_required, email_verification_required
-from scripts.email_message import EmailMessage
 from app.utils.token import generate_registration_token, confirm_registration_token, verify_admin_verification_code
+from scripts.send_email_client import send_email_via_hermes
 from config import EmailConfig
 from app.extensions import db
 
@@ -103,23 +103,27 @@ def request_email_verification():
         user=user.first_name
     )
 
-    msg = EmailMessage(
-        sender_email_id=EmailConfig.MAIL_USERNAME,
-        to=email,
-        subject=f"Action Required: Verify your Email Id for {current_app.config['FLASK_APP_NAME']}",
-        email_html_text=html,
-        formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
-    )
-
+    # Use Hermes API email service to send the email
     try:
-        msg.send(
-            sender_email_password=EmailConfig.MAIL_PASSWORD,
-            server_info=EmailConfig.GMAIL_SERVER,
-            print_success_status=False
+        response = send_email_via_hermes(
+            to=email,
+            subject=f"Action Required: Verify your Email Id for {current_app.config['FLASK_APP_NAME']}",
+            email_html_text=html,
+            api_key=EmailConfig.HERMES_API_KEY,
+            bot_id=EmailConfig.HERMES_EMAILBOT_ID,
+            api_url=f"{EmailConfig.HERMES_BASE_URL}/api/v1/send-email",
+            from_name=f"{current_app.config['FLASK_APP_NAME']} Bot",
         )
-        logger.info(f"Verification email sent to '{email}' with token '{token}'.")
-        flash("A verification link has been sent to your email. Please check your Spam folder if you don't see it in your inbox.", "info")
-        return redirect(url_for('auth.login'))
+        
+        if response.get('success'):
+            logger.info(f"Verification email sent to '{email}' with token '{token}'.")
+            flash("A verification link has been sent to your email. Please check your Spam folder if you don't see it in your inbox.", "info")
+            return redirect(url_for('auth.login'))
+        else:
+            logger.error(f"Hermes email sending failed for '{email}': {response}")
+            flash("Failed to send verification email. Please try again later.", "danger")
+            return redirect(url_for('auth.register'))
+        
     except Exception as e:
         logger.exception(f"Failed to send verification email to {email}: {e}")
         flash("Failed to send verification email. Please try again later.", "danger")
@@ -258,21 +262,23 @@ def register():
                 config=current_app.config
             )
 
-            admin_msg = EmailMessage(
-                sender_email_id=EmailConfig.MAIL_USERNAME,
-                to=admin_emails,  # sending to list directly
-                subject=f"Guest Registration Request: {form_data['first_name']} {form_data['last_name'] or ''}",
-                email_html_text=guest_info_html,
-                formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
-            )
-
+            # Send email to admins via Hermes API
             try:
-                admin_msg.send(
-                    sender_email_password=EmailConfig.MAIL_PASSWORD,
-                    server_info=EmailConfig.GMAIL_SERVER,
-                    print_success_status=False
+                response = send_email_via_hermes(
+                    to=admin_emails,
+                    subject=f"Guest Registration Request: {form_data['first_name']} {form_data['last_name'] or ''}",
+                    email_html_text=guest_info_html,
+                    api_key=EmailConfig.HERMES_API_KEY,
+                    bot_id=EmailConfig.HERMES_EMAILBOT_ID,
+                    api_url=f"{EmailConfig.HERMES_BASE_URL}/api/v1/send-email",
+                    from_name=f"{current_app.config['FLASK_APP_NAME']} Bot",
                 )
-                logger.info(f"Admin notification sent to: {admin_emails}")
+                if response.get('success'):
+                    logger.info(f"Admin notification email sent for guest registration of {form_data['email']}")
+                else:
+                    logger.error(f"Email sending failed for admin notification: {response}")
+                    flash("Failed to send registration request to admins. Please try again later.", "danger")
+                    return redirect(url_for('auth.register'))
             except Exception as e:
                 logger.exception(f"Failed to notify admins: {e}")
                 flash("Failed to send registration request to admins. Please try again later.", "danger")
@@ -341,21 +347,24 @@ def register():
                 user=form_data['first_name']
             )
 
-            msg = EmailMessage(
-                sender_email_id=EmailConfig.MAIL_USERNAME,
-                to=form_data['email'],
-                subject=f"Action Required: Confirm your email for {current_app.config['FLASK_APP_NAME']}",
-                email_html_text=html,
-                formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
-            )
-
             try:
-                msg.send(
-                    sender_email_password=EmailConfig.MAIL_PASSWORD,
-                    server_info=EmailConfig.GMAIL_SERVER,
-                    print_success_status=False
+                response = send_email_via_hermes(
+                    to=form_data['email'],
+                    subject=f"Action Required: Confirm your email for {current_app.config['FLASK_APP_NAME']}",
+                    email_html_text=html,
+                    api_key=EmailConfig.HERMES_API_KEY,
+                    bot_id=EmailConfig.HERMES_EMAILBOT_ID,
+                    api_url=f"{EmailConfig.HERMES_BASE_URL}/api/v1/send-email",
+                    from_name=f"{current_app.config['FLASK_APP_NAME']} Bot",
                 )
-                logger.info(f"Verification email successfully sent to {form_data['email']}")
+                
+                if response.get('success'):
+                    logger.info(f"Verification email successfully sent to {form_data['email']}")
+                else:
+                    logger.error(f"Email sending failed for '{form_data['email']}': {response}")
+                    flash("Failed to send verification email. Please try again later.", "danger")
+                    return redirect(url_for('auth.register'))
+                
             except Exception as e:
                 logger.exception(f"Failed to send verification email to {form_data['email']}: {e}")
                 flash("Failed to send verification email. Please try again later.", "danger")
@@ -368,7 +377,6 @@ def register():
                 "from your ISI Bangalore email address.",
                 "info"
             )
-
 
             return redirect(url_for('auth.login'))
 
@@ -443,21 +451,24 @@ def complete_registration(token):
                 guest=new_user.first_name
             )
 
-            msg = EmailMessage(
-                sender_email_id=EmailConfig.MAIL_USERNAME,
-                to=new_user.email,
-                subject=f"Welcome! Your account has been activated on {current_app.config['FLASK_APP_NAME']}",
-                email_html_text=html,
-                formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
-            )
-
+            # Send email via Hermes API
             try:
-                msg.send(
-                    sender_email_password=EmailConfig.MAIL_PASSWORD,
-                    server_info=EmailConfig.GMAIL_SERVER,
-                    print_success_status=False
+                response = send_email_via_hermes(
+                    to=new_user.email,
+                    subject=f"Welcome! Your account has been activated on {current_app.config['FLASK_APP_NAME']}",
+                    email_html_text=html,
+                    api_key=EmailConfig.HERMES_API_KEY,
+                    bot_id=EmailConfig.HERMES_EMAILBOT_ID,
+                    api_url=f"{EmailConfig.HERMES_BASE_URL}/api/v1/send-email",
+                    from_name=f"{current_app.config['FLASK_APP_NAME']} Bot",
                 )
-                logger.info(f"Account activation email successfully sent to {new_user.email}.")
+                if response.get('success'):
+                    logger.info(f"Account activation email successfully sent to {new_user.email}.")
+                else:
+                    logger.error(f"Email sending failed for guest activation email to '{new_user.email}': {response}")
+                    flash("We were unable to send the confirmation email to the guest. Please try again later.", "danger")
+                    return redirect(url_for('auth.register'))
+                
             except Exception as e:
                 logger.exception(f"Failed to send account activation email to {new_user.email}: {e}")
                 flash("We were unable to send the confirmation email to the guest. Please try again later.", "danger")
@@ -484,22 +495,25 @@ def forgot_password():
 
             current_app.logger.info(f"Password reset requested for user {user.uuid} ({email}). Reset URL: {reset_url}")
             
-            # Email
-            msg = EmailMessage(
-                sender_email_id=EmailConfig.MAIL_USERNAME,
-                to=email,
-                subject=f"Reset Your {current_app.config['FLASK_APP_NAME']} Password",
-                email_html_text=html_body,
-                formataddr_text=f"{current_app.config['FLASK_APP_NAME']} Bot"
-            )
-
+            # Email sending via Hermes API
             try:
-                msg.send(
-                    sender_email_password=EmailConfig.MAIL_PASSWORD,
-                    server_info=EmailConfig.GMAIL_SERVER,
-                    print_success_status=False
+                response = send_email_via_hermes(
+                    to=email,
+                    subject=f"Reset Your {current_app.config['FLASK_APP_NAME']} Password",
+                    email_html_text=html_body,
+                    api_key=EmailConfig.HERMES_API_KEY,
+                    bot_id=EmailConfig.HERMES_EMAILBOT_ID,
+                    api_url=f"{EmailConfig.HERMES_BASE_URL}/api/v1/send-email",
+                    from_name=f"{current_app.config['FLASK_APP_NAME']} Bot",
                 )
-                logger.info(f"Password Reset email successfully sent to {email}")
+
+                if response.get('success'):
+                    logger.info(f"Password Reset email successfully sent to {email}")
+                else:
+                    logger.error(f"Email sending failed for password reset to '{email}': {response}")
+                    flash("Failed to send password reset link email. Please try again later.", "danger")
+                    return redirect(url_for('auth.login'))
+                
             except Exception as e:
                 logger.exception(f"Failed to send password reset link email to {email}: {e}")
                 flash("Failed to send password reset link email. Please try again later.", "danger")

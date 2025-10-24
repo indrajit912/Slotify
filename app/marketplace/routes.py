@@ -2,7 +2,7 @@
 # Author: Indrajit Ghosh
 # Created On: Oct 18, 2025
 # 
-from flask import render_template, request, redirect, url_for, flash, session, current_app
+from flask import render_template, request, redirect, url_for, flash, session, current_app, abort
 from sqlalchemy.orm import joinedload
 from app.marketplace import marketplace_bp
 from app.extensions import db
